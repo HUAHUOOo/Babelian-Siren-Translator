@@ -19,7 +19,7 @@
           <div class="ocr-settings">
             <label>字色 <select id="ocr-polarity"><option value="auto">自动判断</option><option value="dark">深字浅底</option><option value="light">浅字深底</option></select></label>
             <label><input id="ocr-single" type="checkbox"> 框选内容仅一行</label>
-            <label title="融合粗细两种字形细节；模糊图可取消后重新识别对照"><input id="ocr-detail" type="checkbox" checked> 多尺度精细比对</label>
+            <label title="融合粗细两种字形细节；自动阈值时额外比较浅色笔尖，模糊图可取消后重新识别对照"><input id="ocr-detail" type="checkbox" checked> 多尺度精细比对</label>
             <label><input id="ocr-auto" type="checkbox" checked> 自动阈值</label>
             <label>阈值 <input id="ocr-threshold" type="range" min="0" max="254" value="150" disabled><output id="ocr-threshold-value">150</output></label>
           </div>
@@ -29,8 +29,8 @@
       <div id="ocr-inspection" class="ocr-card" hidden>
         <h2>逐字复核</h2>
         <p id="ocr-summary" class="ocr-help"></p>
-        <p class="ocr-help">橙色项需要确认；[?] 为待确认，[未映射] 为已识别但尚无对应。绿色项也建议与原图核对，尤其注意字形分割。</p>
-        <details class="ocr-token-details" open><summary>逐字复核 · 点击一项查看原图与候选</summary><div id="ocr-tokens"></div></details>
+        <p class="ocr-help">橙色项尚待确认，结果先采用候选字形；[?] 表示无候选，[未映射] 表示尚无对应文字。需要时展开复核。</p>
+        <details id="ocr-token-details" class="ocr-token-details"><summary>展开逐字复核 · 点击字形查看原图与候选</summary><div id="ocr-tokens"></div></details>
         <section id="ocr-review" class="ocr-review" aria-labelledby="ocr-review-title" hidden>
           <h3 id="ocr-review-title">复核字形</h3>
           <div class="ocr-review-images"><figure><canvas id="ocr-piece" aria-label="选中字形的原图裁片"></canvas><figcaption id="ocr-piece-caption">原图裁片</figcaption></figure><figure><img id="ocr-choice-image" alt="选中的候选字形"><figcaption>候选模板</figcaption></figure></div>
@@ -44,6 +44,7 @@
       <div id="ocr-samples" class="ocr-card"></div>
       <div id="ocr-results" class="ocr-card" hidden>
         <h2>识别结果</h2>
+        <p id="ocr-output-note" class="ocr-help" role="status"></p>
         <label class="ocr-output-label" for="ocr-output">逐字英文 · 跟随当前映射，未经分词</label><textarea id="ocr-output" readonly spellcheck="false" rows="4" aria-label="截图识别英文"></textarea>
         <div class="ocr-toolbar"><label><input id="ocr-join" type="checkbox"> 合并原图换行</label><button id="ocr-copy" type="button" class="secondary">复制逐字英文</button><button id="ocr-append" type="button" class="secondary">追加逐字英文</button></div>
         <section class="ocr-format-section" aria-label="自动分词断句建议">
@@ -54,7 +55,7 @@
             <div class="ocr-toolbar"><button id="ocr-formatted-copy" type="button" class="secondary">复制整理文本</button><button id="ocr-formatted-append" type="button" class="secondary">将整理文本追加到书写区</button><button id="ocr-translate-toggle" type="button" class="secondary" aria-controls="ocr-translate-panel" aria-expanded="false">中文机翻</button></div>
             <section id="ocr-translate-panel" class="ocr-translation" aria-label="英文机翻为中文" hidden>
               <h3>中文机翻 · 联网，可选</h3>
-              <p id="ocr-translate-help" class="ocr-help">使用 MyMemory（含机器翻译及译文库匹配），仅供参考，游戏专名和规则需复核。只在点击下方按钮后发送当前“整理后的英文”，不发送截图或映射；长文本分段发送，每次最多5000字符，受服务额度及网络限制。请勿发送敏感内容。<a href="https://mymemory.translated.net/doc/spec.php" target="_blank" rel="noopener noreferrer">服务说明</a></p>
+              <p id="ocr-translate-help" class="ocr-help">使用 MyMemory（含机器翻译及译文库匹配），不是官方译文；专名和规则以官方中文剧情书及规则书为准。只在点击下方按钮后发送当前“整理后的英文”，不发送截图或映射；长文本分段发送，每次最多5000字符，受服务额度及网络限制。请勿发送敏感内容。<a href="https://mymemory.translated.net/doc/spec.php" target="_blank" rel="noopener noreferrer">服务说明</a></p>
               <label class="ocr-consent"><input id="ocr-translate-consent" type="checkbox"> 我同意将当前整理后的英文发送给 MyMemory 翻译</label>
               <div class="ocr-toolbar"><button id="ocr-translate-run" type="button" class="primary" disabled>将当前英文翻译为中文</button><button id="ocr-translate-cancel" type="button" class="secondary" hidden>取消翻译</button><button id="ocr-translate-copy" type="button" class="secondary" disabled>复制中文译文</button></div>
               <p id="ocr-translate-status" class="ocr-help" role="status" aria-live="polite">尚未翻译。先调整上方英文，再点击翻译。</p>

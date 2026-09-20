@@ -8,3 +8,7 @@ playwright-report/
 .DS_Store
 Thumbs.db
 dist/
+
+# Private story transcriptions used only for local OCR evaluation.
+tests/fixtures/babelian-3935.json
+tests/fixtures/babelian-9301.json

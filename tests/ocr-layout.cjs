@@ -17,6 +17,8 @@ const decode=get('panel-decode'),inspection=get('ocr-inspection'),results=get('o
 assert.equal(inspection.parent,decode);assert.equal(results.parent,decode);
 assert.equal(decode.children.at(-1),results,'recognized English must be the bottom section');
 assert(inside(get('ocr-tokens'),inspection));assert(inside(get('ocr-review'),inspection));
+assert.equal(get('ocr-token-details').tag,'details');assert(!/\bopen\b/.test(get('ocr-token-details').attrs));
+assert(/\bhidden\b/.test(get('ocr-review').attrs));assert(inside(get('ocr-output-note'),results));
 assert(inspection.index<results.index);assert(inside(get('ocr-output'),results));
 const toolbar=get('ocr-formatted-copy').parent;
 assert.equal(get('ocr-formatted-append').parent,toolbar);assert.equal(get('ocr-translate-toggle').parent,toolbar);

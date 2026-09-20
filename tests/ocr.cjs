@@ -52,8 +52,9 @@ async function run(){
  payload.spans.forEach((span,i)=>{assert.equal(span.glyph,random[i]);assert.equal(span.text,payload.text.slice(span.start,span.end));});
  map[random[0]]='';assert(OCR.transcribe(confirmed,map).startsWith('[未映射]'));
  confirmed.lines[0].tokens[0].manual=false;confirmed.lines[0].tokens[0].certain=false;
- assert(OCR.transcribe(confirmed,map).startsWith('[?]'));
- assert.equal(OCR.toWriter(confirmed,map).spans.length,random.length-1);
+ assert(OCR.transcribe(confirmed,map).startsWith('[未映射]'));
+ assert.equal(OCR.toWriter(confirmed,map).spans.length,random.length);
+ map[random[0]]='CUSTOM WORD';assert(OCR.transcribe(confirmed,map).startsWith('CUSTOM WORD'));
  const joined={lines:[confirmed.lines[0],confirmed.lines[0]]};
  assert.equal(OCR.transcribe(joined,map,{joinLines:true}),OCR.transcribe(confirmed,map).repeat(2));
  assert.equal(OCR.transcribe(joined,map),[OCR.transcribe(confirmed,map),OCR.transcribe(confirmed,map)].join('\n'));

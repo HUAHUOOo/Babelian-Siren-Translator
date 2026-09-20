@@ -212,8 +212,7 @@
     }
     return tokens.reverse();
   }
-  async function recognize(image,templateMasks,options={},progress=()=>{}){
-    const mask=binarize(image,options),templates=prepareTemplates(templateMasks,options),bands=rowBands(mask,options.oneLine,templates);
+  async function recognizeMask(mask,templates,options,progress,bands=rowBands(mask,options.oneLine,templates)){
     if(bands.length>100)throw Error('内容超过100行，请分段框选。');
     const lines=[];let count=0;
     for(let i=0;i<bands.length;i++){
@@ -223,11 +222,156 @@
       lines.push({box:bands[i],tokens});progress({done:i+1,total:bands.length});
       await new Promise(resolve=>setTimeout(resolve,0));
     }
-    return {lines,threshold:mask.threshold,polarity:mask.polarity,width:image.width,height:image.height,detail:options.detail!==false};
+    if(options.cancelled?.())throw Error('已取消识别。');
+    return {lines,threshold:mask.threshold,polarity:mask.polarity,width:mask.width,height:mask.height,detail:options.detail!==false};
   }
+  function overlap(a,b){
+    const area=Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));
+    return area/(a.width*a.height+b.width*b.height-area||1);
+  }
+  function imageEvidence(result){
+    let sum=0,weight=0;
+    for(const line of result.lines)for(const token of line.tokens){
+      const w=token.box.width/line.box.height;sum+=token.score*w-.025;weight+=w;
+    }
+    return weight?sum/weight:0;
+  }
+  function hasSoftEdges(gray,width,box,threshold,polarity){
+    const hist=new Uint32Array(256),split=polarity==='light'?254-threshold:threshold;
+    for(let y=box.y;y<box.y+box.height;y++)for(let x=box.x;x<box.x+box.width;x++){
+      const value=gray[y*width+x];hist[polarity==='light'?255-value:value]++;
+    }
+    let foreground=0,background=Math.min(255,split+1);
+    for(let i=0;i<=split;i++)if(hist[i]>hist[foreground])foreground=i;
+    for(let i=split+1;i<256;i++)if(hist[i]>hist[background])background=i;
+    const contrast=background-foreground;if(contrast<40)return false;
+    let ink=0,soft=0;
+    for(let i=0;i<background-contrast*.05;i++){
+      ink+=hist[i];if(i>foreground+contrast*.2&&i<background-contrast*.2)soft+=hist[i];
+    }
+    // Resampling already sharp binary edges invents intermediate shades and
+    // may favor the wrong partition. Only use it with measured soft edges.
+    return ink>0&&soft/ink>=.2;
+  }
+  function subpixelMask(gray,image,box,threshold,polarity){
+    const scale=3,width=box.width*scale,height=box.height*scale,data=new Uint8Array(width*height);
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+      const sx=box.x+(x+.5)/scale-.5,sy=box.y+(y+.5)/scale-.5,ix=Math.floor(sx),iy=Math.floor(sy),dx=sx-ix,dy=sy-iy;
+      let value=0;
+      for(let j=0;j<2;j++)for(let i=0;i<2;i++)value+=gray[Math.max(0,Math.min(image.height-1,iy+j))*image.width+Math.max(0,Math.min(image.width-1,ix+i))]*(i?dx:1-dx)*(j?dy:1-dy);
+      value=Math.round(value);data[y*width+x]=Number(polarity==='light'?value>threshold:value<=threshold);
+    }
+    return {width,height,data,threshold,polarity};
+  }
+  async function refineSmallRows(image,gray,baseline,templates,thresholds,options,progress){
+    const lines=[];let refined=0,count=0;
+    for(let row=0;row<baseline.lines.length;row++){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      const original=baseline.lines[row],b=original.box;
+      // Interpolation adds no information: it only provides fractional cut
+      // sites for small, antialiased strokes. Keep very tiny rows unchanged.
+      const x=Math.max(0,b.x-2),y=Math.max(0,b.y-2),region={x,y,width:Math.min(image.width,b.x+b.width+2)-x,height:Math.min(image.height,b.y+b.height+2)-y};
+      let chosen=original,quality=imageEvidence({lines:[original]}),selectedThreshold=baseline.threshold;
+      const passes=[original];
+      if(b.height>=30&&b.height<40&&region.width*region.height*9<=1200000&&hasSoftEdges(gray,image.width,b,baseline.threshold,baseline.polarity)){
+        for(const threshold of [baseline.threshold,...thresholds]){
+          if(options.cancelled?.())throw Error('已取消识别。');
+          const mask=subpixelMask(gray,image,region,threshold,baseline.polarity),bands=rowBands(mask,false,templates);
+          if(bands.length!==1)continue;
+          const mapBox=box=>{
+            const left=Math.max(0,Math.floor(box.x/3+x)),top=Math.max(0,Math.floor(box.y/3+y));
+            return {x:left,y:top,width:Math.min(image.width,Math.ceil((box.x+box.width)/3+x))-left,height:Math.min(image.height,Math.ceil((box.y+box.height)/3+y))-top};
+          };
+          if(overlap(mapBox(bands[0]),b)<.8)continue;
+          let tokens;
+          try{tokens=recognizeLine(mask,bands[0],templates);}
+          catch(error){
+            if(/^(单行内容过多|无法切分这一行)/.test(error.message))continue;
+            throw error;
+          }
+          const pass={box:bands[0],tokens};
+          const evidence=imageEvidence({lines:[pass]});
+          // Evaluate before rounding to source-pixel boxes. Rounding must not
+          // become extra evidence for a wider or more fragmented candidate.
+          pass.box=mapBox(pass.box);pass.tokens=tokens.map(t=>({...t,certain:t.certain&&t.box.height/3>=30,box:mapBox(t.box)}));passes.push(pass);
+          if(evidence>quality+.008){chosen=pass;quality=evidence;selectedThreshold=threshold;}
+          progress({done:row+1,total:baseline.lines.length,pass:2});
+          await new Promise(resolve=>setTimeout(resolve,0));
+        }
+      }
+      if(chosen!==original){
+        refined++;
+        for(const token of chosen.tokens){
+          const peers=passes.filter(p=>p!==chosen).flatMap(p=>p.tokens).filter(t=>overlap(t.box,token.box)>=.7);
+          token.samplingStable=peers.some(t=>t.id===token.id&&t.score>=.7&&(t.candidates[0]?.score||0)-(t.candidates[1]?.score||0)>=.035);
+          // The original resolution gate still applies, never the enlarged
+          // sampling grid. A new choice also needs another pass's support.
+          token.certain=token.certain&&b.height>=30&&token.samplingStable;
+        }
+        chosen={...chosen,sampling:{scale:3,threshold:selectedThreshold,sourceHeight:b.height}};
+      }
+      lines.push(chosen);count+=chosen.tokens.length;
+      if(count>1500)throw Error('内容超过1500个字形，请分段识别。');
+    }
+    if(options.cancelled?.())throw Error('已取消识别。');
+    return {...baseline,lines,samplingRefinement:{rows:refined,scale:3}};
+  }
+  async function recognize(image,templateMasks,options={},progress=()=>{}){
+    const mask=binarize(image,options),templates=prepareTemplates(templateMasks,options);
+    const baseline=await recognizeMask(mask,templates,options,p=>progress({...p,pass:1}));
+    // A manual threshold is authoritative. Keep the coarse comparison as an
+    // explicit single-pass fallback; only automatic fine comparison sweeps.
+    if(options.threshold!=null||options.detail===false||!baseline.lines.length)return baseline;
+    const {gray,hist}=grayImage(image),dark=mask.polarity==='dark';
+    let background=mask.threshold;
+    for(let v=dark?mask.threshold+1:0;v<(dark?256:mask.threshold);v++)if(hist[v]>hist[background])background=v;
+    // Search only part of the gap toward the background peak: recovering faint
+    // tips must not flood paper texture or join adjacent rows. No image IDs,
+    // letters, word counts or expected text participate in this decision.
+    const thresholds=[...new Set([1/6,1/3].map(f=>Math.max(0,Math.min(254,Math.round(mask.threshold+(background-mask.threshold)*f)))))].filter(t=>Math.abs(t-mask.threshold)>=4);
+    if(baseline.lines.some(l=>l.box.height<40))return refineSmallRows(image,gray,baseline,templates,thresholds,options,progress);
+    const passes=[baseline];let previousMask=mask;
+    for(const threshold of thresholds){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      const variant=binarize(image,{threshold,polarity:mask.polarity});
+      if(variant.data.every((v,i)=>v===previousMask.data[i]))continue;
+      previousMask=variant;
+      let result;
+      try{
+        const bands=rowBands(variant,options.oneLine,templates);
+        if(bands.length!==baseline.lines.length||bands.some((b,i)=>overlap(b,baseline.lines[i].box)<.8))continue;
+        result=await recognizeMask(variant,templates,options,p=>progress({...p,pass:passes.length+1}),bands);
+      }
+      catch(error){
+        if(options.cancelled?.())throw error;
+        // A more permissive threshold can expose paper texture. Keep the
+        // successful baseline instead of failing a previously readable page.
+        if(/^(内容超过|单行内容过多|无法切分这一行)/.test(error.message))continue;
+        throw error;
+      }
+      // Avoid taking a high average score caused by missing or merged rows.
+      if(result.lines.length===baseline.lines.length&&result.lines.every((l,i)=>overlap(l.box,baseline.lines[i].box)>=.8))passes.push(result);
+    }
+    let chosen=baseline,quality=imageEvidence(baseline);
+    for(const pass of passes.slice(1)){
+      const score=imageEvidence(pass);
+      if(score>quality+.008){chosen=pass;quality=score;}
+    }
+    if(chosen!==baseline){
+      for(let row=0;row<chosen.lines.length;row++)for(const token of chosen.lines[row].tokens){
+        const peers=passes.filter(p=>p!==chosen).flatMap(p=>p.lines[row].tokens).filter(t=>overlap(t.box,token.box)>=.7);
+        // New automatic output needs independent threshold support, in addition
+        // to unchanged pixel/runner-up/boundary/resolution confidence gates.
+        token.thresholdStable=peers.some(t=>t.id===token.id&&t.score>=.7&&(t.candidates[0]?.score||0)-(t.candidates[1]?.score||0)>=.035);
+        token.certain=token.certain&&token.thresholdStable;
+      }
+    }
+    return {...chosen,thresholdSearch:{baseline:baseline.threshold,selected:chosen.threshold,passes:passes.map(p=>({threshold:p.threshold,evidence:imageEvidence(p)}))}};
+  }
+  function tokenGlyph(token){return token.id||token.candidates?.[0]?.id||null;}
   function tokenReading(token,mapping){
-    if(!token.id||(!token.certain&&!token.manual))return '[?]';
-    const value=typeof mapping[token.id]==='string'?mapping[token.id]:'';
+    const id=tokenGlyph(token);if(!id)return '[?]';
+    const value=typeof mapping[id]==='string'?mapping[id]:'';
     return value||'[未映射]';
   }
   function transcribe(result,mapping,{joinLines=false,separate=false}={}){
@@ -239,10 +383,11 @@
       if(index&&!joinLines)text+='\n';
       for(const token of line.tokens){
         const value=tokenReading(token,mapping),start=text.length;text+=value;
-        if(token.id&&(token.certain||token.manual))spans.push({glyph:token.id,start,end:text.length,text:value});
+        const id=tokenGlyph(token);
+        if(id)spans.push({glyph:id,start,end:text.length,text:value});
       }
     });
     return {text,spans};
   }
-  return {binarize,bounds,describe,prepareTemplates,matchDescriptor,rowBands,recognizeLine,recognize,tokenReading,transcribe,toWriter};
+  return {binarize,bounds,describe,prepareTemplates,matchDescriptor,rowBands,recognizeLine,recognize,tokenGlyph,tokenReading,transcribe,toWriter};
 });

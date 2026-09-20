@@ -26,7 +26,7 @@
       }
     }
     const c=value.context??null;
-    if(c!==null&&(!plain(c)||Object.keys(c).some(k=>!['book','entry','key','chapter','encounter'].includes(k)||typeof c[k]!=='string'||c[k].length>200)))throw Error('故事书来源格式不正确。');
+    if(c!==null&&(!plain(c)||Object.keys(c).some(k=>!['book','entry','key','chapter','encounter'].includes(k)||typeof c[k]!=='string'||c[k].length>200)))throw Error('剧情书来源格式不正确。');
     return copy({writer:value.writer,mappings:value.mappings,context:c});
   }
   function create(config,env){

@@ -351,7 +351,7 @@
 <body>
   <header class="masthead">
     <div class="masthead-inner">
-      <div class="brand"><img id="brand-glyph" class="brand-symbol" alt=""><span class="brand-name">AEON TRESPASS</span><span class="brand-divider"></span><span class="brand-detail">密文工坊</span></div>
+      <div class="brand"><img id="brand-glyph" class="brand-symbol" alt=""><span class="brand-name">永世侵入：奥德赛</span><span class="brand-divider"></span><span class="brand-detail">密文工坊</span></div>
       <span id="runtime-mode" class="offline">离线可用</span>
     </div>
   </header>
@@ -365,6 +365,7 @@
         <button type="button" id="language-open-siren" class="language-choice"><img id="language-siren-icon" alt=""><span><strong>塞壬语生成</strong><small>英文 → 螺旋 · 拖动排布</small></span></button>
         <button type="button" id="language-open-siren-translate" class="language-choice"><img id="language-siren-translate-icon" alt=""><span><strong>塞壬语翻译</strong><small>截图识别 → 英文 · 中文机翻</small></span></button>
       </div>
+      <details id="official-terminology-note" class="footer"><summary>中文名称与译文说明</summary><p>官方中文故事集正文称这类生物为“海妖”。已核对的资料尚未确认两种密码语言的正式中文名，因此功能名仍沿用“巴别语／塞壬语”。中文机翻不是官方译文，专名和规则请对照官方中文剧情书及规则书。</p></details>
     </section>
     <button type="button" id="language-back" class="text-button" hidden>← 返回首页</button>
     <section id="language-babelian" aria-labelledby="babelian-title" hidden>
@@ -415,7 +416,7 @@
           <div class="ocr-settings">
             <label>字色 <select id="ocr-polarity"><option value="auto">自动判断</option><option value="dark">深字浅底</option><option value="light">浅字深底</option></select></label>
             <label><input id="ocr-single" type="checkbox"> 框选内容仅一行</label>
-            <label title="融合粗细两种字形细节；模糊图可取消后重新识别对照"><input id="ocr-detail" type="checkbox" checked> 多尺度精细比对</label>
+            <label title="融合粗细两种字形细节；自动阈值时额外比较浅色笔尖，模糊图可取消后重新识别对照"><input id="ocr-detail" type="checkbox" checked> 多尺度精细比对</label>
             <label><input id="ocr-auto" type="checkbox" checked> 自动阈值</label>
             <label>阈值 <input id="ocr-threshold" type="range" min="0" max="254" value="150" disabled><output id="ocr-threshold-value">150</output></label>
           </div>
@@ -425,8 +426,8 @@
       <div id="ocr-inspection" class="ocr-card" hidden>
         <h2>逐字复核</h2>
         <p id="ocr-summary" class="ocr-help"></p>
-        <p class="ocr-help">橙色项需要确认；[?] 为待确认，[未映射] 为已识别但尚无对应。绿色项也建议与原图核对，尤其注意字形分割。</p>
-        <details class="ocr-token-details" open><summary>逐字复核 · 点击一项查看原图与候选</summary><div id="ocr-tokens"></div></details>
+        <p class="ocr-help">橙色项尚待确认，结果先采用候选字形；[?] 表示无候选，[未映射] 表示尚无对应文字。需要时展开复核。</p>
+        <details id="ocr-token-details" class="ocr-token-details"><summary>展开逐字复核 · 点击字形查看原图与候选</summary><div id="ocr-tokens"></div></details>
         <section id="ocr-review" class="ocr-review" aria-labelledby="ocr-review-title" hidden>
           <h3 id="ocr-review-title">复核字形</h3>
           <div class="ocr-review-images"><figure><canvas id="ocr-piece" aria-label="选中字形的原图裁片"></canvas><figcaption id="ocr-piece-caption">原图裁片</figcaption></figure><figure><img id="ocr-choice-image" alt="选中的候选字形"><figcaption>候选模板</figcaption></figure></div>
@@ -440,6 +441,7 @@
       <div id="ocr-samples" class="ocr-card"></div>
       <div id="ocr-results" class="ocr-card" hidden>
         <h2>识别结果</h2>
+        <p id="ocr-output-note" class="ocr-help" role="status"></p>
         <label class="ocr-output-label" for="ocr-output">逐字英文 · 跟随当前映射，未经分词</label><textarea id="ocr-output" readonly spellcheck="false" rows="4" aria-label="截图识别英文"></textarea>
         <div class="ocr-toolbar"><label><input id="ocr-join" type="checkbox"> 合并原图换行</label><button id="ocr-copy" type="button" class="secondary">复制逐字英文</button><button id="ocr-append" type="button" class="secondary">追加逐字英文</button></div>
         <section class="ocr-format-section" aria-label="自动分词断句建议">
@@ -450,7 +452,7 @@
             <div class="ocr-toolbar"><button id="ocr-formatted-copy" type="button" class="secondary">复制整理文本</button><button id="ocr-formatted-append" type="button" class="secondary">将整理文本追加到书写区</button><button id="ocr-translate-toggle" type="button" class="secondary" aria-controls="ocr-translate-panel" aria-expanded="false">中文机翻</button></div>
             <section id="ocr-translate-panel" class="ocr-translation" aria-label="英文机翻为中文" hidden>
               <h3>中文机翻 · 联网，可选</h3>
-              <p id="ocr-translate-help" class="ocr-help">使用 MyMemory（含机器翻译及译文库匹配），仅供参考，游戏专名和规则需复核。只在点击下方按钮后发送当前“整理后的英文”，不发送截图或映射；长文本分段发送，每次最多5000字符，受服务额度及网络限制。请勿发送敏感内容。<a href="https://mymemory.translated.net/doc/spec.php" target="_blank" rel="noopener noreferrer">服务说明</a></p>
+              <p id="ocr-translate-help" class="ocr-help">使用 MyMemory（含机器翻译及译文库匹配），不是官方译文；专名和规则以官方中文剧情书及规则书为准。只在点击下方按钮后发送当前“整理后的英文”，不发送截图或映射；长文本分段发送，每次最多5000字符，受服务额度及网络限制。请勿发送敏感内容。<a href="https://mymemory.translated.net/doc/spec.php" target="_blank" rel="noopener noreferrer">服务说明</a></p>
               <label class="ocr-consent"><input id="ocr-translate-consent" type="checkbox"> 我同意将当前整理后的英文发送给 MyMemory 翻译</label>
               <div class="ocr-toolbar"><button id="ocr-translate-run" type="button" class="primary" disabled>将当前英文翻译为中文</button><button id="ocr-translate-cancel" type="button" class="secondary" hidden>取消翻译</button><button id="ocr-translate-copy" type="button" class="secondary" disabled>复制中文译文</button></div>
               <p id="ocr-translate-status" class="ocr-help" role="status" aria-live="polite">尚未翻译。先调整上方英文，再点击翻译。</p>
@@ -523,7 +525,7 @@
           <div class="siren-actions"><button type="button" id="siren-copy-raw" class="text-button">复制逐字英文</button><button type="button" id="siren-format" class="secondary">生成分词断句建议</button></div>
           <label for="siren-formatted" title="数字词自动转数字；可修改空格与标点">整理文本</label><textarea id="siren-formatted" rows="4" spellcheck="false"></textarea><p id="siren-format-status" class="siren-note" role="status"></p>
           <div class="siren-actions"><button type="button" id="siren-copy-formatted" class="text-button">复制整理文本</button><button type="button" id="siren-translate-toggle" class="secondary" aria-expanded="false" aria-controls="siren-translate-panel">中文机翻</button></div>
-          <div id="siren-translate-panel" hidden><p class="siren-note">仅在同意并点击翻译时向 MyMemory 发送当前整理英文；不发送截图或字形。专名和规则需要人工核对。</p><label><input type="checkbox" id="siren-translate-consent"> 同意发送当前整理英文</label><div class="siren-actions"><button type="button" id="siren-translate" class="secondary" disabled>翻译当前英文</button><button type="button" id="siren-translate-cancel" class="text-button" hidden>取消</button><button type="button" id="siren-copy-chinese" class="text-button" disabled>复制中文</button></div><p id="siren-translate-status" class="siren-note" role="status"></p><textarea id="siren-chinese" rows="5" readonly aria-label="中文机翻结果"></textarea></div>
+          <div id="siren-translate-panel" hidden><p class="siren-note">仅在同意并点击翻译时向 MyMemory 发送当前整理英文；不发送截图或字形。不是官方译文，专名和规则以官方中文剧情书及规则书为准。</p><label><input type="checkbox" id="siren-translate-consent"> 同意发送当前整理英文</label><div class="siren-actions"><button type="button" id="siren-translate" class="secondary" disabled>翻译当前英文</button><button type="button" id="siren-translate-cancel" class="text-button" hidden>取消</button><button type="button" id="siren-copy-chinese" class="text-button" disabled>复制中文</button></div><p id="siren-translate-status" class="siren-note" role="status"></p><textarea id="siren-chinese" rows="5" readonly aria-label="中文机翻结果"></textarea></div>
         </div>
       </fieldset><p id="siren-status" class="siren-note" role="status" aria-live="polite">正在加载高清字形…</p>
     </section>
@@ -560,7 +562,7 @@
       }
     }
     const c=value.context??null;
-    if(c!==null&&(!plain(c)||Object.keys(c).some(k=>!['book','entry','key','chapter','encounter'].includes(k)||typeof c[k]!=='string'||c[k].length>200)))throw Error('故事书来源格式不正确。');
+    if(c!==null&&(!plain(c)||Object.keys(c).some(k=>!['book','entry','key','chapter','encounter'].includes(k)||typeof c[k]!=='string'||c[k].length>200)))throw Error('剧情书来源格式不正确。');
     return copy({writer:value.writer,mappings:value.mappings,context:c});
   }
   function create(config,env){
@@ -1012,8 +1014,7 @@
     }
     return tokens.reverse();
   }
-  async function recognize(image,templateMasks,options={},progress=()=>{}){
-    const mask=binarize(image,options),templates=prepareTemplates(templateMasks,options),bands=rowBands(mask,options.oneLine,templates);
+  async function recognizeMask(mask,templates,options,progress,bands=rowBands(mask,options.oneLine,templates)){
     if(bands.length>100)throw Error('内容超过100行，请分段框选。');
     const lines=[];let count=0;
     for(let i=0;i<bands.length;i++){
@@ -1023,11 +1024,156 @@
       lines.push({box:bands[i],tokens});progress({done:i+1,total:bands.length});
       await new Promise(resolve=>setTimeout(resolve,0));
     }
-    return {lines,threshold:mask.threshold,polarity:mask.polarity,width:image.width,height:image.height,detail:options.detail!==false};
+    if(options.cancelled?.())throw Error('已取消识别。');
+    return {lines,threshold:mask.threshold,polarity:mask.polarity,width:mask.width,height:mask.height,detail:options.detail!==false};
   }
+  function overlap(a,b){
+    const area=Math.max(0,Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y));
+    return area/(a.width*a.height+b.width*b.height-area||1);
+  }
+  function imageEvidence(result){
+    let sum=0,weight=0;
+    for(const line of result.lines)for(const token of line.tokens){
+      const w=token.box.width/line.box.height;sum+=token.score*w-.025;weight+=w;
+    }
+    return weight?sum/weight:0;
+  }
+  function hasSoftEdges(gray,width,box,threshold,polarity){
+    const hist=new Uint32Array(256),split=polarity==='light'?254-threshold:threshold;
+    for(let y=box.y;y<box.y+box.height;y++)for(let x=box.x;x<box.x+box.width;x++){
+      const value=gray[y*width+x];hist[polarity==='light'?255-value:value]++;
+    }
+    let foreground=0,background=Math.min(255,split+1);
+    for(let i=0;i<=split;i++)if(hist[i]>hist[foreground])foreground=i;
+    for(let i=split+1;i<256;i++)if(hist[i]>hist[background])background=i;
+    const contrast=background-foreground;if(contrast<40)return false;
+    let ink=0,soft=0;
+    for(let i=0;i<background-contrast*.05;i++){
+      ink+=hist[i];if(i>foreground+contrast*.2&&i<background-contrast*.2)soft+=hist[i];
+    }
+    // Resampling already sharp binary edges invents intermediate shades and
+    // may favor the wrong partition. Only use it with measured soft edges.
+    return ink>0&&soft/ink>=.2;
+  }
+  function subpixelMask(gray,image,box,threshold,polarity){
+    const scale=3,width=box.width*scale,height=box.height*scale,data=new Uint8Array(width*height);
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+      const sx=box.x+(x+.5)/scale-.5,sy=box.y+(y+.5)/scale-.5,ix=Math.floor(sx),iy=Math.floor(sy),dx=sx-ix,dy=sy-iy;
+      let value=0;
+      for(let j=0;j<2;j++)for(let i=0;i<2;i++)value+=gray[Math.max(0,Math.min(image.height-1,iy+j))*image.width+Math.max(0,Math.min(image.width-1,ix+i))]*(i?dx:1-dx)*(j?dy:1-dy);
+      value=Math.round(value);data[y*width+x]=Number(polarity==='light'?value>threshold:value<=threshold);
+    }
+    return {width,height,data,threshold,polarity};
+  }
+  async function refineSmallRows(image,gray,baseline,templates,thresholds,options,progress){
+    const lines=[];let refined=0,count=0;
+    for(let row=0;row<baseline.lines.length;row++){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      const original=baseline.lines[row],b=original.box;
+      // Interpolation adds no information: it only provides fractional cut
+      // sites for small, antialiased strokes. Keep very tiny rows unchanged.
+      const x=Math.max(0,b.x-2),y=Math.max(0,b.y-2),region={x,y,width:Math.min(image.width,b.x+b.width+2)-x,height:Math.min(image.height,b.y+b.height+2)-y};
+      let chosen=original,quality=imageEvidence({lines:[original]}),selectedThreshold=baseline.threshold;
+      const passes=[original];
+      if(b.height>=30&&b.height<40&&region.width*region.height*9<=1200000&&hasSoftEdges(gray,image.width,b,baseline.threshold,baseline.polarity)){
+        for(const threshold of [baseline.threshold,...thresholds]){
+          if(options.cancelled?.())throw Error('已取消识别。');
+          const mask=subpixelMask(gray,image,region,threshold,baseline.polarity),bands=rowBands(mask,false,templates);
+          if(bands.length!==1)continue;
+          const mapBox=box=>{
+            const left=Math.max(0,Math.floor(box.x/3+x)),top=Math.max(0,Math.floor(box.y/3+y));
+            return {x:left,y:top,width:Math.min(image.width,Math.ceil((box.x+box.width)/3+x))-left,height:Math.min(image.height,Math.ceil((box.y+box.height)/3+y))-top};
+          };
+          if(overlap(mapBox(bands[0]),b)<.8)continue;
+          let tokens;
+          try{tokens=recognizeLine(mask,bands[0],templates);}
+          catch(error){
+            if(/^(单行内容过多|无法切分这一行)/.test(error.message))continue;
+            throw error;
+          }
+          const pass={box:bands[0],tokens};
+          const evidence=imageEvidence({lines:[pass]});
+          // Evaluate before rounding to source-pixel boxes. Rounding must not
+          // become extra evidence for a wider or more fragmented candidate.
+          pass.box=mapBox(pass.box);pass.tokens=tokens.map(t=>({...t,certain:t.certain&&t.box.height/3>=30,box:mapBox(t.box)}));passes.push(pass);
+          if(evidence>quality+.008){chosen=pass;quality=evidence;selectedThreshold=threshold;}
+          progress({done:row+1,total:baseline.lines.length,pass:2});
+          await new Promise(resolve=>setTimeout(resolve,0));
+        }
+      }
+      if(chosen!==original){
+        refined++;
+        for(const token of chosen.tokens){
+          const peers=passes.filter(p=>p!==chosen).flatMap(p=>p.tokens).filter(t=>overlap(t.box,token.box)>=.7);
+          token.samplingStable=peers.some(t=>t.id===token.id&&t.score>=.7&&(t.candidates[0]?.score||0)-(t.candidates[1]?.score||0)>=.035);
+          // The original resolution gate still applies, never the enlarged
+          // sampling grid. A new choice also needs another pass's support.
+          token.certain=token.certain&&b.height>=30&&token.samplingStable;
+        }
+        chosen={...chosen,sampling:{scale:3,threshold:selectedThreshold,sourceHeight:b.height}};
+      }
+      lines.push(chosen);count+=chosen.tokens.length;
+      if(count>1500)throw Error('内容超过1500个字形，请分段识别。');
+    }
+    if(options.cancelled?.())throw Error('已取消识别。');
+    return {...baseline,lines,samplingRefinement:{rows:refined,scale:3}};
+  }
+  async function recognize(image,templateMasks,options={},progress=()=>{}){
+    const mask=binarize(image,options),templates=prepareTemplates(templateMasks,options);
+    const baseline=await recognizeMask(mask,templates,options,p=>progress({...p,pass:1}));
+    // A manual threshold is authoritative. Keep the coarse comparison as an
+    // explicit single-pass fallback; only automatic fine comparison sweeps.
+    if(options.threshold!=null||options.detail===false||!baseline.lines.length)return baseline;
+    const {gray,hist}=grayImage(image),dark=mask.polarity==='dark';
+    let background=mask.threshold;
+    for(let v=dark?mask.threshold+1:0;v<(dark?256:mask.threshold);v++)if(hist[v]>hist[background])background=v;
+    // Search only part of the gap toward the background peak: recovering faint
+    // tips must not flood paper texture or join adjacent rows. No image IDs,
+    // letters, word counts or expected text participate in this decision.
+    const thresholds=[...new Set([1/6,1/3].map(f=>Math.max(0,Math.min(254,Math.round(mask.threshold+(background-mask.threshold)*f)))))].filter(t=>Math.abs(t-mask.threshold)>=4);
+    if(baseline.lines.some(l=>l.box.height<40))return refineSmallRows(image,gray,baseline,templates,thresholds,options,progress);
+    const passes=[baseline];let previousMask=mask;
+    for(const threshold of thresholds){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      const variant=binarize(image,{threshold,polarity:mask.polarity});
+      if(variant.data.every((v,i)=>v===previousMask.data[i]))continue;
+      previousMask=variant;
+      let result;
+      try{
+        const bands=rowBands(variant,options.oneLine,templates);
+        if(bands.length!==baseline.lines.length||bands.some((b,i)=>overlap(b,baseline.lines[i].box)<.8))continue;
+        result=await recognizeMask(variant,templates,options,p=>progress({...p,pass:passes.length+1}),bands);
+      }
+      catch(error){
+        if(options.cancelled?.())throw error;
+        // A more permissive threshold can expose paper texture. Keep the
+        // successful baseline instead of failing a previously readable page.
+        if(/^(内容超过|单行内容过多|无法切分这一行)/.test(error.message))continue;
+        throw error;
+      }
+      // Avoid taking a high average score caused by missing or merged rows.
+      if(result.lines.length===baseline.lines.length&&result.lines.every((l,i)=>overlap(l.box,baseline.lines[i].box)>=.8))passes.push(result);
+    }
+    let chosen=baseline,quality=imageEvidence(baseline);
+    for(const pass of passes.slice(1)){
+      const score=imageEvidence(pass);
+      if(score>quality+.008){chosen=pass;quality=score;}
+    }
+    if(chosen!==baseline){
+      for(let row=0;row<chosen.lines.length;row++)for(const token of chosen.lines[row].tokens){
+        const peers=passes.filter(p=>p!==chosen).flatMap(p=>p.lines[row].tokens).filter(t=>overlap(t.box,token.box)>=.7);
+        // New automatic output needs independent threshold support, in addition
+        // to unchanged pixel/runner-up/boundary/resolution confidence gates.
+        token.thresholdStable=peers.some(t=>t.id===token.id&&t.score>=.7&&(t.candidates[0]?.score||0)-(t.candidates[1]?.score||0)>=.035);
+        token.certain=token.certain&&token.thresholdStable;
+      }
+    }
+    return {...chosen,thresholdSearch:{baseline:baseline.threshold,selected:chosen.threshold,passes:passes.map(p=>({threshold:p.threshold,evidence:imageEvidence(p)}))}};
+  }
+  function tokenGlyph(token){return token.id||token.candidates?.[0]?.id||null;}
   function tokenReading(token,mapping){
-    if(!token.id||(!token.certain&&!token.manual))return '[?]';
-    const value=typeof mapping[token.id]==='string'?mapping[token.id]:'';
+    const id=tokenGlyph(token);if(!id)return '[?]';
+    const value=typeof mapping[id]==='string'?mapping[id]:'';
     return value||'[未映射]';
   }
   function transcribe(result,mapping,{joinLines=false,separate=false}={}){
@@ -1039,12 +1185,13 @@
       if(index&&!joinLines)text+='\n';
       for(const token of line.tokens){
         const value=tokenReading(token,mapping),start=text.length;text+=value;
-        if(token.id&&(token.certain||token.manual))spans.push({glyph:token.id,start,end:text.length,text:value});
+        const id=tokenGlyph(token);
+        if(id)spans.push({glyph:id,start,end:text.length,text:value});
       }
     });
     return {text,spans};
   }
-  return {binarize,bounds,describe,prepareTemplates,matchDescriptor,rowBands,recognizeLine,recognize,tokenReading,transcribe,toWriter};
+  return {binarize,bounds,describe,prepareTemplates,matchDescriptor,rowBands,recognizeLine,recognize,tokenGlyph,tokenReading,transcribe,toWriter};
 });
 
   /* Selected-region image evidence only. No mapping, text, dictionary or persistence. */
@@ -1594,6 +1741,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     formattedDraft.clear();$('ocr-formatted').value='';$('ocr-format-status').textContent='';
     translation.invalidate('识别结果已清除，请重新整理后翻译。');endRebox();
     result=null;resultImage=null;selected=null;deepSuggestion=null;$('ocr-deep-candidates').replaceChildren();$('ocr-deep-status').textContent='';$('ocr-results').hidden=true;$('ocr-review').hidden=true;$('ocr-inspection').hidden=true;
+    $('ocr-token-details').open=false;$('ocr-output-note').textContent='';
     setTranslationOpen(false);
     $('ocr-output').value='';$('ocr-tokens').replaceChildren();$('ocr-candidates').replaceChildren();
     $('ocr-piece').width=1;$('ocr-piece').height=1;$('ocr-choice-image').removeAttribute('src');
@@ -1643,6 +1791,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
       for(const [li,row] of result.lines.entries())for(const [ti,t] of row.tokens.entries()){
         const b=t.box;if(end.x>=crop.x+b.x&&end.x<crop.x+b.x+b.width&&end.y>=crop.y+b.y&&end.y<crop.y+b.y+b.height){select(li,ti);return;}
       }
+      closeReview();
     }draw();
   });
   preview.addEventListener('pointercancel',()=>{drag=null;draw();});
@@ -1723,7 +1872,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     }))).catch(e=>{templatesPromise=null;throw e;});
     templates=await templatesPromise;prepared=OCR.prepareTemplates(templates,options());return templates;
   }
-  function progress(p){message(`正在按图形匹配：${p.done} / ${p.total} 行…`);}
+  function progress(p){message(`正在按图形匹配${p.pass>1?'（细笔画复核）':''}：${p.done} / ${p.total} 行…`);}
   async function recognize(){
     if(!source||busy)return;
     if(result&&!confirm('重新识别会替换本次结果和手动校正，继续吗？'))return;
@@ -1752,20 +1901,20 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
       if(!result.lines.length)message('未找到有效字形行。请检查框选范围、黑白方向或阈值。');
       else message(`识别完成，共 ${result.lines.length} 行。${result.polarity==='dark'?'深字浅底':'浅字深底'}，阈值 ${result.threshold}。请复核橙色项目及分割边界。`);
     }catch(e){if(version===job){message('识别失败：'+e.message);clearResult();}}
-    finally{if(version===job){worker?.terminate();worker=null;setBusy(false);}}
+    finally{if(version===job){worker?.terminate();worker=null;setBusy(false);if(result?.lines.length)$('ocr-results').scrollIntoView({block:'start'});}}
   }
   $('ocr-run').addEventListener('click',recognize);
   $('ocr-cancel').addEventListener('click',()=>{loading++;cancel();message('已取消。可以调整框选后重新识别。');});
   function renderResults(){
     if(!result)return;
-    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,unmapped=0,total=0;
+    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,unmapped=0,total=0,noCandidate=0;
     result.lines.forEach((line,li)=>{
       const row=document.createElement('div');row.className='ocr-token-line';const title=document.createElement('span');title.className='ocr-row-label';title.textContent=`第 ${li+1} 行`;row.append(title);
       line.tokens.forEach((token,ti)=>{
-        total++;const accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;else if(!map[token.id])unmapped++;
-        const b=document.createElement('button');b.type='button';b.className='ocr-token';b.classList.toggle('uncertain',!accepted);b.classList.toggle('unmapped',!!accepted&&!map[token.id]);b.setAttribute('aria-pressed',String(selected?.line===li&&selected?.token===ti));
-        const top=document.createElement('span');top.textContent=`${ti+1} · ${token.id?label(token.id):'未知'}`;
-        if(token.id)b.append(imageElement(token.id));
+        total++;const id=OCR.tokenGlyph(token),accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;if(!id)noCandidate++;else if(!map[id])unmapped++;
+        const b=document.createElement('button');b.type='button';b.className='ocr-token';b.dataset.line=li;b.dataset.token=ti;b.classList.toggle('uncertain',!accepted);b.classList.toggle('unmapped',!!accepted&&!map[id]);b.setAttribute('aria-pressed',String(selected?.line===li&&selected?.token===ti));
+        const top=document.createElement('span');top.textContent=`${ti+1} · ${id?label(id):'未知'}`;
+        if(id)b.append(imageElement(id));
         const text=document.createElement('strong');text.textContent=reading;b.append(top,text);
         b.title=`第${li+1}行第${ti+1}项 · ${token.manual?'已人工确认':accepted?'自动匹配，仍建议复核':'待确认'} · 点击核对原图`;
         b.addEventListener('click',()=>select(li,ti));row.append(b);
@@ -1773,11 +1922,25 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     });
     $('ocr-results').hidden=!total;$('ocr-inspection').hidden=!total;$('ocr-summary').textContent=`${total} 个分割项 · ${unknown} 个待确认 · ${unmapped} 个未映射。相似度仅为图形评分，不是正确率。`;
     $('ocr-output').value=OCR.transcribe(result,map,outputOptions());
+    $('ocr-output-note').textContent=unknown?`${unknown} 项尚待确认，已有候选先按当前映射输出${noCandidate?`；${noCandidate} 项无候选，显示 [?]`:''}。需要时展开逐字复核。`:'已按当前映射输出。需要校正时，可展开逐字复核。';
     refreshFormatted();
     list.scrollTop=scroll;
-    if(selected)renderReview();
+    if(selected)renderReview();else $('ocr-review').hidden=true;
   }
-  function select(line,token){endRebox();selected={line,token};renderResults();draw();}
+  function select(line,token){endRebox();selected={line,token};$('ocr-token-details').open=true;renderResults();draw();}
+  function closeReview(){
+    endRebox();selected=null;deepSuggestion=null;$('ocr-review').hidden=true;
+    $('ocr-deep-candidates').replaceChildren();$('ocr-deep-status').textContent='';
+    $('ocr-tokens').querySelectorAll('[aria-pressed="true"]').forEach(b=>b.setAttribute('aria-pressed','false'));draw();
+  }
+  $('ocr-token-details').addEventListener('toggle',()=>{if(!$('ocr-token-details').open)closeReview();});
+  document.addEventListener('click',e=>{
+    if(!selected||panel.hidden||busy||rebox)return;
+    // Blank areas dismiss the editor. Controls, comparison images and screenshot
+    // gestures keep their own behavior; candidate selection is only a preview.
+    if(e.target.closest('button,a,input,select,textarea,summary,label,figure,#ocr-preview,#ocr-rebox-bar'))return;
+    closeReview();
+  });
   function active(){return selected&&result?.lines[selected.line]?.tokens[selected.token];}
   function renderReview(){
     const token=active();if(!token)return;$('ocr-review').hidden=false;
@@ -1806,7 +1969,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     }
     $('ocr-choice').replaceChildren();
     for(const id of ids){const option=document.createElement('option');option.value=id;option.textContent=`${label(id)} · ${map[id]||'未映射'}`;$('ocr-choice').append(option);}
-    $('ocr-choice').value=token.id||ids[0];showChoice();
+    $('ocr-choice').value=OCR.tokenGlyph(token)||ids[0];showChoice();
     $('ocr-merge').disabled=selected.token>=result.lines[selected.line].tokens.length-1;
   }
   function showChoice(){const id=$('ocr-choice').value;$('ocr-choice-image').src=glyphs[id].src;$('ocr-choice-image').alt=label(id);$('ocr-add-sample').disabled=!samples||!active()?.manual||active().id!==id;}
@@ -1830,7 +1993,11 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     }catch(e){message(e.message);}
   });
   $('ocr-choice').addEventListener('change',showChoice);
-  $('ocr-confirm').addEventListener('click',()=>{const t=active();if(!t)return;endRebox();t.id=$('ocr-choice').value;t.manual=true;t.certain=false;renderResults();draw();});
+  $('ocr-confirm').addEventListener('click',()=>{
+    const t=active();if(!t)return;const position={...selected};t.id=$('ocr-choice').value;t.manual=true;t.certain=false;
+    closeReview();renderResults();draw();
+    $('ocr-tokens').querySelector(`[data-line="${position.line}"][data-token="${position.token}"]`)?.focus({preventScroll:true});
+  });
   $('ocr-unknown').addEventListener('click',()=>{const t=active();if(!t)return;endRebox();t.manual=false;t.certain=false;renderResults();draw();});
   $('ocr-edit-map').addEventListener('click',()=>{endRebox();if(active())editMapping($('ocr-choice').value);});
   function imageMask(excludedBoxes=[]){return BabelianOCRCorrection.exclude(OCR.binarize(resultImage,{threshold:result.threshold,polarity:result.polarity}),excludedBoxes);}
@@ -1868,7 +2035,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     $('ocr-formatted-copy').disabled=!!state.error;$('ocr-formatted-append').disabled=!!state.error;
     $('ocr-format-status').textContent=state.error||(
       state.dirty?'已手动调整空格或标点；原文字母与大小写保持不变。':
-      '自动整理建议。'+(state.meta.punctuationCount?` ${state.meta.punctuationCount} 处标点/句界由规则推测，不代表故事书原标点。`:' 本次仅补分词空格，未添加标点。')+
+      '自动整理建议。'+(state.meta.punctuationCount?` ${state.meta.punctuationCount} 处标点/句界由规则推测，不代表剧情书原标点。`:' 本次仅补分词空格，未添加标点。')+
       (state.meta.unknown.length?` ${state.meta.unknown.length} 个片段未在词表中找到，请复核或补充词语。`:''));
     syncTranslation();
   }
@@ -1932,7 +2099,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     catch(_){field.focus();field.select();notify(document.execCommand('copy')?'已复制中文译文。':'请全选并复制中文译文。');}
   });
   $('ocr-copy').addEventListener('click',async()=>{
-    const field=$('ocr-output');try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(field.value);notify('已复制识别英文，含未确认占位符。');}
+    const field=$('ocr-output');try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(field.value);notify('已复制识别英文，包含待确认候选。');}
     catch(_){field.focus();field.select();notify(document.execCommand('copy')?'已复制识别英文。':'请在结果框中全选并复制。');}
   });
   $('ocr-append').addEventListener('click',()=>{if(result)append(OCR.toWriter(result,mapping(),outputOptions()));});

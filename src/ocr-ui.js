@@ -20,6 +20,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     formattedDraft.clear();$('ocr-formatted').value='';$('ocr-format-status').textContent='';
     translation.invalidate('识别结果已清除，请重新整理后翻译。');endRebox();
     result=null;resultImage=null;selected=null;deepSuggestion=null;$('ocr-deep-candidates').replaceChildren();$('ocr-deep-status').textContent='';$('ocr-results').hidden=true;$('ocr-review').hidden=true;$('ocr-inspection').hidden=true;
+    $('ocr-token-details').open=false;$('ocr-output-note').textContent='';
     setTranslationOpen(false);
     $('ocr-output').value='';$('ocr-tokens').replaceChildren();$('ocr-candidates').replaceChildren();
     $('ocr-piece').width=1;$('ocr-piece').height=1;$('ocr-choice-image').removeAttribute('src');
@@ -69,6 +70,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
       for(const [li,row] of result.lines.entries())for(const [ti,t] of row.tokens.entries()){
         const b=t.box;if(end.x>=crop.x+b.x&&end.x<crop.x+b.x+b.width&&end.y>=crop.y+b.y&&end.y<crop.y+b.y+b.height){select(li,ti);return;}
       }
+      closeReview();
     }draw();
   });
   preview.addEventListener('pointercancel',()=>{drag=null;draw();});
@@ -149,7 +151,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     }))).catch(e=>{templatesPromise=null;throw e;});
     templates=await templatesPromise;prepared=OCR.prepareTemplates(templates,options());return templates;
   }
-  function progress(p){message(`正在按图形匹配：${p.done} / ${p.total} 行…`);}
+  function progress(p){message(`正在按图形匹配${p.pass>1?'（细笔画复核）':''}：${p.done} / ${p.total} 行…`);}
   async function recognize(){
     if(!source||busy)return;
     if(result&&!confirm('重新识别会替换本次结果和手动校正，继续吗？'))return;
@@ -178,20 +180,20 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
       if(!result.lines.length)message('未找到有效字形行。请检查框选范围、黑白方向或阈值。');
       else message(`识别完成，共 ${result.lines.length} 行。${result.polarity==='dark'?'深字浅底':'浅字深底'}，阈值 ${result.threshold}。请复核橙色项目及分割边界。`);
     }catch(e){if(version===job){message('识别失败：'+e.message);clearResult();}}
-    finally{if(version===job){worker?.terminate();worker=null;setBusy(false);}}
+    finally{if(version===job){worker?.terminate();worker=null;setBusy(false);if(result?.lines.length)$('ocr-results').scrollIntoView({block:'start'});}}
   }
   $('ocr-run').addEventListener('click',recognize);
   $('ocr-cancel').addEventListener('click',()=>{loading++;cancel();message('已取消。可以调整框选后重新识别。');});
   function renderResults(){
     if(!result)return;
-    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,unmapped=0,total=0;
+    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,unmapped=0,total=0,noCandidate=0;
     result.lines.forEach((line,li)=>{
       const row=document.createElement('div');row.className='ocr-token-line';const title=document.createElement('span');title.className='ocr-row-label';title.textContent=`第 ${li+1} 行`;row.append(title);
       line.tokens.forEach((token,ti)=>{
-        total++;const accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;else if(!map[token.id])unmapped++;
-        const b=document.createElement('button');b.type='button';b.className='ocr-token';b.classList.toggle('uncertain',!accepted);b.classList.toggle('unmapped',!!accepted&&!map[token.id]);b.setAttribute('aria-pressed',String(selected?.line===li&&selected?.token===ti));
-        const top=document.createElement('span');top.textContent=`${ti+1} · ${token.id?label(token.id):'未知'}`;
-        if(token.id)b.append(imageElement(token.id));
+        total++;const id=OCR.tokenGlyph(token),accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;if(!id)noCandidate++;else if(!map[id])unmapped++;
+        const b=document.createElement('button');b.type='button';b.className='ocr-token';b.dataset.line=li;b.dataset.token=ti;b.classList.toggle('uncertain',!accepted);b.classList.toggle('unmapped',!!accepted&&!map[id]);b.setAttribute('aria-pressed',String(selected?.line===li&&selected?.token===ti));
+        const top=document.createElement('span');top.textContent=`${ti+1} · ${id?label(id):'未知'}`;
+        if(id)b.append(imageElement(id));
         const text=document.createElement('strong');text.textContent=reading;b.append(top,text);
         b.title=`第${li+1}行第${ti+1}项 · ${token.manual?'已人工确认':accepted?'自动匹配，仍建议复核':'待确认'} · 点击核对原图`;
         b.addEventListener('click',()=>select(li,ti));row.append(b);
@@ -199,11 +201,25 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     });
     $('ocr-results').hidden=!total;$('ocr-inspection').hidden=!total;$('ocr-summary').textContent=`${total} 个分割项 · ${unknown} 个待确认 · ${unmapped} 个未映射。相似度仅为图形评分，不是正确率。`;
     $('ocr-output').value=OCR.transcribe(result,map,outputOptions());
+    $('ocr-output-note').textContent=unknown?`${unknown} 项尚待确认，已有候选先按当前映射输出${noCandidate?`；${noCandidate} 项无候选，显示 [?]`:''}。需要时展开逐字复核。`:'已按当前映射输出。需要校正时，可展开逐字复核。';
     refreshFormatted();
     list.scrollTop=scroll;
-    if(selected)renderReview();
+    if(selected)renderReview();else $('ocr-review').hidden=true;
   }
-  function select(line,token){endRebox();selected={line,token};renderResults();draw();}
+  function select(line,token){endRebox();selected={line,token};$('ocr-token-details').open=true;renderResults();draw();}
+  function closeReview(){
+    endRebox();selected=null;deepSuggestion=null;$('ocr-review').hidden=true;
+    $('ocr-deep-candidates').replaceChildren();$('ocr-deep-status').textContent='';
+    $('ocr-tokens').querySelectorAll('[aria-pressed="true"]').forEach(b=>b.setAttribute('aria-pressed','false'));draw();
+  }
+  $('ocr-token-details').addEventListener('toggle',()=>{if(!$('ocr-token-details').open)closeReview();});
+  document.addEventListener('click',e=>{
+    if(!selected||panel.hidden||busy||rebox)return;
+    // Blank areas dismiss the editor. Controls, comparison images and screenshot
+    // gestures keep their own behavior; candidate selection is only a preview.
+    if(e.target.closest('button,a,input,select,textarea,summary,label,figure,#ocr-preview,#ocr-rebox-bar'))return;
+    closeReview();
+  });
   function active(){return selected&&result?.lines[selected.line]?.tokens[selected.token];}
   function renderReview(){
     const token=active();if(!token)return;$('ocr-review').hidden=false;
@@ -232,7 +248,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     }
     $('ocr-choice').replaceChildren();
     for(const id of ids){const option=document.createElement('option');option.value=id;option.textContent=`${label(id)} · ${map[id]||'未映射'}`;$('ocr-choice').append(option);}
-    $('ocr-choice').value=token.id||ids[0];showChoice();
+    $('ocr-choice').value=OCR.tokenGlyph(token)||ids[0];showChoice();
     $('ocr-merge').disabled=selected.token>=result.lines[selected.line].tokens.length-1;
   }
   function showChoice(){const id=$('ocr-choice').value;$('ocr-choice-image').src=glyphs[id].src;$('ocr-choice-image').alt=label(id);$('ocr-add-sample').disabled=!samples||!active()?.manual||active().id!==id;}
@@ -256,7 +272,11 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     }catch(e){message(e.message);}
   });
   $('ocr-choice').addEventListener('change',showChoice);
-  $('ocr-confirm').addEventListener('click',()=>{const t=active();if(!t)return;endRebox();t.id=$('ocr-choice').value;t.manual=true;t.certain=false;renderResults();draw();});
+  $('ocr-confirm').addEventListener('click',()=>{
+    const t=active();if(!t)return;const position={...selected};t.id=$('ocr-choice').value;t.manual=true;t.certain=false;
+    closeReview();renderResults();draw();
+    $('ocr-tokens').querySelector(`[data-line="${position.line}"][data-token="${position.token}"]`)?.focus({preventScroll:true});
+  });
   $('ocr-unknown').addEventListener('click',()=>{const t=active();if(!t)return;endRebox();t.manual=false;t.certain=false;renderResults();draw();});
   $('ocr-edit-map').addEventListener('click',()=>{endRebox();if(active())editMapping($('ocr-choice').value);});
   function imageMask(excludedBoxes=[]){return BabelianOCRCorrection.exclude(OCR.binarize(resultImage,{threshold:result.threshold,polarity:result.polarity}),excludedBoxes);}
@@ -294,7 +314,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     $('ocr-formatted-copy').disabled=!!state.error;$('ocr-formatted-append').disabled=!!state.error;
     $('ocr-format-status').textContent=state.error||(
       state.dirty?'已手动调整空格或标点；原文字母与大小写保持不变。':
-      '自动整理建议。'+(state.meta.punctuationCount?` ${state.meta.punctuationCount} 处标点/句界由规则推测，不代表故事书原标点。`:' 本次仅补分词空格，未添加标点。')+
+      '自动整理建议。'+(state.meta.punctuationCount?` ${state.meta.punctuationCount} 处标点/句界由规则推测，不代表剧情书原标点。`:' 本次仅补分词空格，未添加标点。')+
       (state.meta.unknown.length?` ${state.meta.unknown.length} 个片段未在词表中找到，请复核或补充词语。`:''));
     syncTranslation();
   }
@@ -358,7 +378,7 @@ globalThis.BabelianOCRUI={mount({glyphs,wordData,getMapping,editMapping,append,n
     catch(_){field.focus();field.select();notify(document.execCommand('copy')?'已复制中文译文。':'请全选并复制中文译文。');}
   });
   $('ocr-copy').addEventListener('click',async()=>{
-    const field=$('ocr-output');try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(field.value);notify('已复制识别英文，含未确认占位符。');}
+    const field=$('ocr-output');try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(field.value);notify('已复制识别英文，包含待确认候选。');}
     catch(_){field.focus();field.select();notify(document.execCommand('copy')?'已复制识别英文。':'请在结果框中全选并复制。');}
   });
   $('ocr-append').addEventListener('click',()=>{if(result)append(OCR.toWriter(result,mapping(),outputOptions()));});
