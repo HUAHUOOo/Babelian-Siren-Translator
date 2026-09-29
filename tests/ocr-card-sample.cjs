@@ -16,7 +16,9 @@ function distance(a,b){let p=Array.from({length:b.length+1},(_,i)=>i);for(let i=
   const report={inverse,seconds:(Date.now()-start)/1000,expected:flat.length,lines:result.lines.length,tokens:tokens.length,edits:distance(flat,tokens.map(t=>t.id)),missing:tokens.filter(t=>!OCR.tokenGlyph(t)).length,certain:tokens.filter(t=>t.certain).length,refinedRows:result.lines.filter(l=>l.segmentation).length,threshold:result.threshold,actual:result.lines.map(l=>l.tokens.map(t=>t.id||'?').join(' '))};reports.push(report);
   assert.deepEqual(Buffer.from(image.data),bytes);
   if(!process.env.BABELIAN_REFERENCE_ENGINE){
-   assert.deepEqual(result.lines.map(l=>l.tokens.map(t=>t.id)),expected);assert.equal(report.missing,0);assert.equal(report.certain,0,'27px image remains pending');
+   assert.deepEqual(result.lines.map(l=>l.tokens.map(t=>t.id)),expected);assert.equal(report.missing,0);
+   for(const t of tokens)if(t.box.height<30)assert(!t.certain,'Tiny source glyphs remain pending');
+   if(fixture.minPending!=null)assert(tokens.length-report.certain>=fixture.minPending,'Keep ambiguous items pending');
    const map=Object.fromEntries(masks.map(m=>[m.id,m.id]));
    assert(!OCR.transcribe(result,map).includes('[?]'),'Pending candidates appear in the output');
    for(const t of tokens){assert(t.box.x>=0&&t.box.y>=0);assert(t.box.x+t.box.width<=width&&t.box.y+t.box.height<=height);}

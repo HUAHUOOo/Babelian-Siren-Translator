@@ -1022,11 +1022,13 @@
       if(options.cancelled?.())throw Error('已取消识别。');
       let tokens=recognizeLine(mask,bands[i],templates),segmentation;
       const box=bands[i],baseline={box,tokens};
-      // Small printed glyphs can touch through several dark pixels rather than
+      // Printed glyphs can touch through several dark pixels rather than
       // a one-pixel bridge. Offer additional local projection valleys, then
       // compare the complete row using the same image-only objective. Do not
       // force the new cuts, infer letters from words, or raise confidence.
-      if(options.detail!==false&&box.height>=16&&box.height<40&&imageEvidence({lines:[baseline]})<.86){
+      // Source height alone does not distinguish a clean glyph from a larger
+      // scan with connected strokes. Gate on row evidence at every usable size.
+      if(options.detail!==false&&box.height>=16&&imageEvidence({lines:[baseline]})<.86){
         if(options.cancelled?.())throw Error('已取消识别。');
         try{
           const refined=recognizeLine(mask,box,templates,true);
