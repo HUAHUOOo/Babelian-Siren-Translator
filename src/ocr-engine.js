@@ -136,7 +136,7 @@
     }
     return out.filter(b=>b.height>=5);
   }
-  function atomsFor(mask,box){
+  function atomsFor(mask,box,touching=false){
     const cols=[];
     for(let x=box.x;x<box.x+box.width;x++){let n=0;for(let y=box.y;y<box.y+box.height;y++)n+=mask.data[y*mask.width+x];cols.push(n);}
     const atoms=[];let start=-1;
@@ -148,9 +148,10 @@
     const split=[];
     for(const a of atoms){
       let from=a.start;
-      for(let x=a.start+3;x<a.end-3;x++){
+      const inset=touching?1:3;
+      for(let x=a.start+inset;x<a.end-inset;x++){
         const i=x-box.x,n=cols[i];
-        if(x-from>=box.height*.18&&n<=Math.max(1,box.height*.055)&&n<cols[i-1]&&n<=cols[i+1]){
+        if(x-from>=box.height*(touching?.06:.18)&&n<=Math.max(1,box.height*(touching?.25:.055))&&n<cols[i-1]&&n<=cols[i+1]){
           split.push({start:from,end:x});from=x;
         }
       }
@@ -158,8 +159,8 @@
     }
     return split;
   }
-  function recognizeLine(mask,box,templates){
-    const atoms=atomsFor(mask,box),n=atoms.length;
+  function recognizeLine(mask,box,templates,touching=false){
+    const atoms=atomsFor(mask,box,touching),n=atoms.length;
     if(n>1400)throw Error('单行内容过多，请分段框选。');
     const costs=new Float64Array(n+1).fill(Infinity),back=Array(n+1),edges=[];costs[0]=0;
     for(let i=0;i<n;i++){
@@ -217,9 +218,31 @@
     const lines=[];let count=0;
     for(let i=0;i<bands.length;i++){
       if(options.cancelled?.())throw Error('已取消识别。');
-      const tokens=recognizeLine(mask,bands[i],templates);count+=tokens.length;
+      let tokens=recognizeLine(mask,bands[i],templates),segmentation;
+      const box=bands[i],baseline={box,tokens};
+      // Small printed glyphs can touch through several dark pixels rather than
+      // a one-pixel bridge. Offer additional local projection valleys, then
+      // compare the complete row using the same image-only objective. Do not
+      // force the new cuts, infer letters from words, or raise confidence.
+      if(options.detail!==false&&box.height>=16&&box.height<40&&imageEvidence({lines:[baseline]})<.86){
+        if(options.cancelled?.())throw Error('已取消识别。');
+        try{
+          const refined=recognizeLine(mask,box,templates,true);
+          if(imageEvidence({lines:[{box,tokens:refined}]})>imageEvidence({lines:[baseline]})+.008){
+            tokens=refined;
+            for(const token of tokens){
+              const peer=baseline.tokens.find(t=>t.id===token.id&&overlap(t.box,token.box)>=.85);
+              token.certain=token.certain&&Boolean(peer?.certain);
+            }
+            segmentation={method:'touching-valleys',sourceHeight:box.height};
+          }
+        }catch(error){
+          if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
+        }
+      }
+      count+=tokens.length;
       if(count>1500)throw Error('内容超过1500个字形，请分段识别。');
-      lines.push({box:bands[i],tokens});progress({done:i+1,total:bands.length});
+      lines.push({box:bands[i],tokens,...(segmentation?{segmentation}:{})});progress({done:i+1,total:bands.length});
       await new Promise(resolve=>setTimeout(resolve,0));
     }
     if(options.cancelled?.())throw Error('已取消识别。');

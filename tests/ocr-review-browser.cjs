@@ -37,7 +37,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
   await first.click();await page.locator('#ocr-preview').scrollIntoViewIfNeeded();b=await page.locator('#ocr-preview').boundingBox();await page.locator('#ocr-preview').click({position:{x:b.width*255/260,y:b.height*75/80}});assert(!(await editor.isVisible()),'Image blank dismisses detail');
   await first.click();await page.locator('#ocr-segmentation summary').click();assert(await editor.isVisible());await page.locator('#ocr-rebox').click();
   await page.locator('#ocr-rebox-cancel').click();assert(await editor.isVisible(),'Rebox controls must not close review');
-  await list.locator('summary').first().click();assert(!(await editor.isVisible()));assert(!(await list.evaluate(n=>n.open)));
+  // Native <details> dispatches toggle asynchronously after the click task.
+  await list.locator('summary').first().click();await editor.waitFor({state:'hidden'});assert(!(await editor.isVisible()));assert(!(await list.evaluate(n=>n.open)));
   await list.locator('summary').first().click();assert(!(await editor.isVisible()),'Expanding alone must not select a glyph');
   await page.locator('.ocr-token').nth(1).click();assert.equal(await page.locator('#ocr-choice').inputValue(),'the','id:null uses fallback candidate');
   await first.click();await page.locator('#ocr-choice').selectOption('f');await page.locator('#ocr-confirm').click();assert(!(await editor.isVisible()));assert.equal(await raw(),'fTHE[?]r');

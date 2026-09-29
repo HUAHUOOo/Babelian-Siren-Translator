@@ -4,7 +4,7 @@
  const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BabelianTextFormat=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral ambrosia aether arcology irem poseidon poseidons argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed';
+ const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral antinomy ambrosia aether arcology irem poseidon poseidons argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed';
  function create(wordData){
   const words=typeof wordData==='string'?wordData.trim().split(/\s+/):wordData;
   const costs=new Map();let max=1;

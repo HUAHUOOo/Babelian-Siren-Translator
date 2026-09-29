@@ -1,11 +1,11 @@
 {
   "name": "babelian-siren-translator",
-  "version": "1.9.13",
+  "version": "1.9.14",
   "private": true,
   "description": "Babelian & Siren Translator: offline glyph generation, screenshot recognition and manual review for Aeon Trespass: Odyssey",
   "scripts": {
     "build": "node scripts/build.cjs",
-    "test": "node tests/platform.cjs && node tests/ocr.cjs && node tests/ocr-candidate-output.cjs && node tests/ocr-rows.cjs && node tests/text-format.cjs && node tests/ocr-correction.cjs && node tests/translation.cjs && node tests/ocr-layout.cjs && node tests/ato-package.cjs && node tests/siren.cjs && node tests/siren-boundary.cjs && node tests/siren-ui.cjs && node tests/siren-crop.cjs && node tests/language-navigation.cjs && node tests/siren-strip.cjs && node tests/siren-photometric.cjs && node tests/siren-strip-recognition.cjs && node tests/siren-recognition.cjs && node tests/siren-format.cjs && node tests/siren-deep.cjs && node tests/babelian-deep.cjs && node tests/glyph-samples.cjs && node tests/ocr-subpixel.cjs && node tests/official-terminology.cjs",
+    "test": "node tests/platform.cjs && node tests/ocr.cjs && node tests/ocr-candidate-output.cjs && node tests/ocr-rows.cjs && node tests/text-format.cjs && node tests/ocr-correction.cjs && node tests/translation.cjs && node tests/ocr-layout.cjs && node tests/ato-package.cjs && node tests/siren.cjs && node tests/siren-boundary.cjs && node tests/siren-ui.cjs && node tests/siren-crop.cjs && node tests/language-navigation.cjs && node tests/siren-strip.cjs && node tests/siren-photometric.cjs && node tests/siren-strip-recognition.cjs && node tests/siren-recognition.cjs && node tests/siren-format.cjs && node tests/siren-deep.cjs && node tests/babelian-deep.cjs && node tests/glyph-samples.cjs && node tests/ocr-subpixel.cjs && node tests/ocr-touching.cjs && node tests/ocr-thresholds.cjs && node tests/official-terminology.cjs",
     "check:ato": "node scripts/check-ato.cjs",
     "test:siren-sample": "node tests/siren-user-sample.cjs",
     "test:siren-inverse": "node tests/siren-inverse-sample.cjs",
@@ -13,6 +13,8 @@
     "test:babelian-samples": "node tests/ocr-reference-samples.cjs",
     "test:babelian-faint": "node tests/ocr-faint-sample.cjs",
     "test:babelian-small": "node tests/ocr-small-sample.cjs",
+    "test:babelian-card": "node tests/ocr-card-sample.cjs",
+    "test:ocr-touching": "node tests/ocr-touching.cjs",
     "test:ocr-subpixel": "node tests/ocr-subpixel.cjs",
     "test:ocr-thresholds": "node tests/ocr-thresholds.cjs",
     "test:ocr-output": "node tests/ocr-candidate-output.cjs",

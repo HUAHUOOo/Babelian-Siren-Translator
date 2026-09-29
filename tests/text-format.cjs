@@ -29,6 +29,8 @@ const a=formatter.suggest(plain('the[?]dragon[未映射]falls'));assert(a.text.i
 assert.equal(formatter.suggest(plain('abcXYZ123')).text.replace(/[\s.,]/g,''),'abcXYZ123');
 assert.equal(formatter.suggest(plain('')).text,'');
 const term=formatter.suggest(plain('theZyxarlthfalls'),{punctuate:false,extraWords:['Zyxarlth']});assert.equal(term.text,'the Zyxarlth falls');
+const antinomy=perLetter('theantinomyremains'),antinomyResult=formatter.suggest(antinomy,{punctuate:false});
+assert.equal(antinomyResult.text,'the antinomy remains');validSpans(antinomy,antinomyResult);
 // Word-mapped glyphs stay intact even if a user adds internal whitespace.
 const word={text:'WITHtheCURSE',spans:[{glyph:'word',start:0,end:4,text:'WITH'},{glyph:'the',start:4,end:7,text:'the'},{glyph:'last',start:7,end:12,text:'CURSE'}]};
 const output=reflow(word,'WITH the CURSE.');assert.equal(output.spans.length,3);assert.equal(output.spans[1].text,'the');assert.equal(output.spans[2].end,14);
