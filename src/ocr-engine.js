@@ -341,6 +341,48 @@
     if(options.cancelled?.())throw Error('已取消识别。');
     return {...baseline,lines,samplingRefinement:{rows:refined,scale:3}};
   }
+  function thresholdConsensus(chosen,passes){
+    passes=passes.filter((p,i)=>Number.isFinite(p.threshold)&&passes.findIndex(q=>q.threshold===p.threshold)===i);
+    if(passes.length<3)return chosen;
+    const enclosing=items=>{
+      const x=Math.min(...items.map(t=>t.box.x)),y=Math.min(...items.map(t=>t.box.y));
+      return {x,y,width:Math.max(...items.map(t=>t.box.x+t.box.width))-x,height:Math.max(...items.map(t=>t.box.y+t.box.height))-y};
+    };
+    const signature=items=>JSON.stringify(items.map(t=>t.id));
+    const quality=items=>items.reduce((s,t)=>s+t.score*t.box.width,0)/items.reduce((s,t)=>s+t.box.width,0);
+    const lines=chosen.lines.map((line,row)=>{
+      const tokens=[];let changes=0;
+      for(let i=0;i<line.tokens.length;){
+        let end=i;
+        while(end<line.tokens.length&&line.tokens[end].segmentationMargin<.045)end++;
+        if(end-i<2){tokens.push(line.tokens[i++]);continue;}
+        if(end-i>6){tokens.push(...line.tokens.slice(i,end));i=end;continue;}
+        const group=line.tokens.slice(i,end),box=enclosing(group),votes=new Map();
+        for(const pass of passes){
+          const items=(pass.lines[row]?.tokens||[]).filter(t=>t.box.x+t.box.width/2>=box.x&&t.box.x+t.box.width/2<box.x+box.width);
+          if(!items.length||items.length>6||items.some(t=>!t.id||t.score<.7)||overlap(enclosing(items),box)<.9)continue;
+          const key=signature(items);
+          if(!votes.has(key))votes.set(key,[]);
+          votes.get(key).push({items,threshold:pass.threshold});
+        }
+        const ordered=[...votes].sort((a,b)=>b[1].length-a[1].length),best=ordered[0],current=signature(group);
+        // Similar strokes can admit competing cuts. Only a strict majority of
+        // independently binarized images may replace an ambiguous small group.
+        // IDs are opaque: no letters, words or expected passage are consulted.
+        if(best&&best[0]!==current&&best[1].length>passes.length/2&&best[1].length>(votes.get(current)?.length||0)&&best[1].length>(ordered[1]?.[1].length||0)){
+          const picked=best[1].reduce((a,b)=>quality(a.items)>quality(b.items)?a:b);
+          if(quality(picked.items)>=quality(group)-.025){
+            tokens.push(...picked.items.map(t=>({...t,certain:false,thresholdConsensus:{support:best[1].length,passes:passes.length,threshold:picked.threshold}})));
+            changes++;i=end;continue;
+          }
+        }
+        tokens.push(...group);i=end;
+      }
+      return changes?{...line,tokens,thresholdConsensus:{groups:changes}}:line;
+    });
+    // Mixing locally supported cuts must not bypass the document-size limit.
+    return lines.reduce((n,l)=>n+l.tokens.length,0)<=1500?{...chosen,lines}:chosen;
+  }
   async function recognize(image,templateMasks,options={},progress=()=>{}){
     const mask=binarize(image,options),templates=prepareTemplates(templateMasks,options);
     const baseline=await recognizeMask(mask,templates,options,p=>progress({...p,pass:1}));
@@ -391,6 +433,7 @@
         token.certain=token.certain&&token.thresholdStable;
       }
     }
+    chosen=thresholdConsensus(chosen,passes);
     return {...chosen,thresholdSearch:{baseline:baseline.threshold,selected:chosen.threshold,passes:passes.map(p=>({threshold:p.threshold,evidence:imageEvidence(p)}))}};
   }
   function tokenGlyph(token){return token.id||token.candidates?.[0]?.id||null;}
@@ -414,5 +457,5 @@
     });
     return {text,spans};
   }
-  return {binarize,bounds,describe,prepareTemplates,matchDescriptor,rowBands,recognizeLine,recognize,tokenGlyph,tokenReading,transcribe,toWriter};
+  return {binarize,bounds,describe,prepareTemplates,matchDescriptor,rowBands,recognizeLine,recognize,thresholdConsensus,tokenGlyph,tokenReading,transcribe,toWriter};
 });

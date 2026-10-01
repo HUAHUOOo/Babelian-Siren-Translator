@@ -5,6 +5,7 @@ const root=path.resolve(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,'src',file),'utf8');
 const sourceGlyphs=JSON.parse(read('glyphs.json')),sourceParts=JSON.parse(read('parts.json'));
 const sourceSiren=JSON.parse(read('siren-glyphs.json'));
+const domainTerms=JSON.parse(read('domain-terms.json'));
 const dictionary=fs.readFileSync(path.join(root,'src/english-words.txt.gz'));
 if(crypto.createHash('sha256').update(dictionary).digest('hex')!==JSON.parse(read('english-words-source.json')).sha256)throw Error('English vocabulary checksum mismatch');
 const wordData=zlib.gunzipSync(dictionary).toString('utf8').trim().split(/\s+/).filter(w=>/^[a-z]{2,32}$/.test(w)||w==='a'||w==='i').join(' ');
@@ -35,6 +36,7 @@ function htmlFor(mode,glyphs,parts,siren){
   '__TRANSLATION_JS__':read('translation.js'),
   '__OCR_UI_JS__':read('ocr-ui.js'),
   '__TEXT_FORMAT_JS__':read('text-format.js'),
+  '__DOMAIN_TERMS__':JSON.stringify({words:domainTerms.words,phrases:domainTerms.phrases}),
   '__ENGLISH_WORD_DATA__':JSON.stringify(wordData),
   '__WORD_LICENSE__':read('wordninja-LICENSE.txt'),
   '__OCR_CSS__':read('ocr.css'),

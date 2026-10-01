@@ -1,17 +1,30 @@
 /* Formatting is a separate suggestion layer. It cannot alter glyph recognition,
    case, non-whitespace source characters, or unresolved OCR placeholders. */
 (function(root,factory){
- const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BabelianTextFormat=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(){
+ const commonJS=typeof module==='object'&&module.exports;
+ const api=factory(commonJS?require('./domain-terms.json'):root.BabelianDomainTerms);
+ if(commonJS)module.exports=api;else root.BabelianTextFormat=api;
+})(typeof globalThis!=='undefined'?globalThis:this,function(domainTerms){
  'use strict';
- const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral antinomy ambrosia aether arcology irem poseidon poseidons argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed';
+ domainTerms=domainTerms||{};
+ const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral antinomy ambrosia aether arcology irem poseidon poseidons argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed rot';
  function create(wordData){
   const words=typeof wordData==='string'?wordData.trim().split(/\s+/):wordData;
   const costs=new Map();let max=1;
   for(const [i,word] of words.entries())if(/^[a-z]{2,32}$/.test(word)||word==='a'||word==='i'){
    if(!costs.has(word))costs.set(word,Math.log((i+1)*Math.log(words.length+1)));max=Math.max(max,word.length);
   }
-  for(const word of DOMAIN.split(' '))costs.set(word,Math.min(costs.get(word)||Infinity,8));
+  for(const word of [...DOMAIN.split(' '),...(domainTerms.words||[])])if(/^[a-z]{2,40}$/.test(word)){
+   costs.set(word,Math.min(costs.get(word)??Infinity,8));max=Math.max(max,word.length);
+  }
+  const phrases=new Map();
+  for(const phrase of ['narrow hell',...(domainTerms.phrases||[])]){
+   const parts=phrase.split(' '),key=parts.join('');
+   if(parts.length<2||parts.length>10||key.length>120||parts.some(p=>!/^[a-z]{1,40}$/.test(p)))continue;
+   const cost=parts.reduce((sum,p)=>sum+(costs.get(p)??8),0)-Math.min(3,.6*(parts.length-1));
+   if(cost<(phrases.get(key)?.cost??Infinity))phrases.set(key,{parts,cost});
+   max=Math.max(max,key.length);
+  }
   function split(text,extra=[]){
    const lower=text.toLowerCase(),n=lower.length,local=new Map();
    for(const word of extra){const w=word.toLowerCase();if(/^[a-z]{2,40}$/.test(w))local.set(w,5.5);}
@@ -23,20 +36,45 @@
      if(cost===undefined)continue;
      if(dp[start]+cost<dp[end]){dp[end]=dp[start]+cost;back[end]={start,known:true};}
     }
+    for(let size=2;size<=Math.min(end,max);size++){
+     const start=end-size,phrase=phrases.get(lower.slice(start,end));
+     if(phrase&&dp[start]+phrase.cost<dp[end]){dp[end]=dp[start]+phrase.cost;back[end]={start,known:true,parts:phrase.parts};}
+    }
     // Unknown strings remain present; do not spell-correct or invent letters.
     for(let size=1;size<=Math.min(end,40);size++){
      const start=end-size,cost=dp[start]+15+size*3;
      if(cost<dp[end]){dp[end]=cost;back[end]={start,known:false};}
     }
    }
-   const parts=[];for(let at=n;at;){const step=back[at];parts.push({text:text.slice(step.start,at),known:step.known});at=step.start;}
+   const parts=[];for(let at=n;at;){
+    const step=back[at];
+    if(step.parts){
+     let end=at;
+     for(const word of [...step.parts].reverse()){parts.push({text:text.slice(end-word.length,end),known:true});end-=word.length;}
+    }else parts.push({text:text.slice(step.start,at),known:step.known});
+    at=step.start;
+   }
    return parts.reverse();
   }
   function suggest(payload,{punctuate=true,extraWords=[]}={}){
    if(typeof payload.text!=='string'||payload.text.length>80000)throw Error('文本过长，请分段整理。');
    // Physical line wraps have no word-boundary meaning. Existing spaces inside
    // a user's word mapping still constrain the segmentation.
-   const stream=payload.text.replace(/\r?\n/g,''),unknown=[];
+   const boundaries=new Set();
+   for(const span of payload.spans||[]){
+    if(!Number.isInteger(span.start)||!Number.isInteger(span.end)||span.start<0||span.end>payload.text.length||span.start>=span.end)continue;
+    const value=payload.text.slice(span.start,span.end);
+    // A recognized word-valued glyph supplies a real boundary even though
+    // neighboring letter-valued glyphs have no spaces in the raw transcript.
+    // Keep THE + N distinct from THEN; ordinary glyph spacing is not evidence.
+    if(/^[A-Za-z]{2,40}$/.test(value)&&costs.has(value.toLowerCase())){boundaries.add(span.start);boundaries.add(span.end);}
+   }
+   const chars=[];
+   for(let i=0;i<=payload.text.length;i++){
+    if(boundaries.has(i))chars.push(' ');
+    if(i<payload.text.length&&payload.text[i]!=='\n'&&!(payload.text[i]==='\r'&&payload.text[i+1]==='\n'))chars.push(payload.text[i]);
+   }
+   const stream=chars.join(''),unknown=[];
    let text=stream.replace(/[A-Za-z]+/g,chunk=>split(chunk,extraWords).map(p=>{if(!p.known)unknown.push(p.text);return p.text;}).join(' '));
    text=text.replace(/\[\?\]|\[未映射\]/g,m=>' '+m+' ').replace(/[\t ]+/g,' ').trim();
    // Whitespace after existing punctuation; all source punctuation stays intact.
@@ -58,8 +96,11 @@
    if(/[.!?]/.test(gap)&&!gap.includes('[?]')){start=i;finite=false;}
    const prev=prior?.lower,n=i-start;
    const boundary=/^(if|however|otherwise|meanwhile|nevertheless|therefore|though)$/.test(w.lower)&&!['as','even','only','and','but'].includes(prev);
-   const subject=/^(you|it|they|we|this|there)$/.test(w.lower)&&/^(can|may|must|will|should|is|are|was|were|has|have)$/.test(words[i+1]?.lower||'')&&!['that','which','when','because','if','though','as','so'].includes(prev);
-   if(n>=5&&finite&&(boundary||subject)&&!/[.!?:;]|\[/.test(gap)){
+   const subject=/^(you|it|they|we|this|there)$/.test(w.lower)&&/^(can|may|must|will|should|is|are|was|were|has|have)$/.test(words[i+1]?.lower||'')&&!['that','which','where','who','when','because','if','though','as','so'].includes(prev);
+   // Optative clauses ("may he live ...") start a new wish, unlike the ordinary
+   // permission construction ("you may draw ..."). Never change source case.
+   const wish=w.lower==='may'&&/^(he|she|it|they|we|you)$/.test(words[i+1]?.lower||'')&&/^(live|rot|rest|prosper|survive|find|be|have|fall|remain|burn|perish)$/.test(words[i+2]?.lower||'')&&!['and','but','that','whether'].includes(prev);
+   if(n>=5&&finite&&(boundary||subject||wish)&&!/[.!?:;]|\[/.test(gap)){
     inserts.set(w.start,'.\n');count++;start=i;finite=false;
    }
    if(verbs.has(w.lower))finite=true;

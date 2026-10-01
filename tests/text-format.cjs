@@ -34,6 +34,14 @@ assert.equal(antinomyResult.text,'the antinomy remains');validSpans(antinomy,ant
 // Word-mapped glyphs stay intact even if a user adds internal whitespace.
 const word={text:'WITHtheCURSE',spans:[{glyph:'word',start:0,end:4,text:'WITH'},{glyph:'the',start:4,end:7,text:'the'},{glyph:'last',start:7,end:12,text:'CURSE'}]};
 const output=reflow(word,'WITH the CURSE.');assert.equal(output.spans.length,3);assert.equal(output.spans[1].text,'the');assert.equal(output.spans[2].end,14);
+const ligature=perLetter('THENarrowGate');
+ligature.spans=[{glyph:'word-glyph',start:0,end:3,text:'THE'},...ligature.spans.slice(3)];
+const ligatureOutput=formatter.suggest(ligature,{punctuate:false});
+assert.equal(ligatureOutput.text,'THE Narrow Gate');validSpans(ligature,ligatureOutput);
+const acrossLine={text:'THE\nNarrowGate',spans:ligature.spans.map((s,i)=>i?{...s,start:s.start+1,end:s.end+1}:s)};
+assert.equal(formatter.suggest(acrossLine,{punctuate:false}).text,'THE Narrow Gate');
+// Written letters spelling THEN are not a THE word glyph and stay THEN.
+assert.equal(formatter.suggest(perLetter('THENstop'),{punctuate:false}).text,'THEN stop');
 assert.equal(reflow({text:'CUSTOMWORD',spans:[{glyph:'single',start:0,end:10,text:'CUSTOMWORD'}]},'CUSTOM WORD.').spans[0].text,'CUSTOM WORD');
 const symbols=plain('a[?]B[未映射]9301!/?');assert.equal(reflow(symbols,'a [?] B [未映射] 9301 !/?').text,'a [?] B [未映射] 9301 !/?');
 for(const bad of ['the dragon','the[!]dragon','the[ ? ]dragon','the[?]Dragon'])assert.throws(()=>reflow(plain('the[?]dragon'),bad));
