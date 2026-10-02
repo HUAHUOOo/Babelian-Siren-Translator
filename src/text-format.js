@@ -7,7 +7,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(domainTerms){
  'use strict';
  domainTerms=domainTerms||{};
- const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral antinomy ambrosia aether arcology irem poseidon poseidons argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed rot';
+ const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral antinomy ambrosia aether arcology irem poseidon poseidons alitheia argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed rot';
  function create(wordData){
   const words=typeof wordData==='string'?wordData.trim().split(/\s+/):wordData;
   const costs=new Map();let max=1;
@@ -75,7 +75,12 @@
     if(i<payload.text.length&&payload.text[i]!=='\n'&&!(payload.text[i]==='\r'&&payload.text[i+1]==='\n'))chars.push(payload.text[i]);
    }
    const stream=chars.join(''),unknown=[];
-   let text=stream.replace(/[A-Za-z]+/g,chunk=>split(chunk,extraWords).map(p=>{if(!p.known)unknown.push(p.text);return p.text;}).join(' '));
+   let text=stream.replace(/[A-Za-z]+(?:'[sS]\b)?/g,chunk=>{
+    // Preserve an existing possessive as punctuation, not a separate unknown
+    // one-letter word. Segmentation still reads exactly the source letters.
+    const suffix=/'[sS]$/.test(chunk)?chunk.slice(-2):'',body=suffix?chunk.slice(0,-2):chunk;
+    return split(body,extraWords).map(p=>{if(!p.known)unknown.push(p.text);return p.text;}).join(' ')+suffix;
+   });
    text=text.replace(/\[\?\]|\[未映射\]/g,m=>' '+m+' ').replace(/[\t ]+/g,' ').trim();
    // Whitespace after existing punctuation; all source punctuation stays intact.
    text=text.replace(/([.,;:!?])(?=[A-Za-z])/g,'$1 ');
@@ -88,8 +93,13 @@
   return {split,suggest};
  }
  function sentenceSuggestions(text){
+  let possessives=0;
+  // Only a confirmed singular proper-name reading receives this apostrophe.
+  // It is a punctuation suggestion; OCR IDs and source letters never change.
+  // Do not apply a generic trailing-s rule to gods, souls or other plurals.
+  text=text.replace(/\b(poseidon)(s)\b/gi,(_,name,s)=>{possessives++;return name+"'"+s;});
   const words=[...text.matchAll(/[A-Za-z]+/g)].map(m=>({text:m[0],lower:m[0].toLowerCase(),start:m.index,end:m.index+m[0].length}));
-  const inserts=new Map();let count=0,start=0,finite=false;
+  const inserts=new Map();let count=possessives,start=0,finite=false;
   const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see think granted saw ends remains knows know broken lies stands begins ends'.split(' '));
   for(let i=0;i<words.length;i++){
    const w=words[i],prior=words[i-1],gap=prior?text.slice(prior.end,w.start):'';

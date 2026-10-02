@@ -25,7 +25,7 @@ function connected(ids,height,gap){
  }
  return soften(image);
 }
-(async()=>{
+async function run(){
  const all=masks.map(m=>m.id),ids=all.filter((_,i)=>i%2===0).reverse().concat(all.filter((_,i)=>i%2===1));
  const rows=[ids.slice(0,20),ids.slice(20,40),ids.slice(40)];
  // Negative spacing intentionally obscures neighboring edges. This tests
@@ -73,4 +73,6 @@ function connected(ids,height,gap){
  }
  let cancel=false;await assert.rejects(OCR.recognize(image,masks,{cancelled:()=>cancel},()=>{cancel=true;}),/取消/);
  console.log('PASS touching-glyph refinement: small/large connected strokes, image-only boundaries, opaque-ID invariance, original pixels, conservative confirmation, coarse opt-out, manual threshold, clean-size regression, cancellation.');
-})().catch(e=>{console.error(e);process.exitCode=1;});
+}
+if(require.main===module)run().catch(e=>{console.error(e);process.exitCode=1;});
+module.exports={connected};

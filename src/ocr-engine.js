@@ -151,7 +151,8 @@
       const inset=touching?1:3;
       for(let x=a.start+inset;x<a.end-inset;x++){
         const i=x-box.x,n=cols[i];
-        if(x-from>=box.height*(touching?.06:.18)&&n<=Math.max(1,box.height*(touching?.25:.055))&&n<cols[i-1]&&n<=cols[i+1]){
+        const valley=touching==='dense'?.5:touching?.25:.055;
+        if(x-from>=box.height*(touching?.06:.18)&&n<=Math.max(1,box.height*valley)&&n<cols[i-1]&&n<=cols[i+1]){
           split.push({start:from,end:x});from=x;
         }
       }
@@ -237,6 +238,26 @@
               token.certain=token.certain&&Boolean(peer?.certain);
             }
             segmentation={method:'touching-valleys',sourceHeight:box.height};
+          }
+        }catch(error){
+          if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
+        }
+      }
+      // Wider foreground bridges can hide the actual boundary from the weak-
+      // valley pass. Offer stronger valleys only for a still-poor, native-size
+      // row, and retain them only when the full image objective improves.
+      // These are alternative cuts, not extra ink, words or forced labels.
+      if(options.detail!==false&&box.height>=40&&imageEvidence({lines:[{box,tokens}]})<.86){
+        if(options.cancelled?.())throw Error('已取消识别。');
+        try{
+          const refined=recognizeLine(mask,box,templates,'dense');
+          if(imageEvidence({lines:[{box,tokens:refined}]})>imageEvidence({lines:[{box,tokens}]})+.008){
+            tokens=refined;
+            for(const token of tokens){
+              const peer=baseline.tokens.find(t=>t.id===token.id&&overlap(t.box,token.box)>=.85);
+              token.certain=token.certain&&Boolean(peer?.certain);
+            }
+            segmentation={method:'dense-valleys',sourceHeight:box.height};
           }
         }catch(error){
           if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
