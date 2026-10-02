@@ -1,6 +1,6 @@
 {
   "name": "babelian-siren-translator",
-  "version": "1.9.17",
+  "version": "1.9.18",
   "private": true,
   "description": "Babelian & Siren Translator: offline glyph generation, screenshot recognition and manual review for Aeon Trespass: Odyssey",
   "scripts": {
@@ -21,7 +21,8 @@
     "test:ocr-review-browser": "node tests/ocr-review-browser.cjs",
     "test:browser": "node tests/smoke.cjs",
     "test:deep-browser": "node tests/deep-browser.cjs",
-    "test:navigation-browser": "node tests/navigation-browser.cjs"
+    "test:navigation-browser": "node tests/navigation-browser.cjs",
+    "test:theme-browser": "node tests/ui-theme-browser.cjs"
   },
   "engines": {
     "node": ">=20"

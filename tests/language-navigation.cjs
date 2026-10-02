@@ -1,20 +1,24 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),N=require('../src/language-navigation.js');
 const ids=['language-home','language-babelian','panel-siren','language-back','babelian-backups','language-open-babelian','language-open-siren','language-open-babelian-translate','language-open-siren-translate','babelian-title','siren-title'];
 const nodes=new Map(ids.map(id=>[id,{id,hidden:false,events:{},addEventListener(k,fn){this.events[k]=fn;},focus(){focused=id;}}]));let focused='',changes=[];
-const document={getElementById:id=>{assert(nodes.has(id));return nodes.get(id);}},get=id=>nodes.get(id);
+const themeMeta={setAttribute(name,value){assert.equal(name,'content');this.content=value;}};
+const document={body:{dataset:{}},querySelector:selector=>{assert.equal(selector,'meta[name="theme-color"]');return themeMeta;},getElementById:id=>{assert(nodes.has(id));return nodes.get(id);}},get=id=>nodes.get(id);
 const draft={text:'KEEP',groups:[{letter:'A'}]},before=JSON.stringify(draft);
 const nav=N.mount({document,onChange:(next,old)=>changes.push([next,old])});
 assert.equal(nav.current(),'home');assert(!get('language-home').hidden);assert(get('language-babelian').hidden);assert(get('panel-siren').hidden);assert(get('babelian-backups').hidden);
+assert.equal(document.body.dataset.language,'home');assert.equal(document.body.dataset.cycle,undefined);assert.equal(themeMeta.content,'#f6f3ed');
 get('language-open-babelian').events.click();assert.equal(nav.current(),'babelian-generate');assert(get('language-home').hidden);assert(!get('language-babelian').hidden);assert(get('panel-siren').hidden);assert(!get('babelian-backups').hidden);assert.equal(focused,'babelian-title');
 get('language-back').events.click();assert.equal(nav.current(),'home');assert.equal(focused,'language-open-babelian');
 get('language-open-siren').events.click();assert(!get('panel-siren').hidden);assert(get('language-babelian').hidden);assert(get('babelian-backups').hidden);assert.equal(focused,'siren-title');
 get('language-back').events.click();assert.equal(focused,'language-open-siren');assert.equal(JSON.stringify(draft),before);assert.throws(()=>nav.show('nope'));assert.equal(nav.current(),'home');
 for(const language of ['babelian','siren']){
  get('language-open-'+language+'-translate').events.click();assert.equal(nav.current(),language+'-translate');
+ assert.equal(document.body.dataset.language,language);assert.equal(document.body.dataset.cycle,language==='babelian'?'c4':'c5');assert.equal(themeMeta.content,language==='babelian'?'#faf7ed':'#eef3f7');
  assert.equal(get('language-babelian').hidden,language!=='babelian');assert.equal(get('panel-siren').hidden,language!=='siren');
  assert.equal(get('babelian-backups').hidden,language!=='babelian');assert.equal(focused,language+'-title');
  get('language-back').events.click();assert.equal(focused,'language-open-'+language+'-translate');
  nav.show(language);assert.equal(nav.current(),language+'-generate');nav.show('home');
+ assert.equal(document.body.dataset.language,'home');assert.equal(document.body.dataset.cycle,undefined);assert.equal(themeMeta.content,'#f6f3ed');
 }
 // Parse built markup (not a browser) to ensure complete, disjoint language surfaces.
 const source=fs.readFileSync(require.resolve('../src/template.html'),'utf8'),html=fs.readFileSync(require.resolve('../index.html'),'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'').replace(/<style>[\s\S]*?<\/style>/g,'');

@@ -25,6 +25,7 @@ function htmlFor(mode,glyphs,parts,siren){
   '__SIREN_SCAN_JS__':read('siren-scan.js'),
   '__LANGUAGE_NAVIGATION_JS__':read('language-navigation.js'),
   '__SIREN_CSS__':read('siren.css'),
+  '__ASSISTANT_THEME_CSS__':read('assistant-theme.css'),
   '__SIREN_HTML__':read('siren-panel.html'),
   '__MAPPING_EDITOR_JS__':read('mapping-editor.js'),
   '__PLATFORM_JS__':read('runtime.js'),

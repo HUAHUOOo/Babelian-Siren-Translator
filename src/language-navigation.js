@@ -9,6 +9,15 @@
       if(next!=='home'&&!Object.hasOwn(entries,next))throw Error('未知语言工具。');
       const old=current;current=next;if(next!=='home')previous=next;
       const babelian=next.startsWith('babelian-'),siren=next.startsWith('siren-');
+      // Presentation follows the language, not the host campaign or a saved
+      // theme preference. Switching never mutates either language's drafts.
+      if(document.body?.dataset){
+        document.body.dataset.language=babelian?'babelian':siren?'siren':'home';
+        if(babelian||siren)document.body.dataset.cycle=babelian?'c4':'c5';
+        else delete document.body.dataset.cycle;
+      }
+      const themeColor=document.querySelector?.('meta[name="theme-color"]');
+      themeColor?.setAttribute('content',babelian?'#faf7ed':siren?'#eef3f7':'#f6f3ed');
       $('language-home').hidden=next!=='home';$('language-babelian').hidden=!babelian;$('panel-siren').hidden=!siren;
       $('language-back').hidden=next==='home';$('babelian-backups').hidden=!babelian;
       onChange(next,old);
