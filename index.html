@@ -1468,7 +1468,18 @@ summary { color:var(--muted); }
         const native=token.candidates?.find(candidate=>candidate.id===token.id)?.nativeScore;
         return sum+(Number.isFinite(native)?Math.max(0,token.score-native):0)*token.box.width;
       },0);
-      return benefit/width>.005&&imageEvidence({lines:[{box,tokens:after}]})>imageEvidence({lines:[{box,tokens:before}]})+.008;
+      const qualityGain=imageEvidence({lines:[{box,tokens:after}]})-imageEvidence({lines:[{box,tokens:before}]});
+      // A short, already-pending close partition can be resolved by independent
+      // references when every replacement also has strong native-template
+      // evidence. Confident old labels and ordinary changes keep the .008 gate.
+      // nativeScore exists only for IDs with held-out cross-row references.
+      const nativeTie=before.length>=2&&before.length<=6&&after.length>=2&&after.length<=6&&
+        before.every(token=>!token.certain&&Number.isFinite(token.segmentationMargin)&&token.segmentationMargin>=0&&token.segmentationMargin<.01)&&
+        after.every(token=>{
+          const first=token.candidates?.[0];
+          return first?.id===token.id&&Number.isFinite(first.nativeScore)&&first.nativeScore>=.84&&first.score-(token.candidates?.[1]?.score||0)>=.035;
+        });
+      return benefit/width>.005&&(qualityGain>.008||nativeTie&&qualityGain>.002);
     });
   }
   async function refineRepeatedGlyphs(image,baseline,templates,options,progress){
@@ -2112,6 +2123,26 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
   const questionWords=new Set('what who where when why how'.split(' '));
   const questionAuxiliaries=new Set('is are was were do does did can could will would should has have had must'.split(' '));
   const indirect=new Set('know knows knew known wonder wonders wondered ask asks asked explain explains explained remember remembers remembered understand understands understood tell tells told say says said see sees saw hear hears heard'.split(' '));
+  // Only repeated, short nominal complements of a participial predicate form
+  // this list. Nested relatives, finite clauses, markers and existing punctuation
+  // are not evidence for inserting commas between ordinary occurrences of with.
+  function participialList(from,to){
+   const positions=[];
+   for(let i=from;i<to;i++)if(words[i].lower==='with')positions.push(i);
+   if(positions.length<3)return [];
+   const first=positions[0],predicate=first-1;
+   if(!/ing$/.test(words[predicate]?.lower||''))return [];
+   let anchor=predicate-1;
+   while(anchor>=from&&modifiers.has(words[anchor].lower))anchor--;
+   if(predicate!==from&&!copulas.has(words[anchor]?.lower))return [];
+   const allowed=new Set('with of and or nor'.split(' '));
+   for(let n=0;n<positions.length;n++){
+    const end=positions[n+1]??to,phrase=words.slice(positions[n]+1,end);
+    if(!phrase.length||phrase.length>10||phrase.some(w=>verbs.has(w.lower)||indirect.has(w.lower)||dependent.has(w.lower)&&!allowed.has(w.lower)))return [];
+   }
+   if(/[.!?:;,]|\[/.test(text.slice(words[first].start,words[to-1].end)))return [];
+   return positions;
+  }
   for(let i=0;i<words.length;i++){
    const w=words[i],prior=words[i-1],gap=prior?text.slice(prior.end,w.start):'';
    if(/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))){start=i;finite=false;question=false;}
@@ -2121,7 +2152,11 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
    // Optative clauses ("may he live ...") start a new wish, unlike the ordinary
    // permission construction ("you may draw ..."). Never change source case.
    const wish=w.lower==='may'&&/^(he|she|it|they|we|you)$/.test(words[i+1]?.lower||'')&&/^(live|rot|rest|prosper|survive|find|be|have|fall|remain|burn|perish)$/.test(words[i+2]?.lower||'')&&!['and','but','that','whether'].includes(prev);
-   if(finite&&(nominalStarts.has(i)||n>=5&&(boundary||subject||wish))&&!/[.!?:;]|\[/.test(gap)){
+   // A completed presentational participle list can precede an independent
+   // speaker clause. Never split a relative or an ordinary "words I say" phrase.
+   const report=/^(i|we|he|she|they)$/.test(w.lower)&&/^(say|said|declare|declared|insist|insisted|warn|warned)$/.test(words[i+1]?.lower||'')&&
+    n>=5&&/ing$/.test(words[start]?.lower||'')&&words[start+1]?.lower==='with'&&participialList(start,i).length>=3;
+   if((report||finite&&(nominalStarts.has(i)||n>=5&&(boundary||subject||wish)))&&!/[.!?:;]|\[/.test(gap)){
     inserts.set(w.start,question?'?\n':'.\n');count++;start=i;finite=false;question=false;
    }
    const directQuestion=questionWords.has(w.lower)&&questionAuxiliaries.has(words[i+1]?.lower)&&(i===start||finite&&/^(and|but)$/.test(prev)&&!words.slice(start,i).some(token=>indirect.has(token.lower)));
@@ -2136,6 +2171,14 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
     if(commands.has(words[j].lower)){
      if(!/[,;:]\s*$/.test(text.slice(0,words[j].start))){inserts.set(words[j].start,', ');count++;}break;
     }
+   }
+  }
+  let listStart=0;
+  for(let i=1;i<=words.length;i++){
+   const gap=i<words.length?text.slice(words[i-1].end,words[i].start):'';
+   if(i===words.length||/[.!?;:]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))||/^[.?]/.test(inserts.get(words[i]?.start)||'')){
+    for(const at of participialList(listStart,i).slice(1))if(!inserts.has(words[at].start)){inserts.set(words[at].start,', ');count++;}
+    listStart=i;
    }
   }
   let out=text;

@@ -456,7 +456,18 @@
         const native=token.candidates?.find(candidate=>candidate.id===token.id)?.nativeScore;
         return sum+(Number.isFinite(native)?Math.max(0,token.score-native):0)*token.box.width;
       },0);
-      return benefit/width>.005&&imageEvidence({lines:[{box,tokens:after}]})>imageEvidence({lines:[{box,tokens:before}]})+.008;
+      const qualityGain=imageEvidence({lines:[{box,tokens:after}]})-imageEvidence({lines:[{box,tokens:before}]});
+      // A short, already-pending close partition can be resolved by independent
+      // references when every replacement also has strong native-template
+      // evidence. Confident old labels and ordinary changes keep the .008 gate.
+      // nativeScore exists only for IDs with held-out cross-row references.
+      const nativeTie=before.length>=2&&before.length<=6&&after.length>=2&&after.length<=6&&
+        before.every(token=>!token.certain&&Number.isFinite(token.segmentationMargin)&&token.segmentationMargin>=0&&token.segmentationMargin<.01)&&
+        after.every(token=>{
+          const first=token.candidates?.[0];
+          return first?.id===token.id&&Number.isFinite(first.nativeScore)&&first.nativeScore>=.84&&first.score-(token.candidates?.[1]?.score||0)>=.035;
+        });
+      return benefit/width>.005&&(qualityGain>.008||nativeTie&&qualityGain>.002);
     });
   }
   async function refineRepeatedGlyphs(image,baseline,templates,options,progress){

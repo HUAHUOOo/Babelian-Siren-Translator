@@ -68,6 +68,28 @@ const mixedCaseOutput=formatter.suggest(mixedCaseWords);
 assert.equal(mixedCaseOutput.text,'THE lamp is glowing AND what is the lamp that is glowing?\nTHE lock is glowing.\nlights are glowing.');validSpans(mixedCaseWords,mixedCaseOutput);
 assert.equal(formatter.suggest(perLetter('Thelampisglowing[?]Thewindowisglowing')).text,'The lamp is glowing [?] The window is glowing.');
 console.log('PASS synthetic sentence suggestions: direct questions, adjacent/repeated copular statements, lowercase/uppercase and word-valued spans; coordinated/relative/complement clauses, source punctuation and image line wraps preserved.');
+const listCases=[
+ ['Traveling with a map with a lamp with a compass I say we are ready','Traveling with a map, with a lamp, with a compass.\nI say we are ready.'],
+ ['The lamp is glowing with red light with green light with blue light','The lamp is glowing with red light, with green light, with blue light.'],
+ ['Traveling with THE map OF stars with THE map OF hills with THE map OF rivers We declare it is safe','Traveling with THE map OF stars, with THE map OF hills, with THE map OF rivers.\nWe declare it is safe.'],
+ ['Traveling with what!/? Traveling with a map with a lamp with a compass','Traveling with what!/? Traveling with a map, with a lamp, with a compass.']
+];
+for(const [words,expected] of listCases)for(const payload of [perLetter(words.replace(/ /g,'')),wordGlyphs(words)]){
+ const frozen=JSON.stringify(payload),output=formatter.suggest(payload);
+ assert.equal(output.text,expected);validSpans(payload,output);assert.equal(JSON.stringify(payload),frozen);
+ assert.equal(formatter.suggest(payload,{punctuate:false}).text,words);
+}
+for(const words of [
+ 'Traveling with a map with a compass',
+ 'The box with a lid with a handle with a stripe is open',
+ 'Traveling with a map that is old with a lamp with a compass',
+ 'Traveling with a map without a guide with a lamp with a compass',
+ 'Traveling with a map [?] with a lamp with a compass',
+ 'Traveling with a map, with a lamp, with a compass',
+ 'The words I say are glowing with a lamp',
+ 'Traveling with a map with a lamp with a compass that we carry I say it is safe'
+])assert.equal(formatter.suggest(wordGlyphs(words)).text,words+'.');
+console.log('PASS synthetic repeated-preposition lists: short participial complements, independent reporting clause, word glyph case and source marks; two-item/nested/relative/unknown/already-punctuated phrases preserved.');
 const a=formatter.suggest(plain('the[?]dragon[未映射]falls'));assert(a.text.includes('[?]'));assert(a.text.includes('[未映射]'));
 assert.equal(formatter.suggest(plain('abcXYZ123')).text.replace(/[\s.,]/g,''),'abcXYZ123');
 assert.equal(formatter.suggest(plain('')).text,'');

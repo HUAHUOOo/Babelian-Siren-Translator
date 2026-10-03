@@ -85,6 +85,29 @@ function checkLocalSupportGuard(){
   {name:'disjoint replacement cannot drop the old covered region',before:[token('shape-a',0,40,.8)],after:[token('shape-b',60,40,.94,.88)],accept:false},
   {name:'non-finite reference evidence cannot authorize a change',before:[token('shape-a',0,40,.8)],after:[token('shape-b',0,40,.94,NaN)],accept:false}
  ];
+ // Close native partitions are a bounded exception, not a lower global gate.
+ const tieBefore=()=>[token('shape-a',0,30,.9),token('shape-b',30,30,.9)].map(t=>({...t,segmentationMargin:.003}));
+ const tieAfter=()=>[token('shape-c',0,20,.904,.895),token('shape-d',20,40,.904,.895)];
+ const tieCase=(name,edit,accept=false)=>{
+  const before=tieBefore(),after=tieAfter();edit(before,after);cases.push({name,before,after,accept});
+ };
+ tieCase('short pending native tie has independently supported stronger cuts',()=>{},true);
+ tieCase('a confirmed old symbol blocks the native-tie exception',before=>{before[0].certain=true;});
+ tieCase('old segmentation margin outside the tie range is protected',before=>{before[1].segmentationMargin=.01;});
+ tieCase('unknown old segmentation margin is protected',before=>{delete before[1].segmentationMargin;});
+ tieCase('negative old margin cannot supply partition evidence',before=>{before[1].segmentationMargin=-.001;});
+ tieCase('non-finite old margin cannot supply partition evidence',before=>{before[1].segmentationMargin=NaN;});
+ tieCase('every new symbol needs held-out references',(_,after)=>{delete after[0].candidates[0].nativeScore;});
+ tieCase('every new symbol needs a strong native match',(_,after)=>{after[0].candidates[0].nativeScore=.839;});
+ tieCase('infinite native score cannot qualify a partition',(_,after)=>{after[0].candidates[0].nativeScore=Infinity;});
+ tieCase('new labels must match the first ranked candidate',(_,after)=>{after[0].candidates[0].id='other';});
+ tieCase('a close runner-up blocks the native-tie exception',(_,after)=>{after[0].candidates.push({id:'rival',score:.88});});
+ tieCase('local reference gain remains necessary for native ties',(_,after)=>{after.forEach(t=>{t.candidates[0].nativeScore=.9;});});
+ tieCase('native ties still need a positive quality gain above .002',(_,after)=>{after.forEach(t=>{t.score=t.candidates[0].score=.9015;});});
+ tieCase('a one-symbol substitution is not a close multi-symbol partition',before=>{before.splice(1);before[0].box.width=60;before[0].score=before[0].candidates[0].score=.883333;});
+ tieCase('a one-symbol replacement is not a close multi-symbol partition',(_,after)=>{after.splice(1);after[0].box.width=60;after[0].score=after[0].candidates[0].score=.89;after[0].candidates[0].nativeScore=.88;});
+ tieCase('unbounded old partition cannot borrow the tie exception',before=>{before.splice(0,before.length,...Array.from({length:7},(_,i)=>({...token('old-'+i,i*8,8,.991),segmentationMargin:.003})));});
+ tieCase('unbounded new partition cannot borrow the tie exception',(_,after)=>{after.splice(0,after.length,...Array.from({length:7},(_,i)=>token('new-'+i,i*8,8,.995,.986)));});
  const rename=tokens=>tokens.map(token=>({...token,id:'opaque-'+token.id,candidates:token.candidates.map(candidate=>({...candidate,id:'opaque-'+candidate.id}))}));
  for(const {name,before,after,accept} of cases){
   const frozen=JSON.stringify([before,after]);
@@ -92,7 +115,7 @@ function checkLocalSupportGuard(){
   assert.equal(supported(rename(before),rename(after),box),accept,name+' with renamed opaque IDs');
   assert.equal(JSON.stringify([before,after]),frozen,'Local-support checks must not mutate caller tokens');
  }
- console.log('PASS local page-change guard: per-connected-region reference gain AND adapted-quality gain, native-only/distant-boost rejection, width weighting, fragment penalty, opaque IDs and unchanged inputs.');
+ console.log('PASS local page-change guard: independent reference/quality gains; bounded pending native ties; confirmed/weak/unbounded partition rejection; width weighting, fragment penalty, opaque IDs and unchanged inputs.');
 }
 
 async function run(){
