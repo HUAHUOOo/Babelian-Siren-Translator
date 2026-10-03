@@ -1489,7 +1489,7 @@ summary { color:var(--muted); }
     for(let row=0;row<baseline.lines.length;row++){
       if(options.cancelled?.())throw Error('已取消识别。');
       const line=baseline.lines[row];let selected=line;
-      if(line.box.height>=30){
+      if(line.box.height>=40&&(!line.sampling||line.sampling.sourceHeight>=40)){
         let supported=0;
         const adapted=templates.map(template=>{
           const pool=(byId.get(template.id)||[]).filter(item=>item.row!==row);
@@ -1512,7 +1512,10 @@ summary { color:var(--muted); }
           try{
             const tokens=recognizeLine(mask,line.box,adapted,'components');
             const differs=tokens.length!==line.tokens.length||tokens.some((token,i)=>token.id!==line.tokens[i]?.id);
-            if(differs&&supportedPageChanges(rescored,tokens,line.box)&&imageEvidence({lines:[{box:line.box,tokens}]})>imageEvidence({lines:[{box:line.box,tokens:rescored}]})+.002){
+            // Local evidence gates already require a meaningful gain in every
+            // changed region. A fixed whole-row gain dilutes that evidence as
+            // more unchanged glyphs are added; only require no regression here.
+            if(differs&&supportedPageChanges(rescored,tokens,line.box)&&imageEvidence({lines:[{box:line.box,tokens}]})>imageEvidence({lines:[{box:line.box,tokens:rescored}]})){
               for(const token of tokens){
                 const peer=line.tokens.find(t=>t.id===token.id&&overlap(t.box,token.box)>=.85);
                 token.certain=token.certain&&Boolean(peer?.certain);
@@ -1544,7 +1547,12 @@ summary { color:var(--muted); }
     // tips must not flood paper texture or join adjacent rows. No image IDs,
     // letters, word counts or expected text participate in this decision.
     const thresholds=[...new Set([1/6,1/3].map(f=>Math.max(0,Math.min(254,Math.round(mask.threshold+(background-mask.threshold)*f)))))].filter(t=>Math.abs(t-mask.threshold)>=4);
-    if(baseline.lines.some(l=>l.box.height<40))return refineSmallRows(image,gray,baseline,templates,thresholds,options,progress);
+    if(baseline.lines.some(l=>l.box.height<40)){
+      const refined=await refineSmallRows(image,gray,baseline,templates,thresholds,options,progress);
+      // One shorter row must not disable native-size page matching elsewhere.
+      // Entirely small pages keep their existing sampling-only path.
+      return baseline.lines.filter(l=>l.box.height>=40).length>=3?refineRepeatedGlyphs(image,refined,templates,options,progress):refined;
+    }
     const passes=[baseline];let previousMask=mask;
     for(const threshold of thresholds){
       if(options.cancelled?.())throw Error('已取消识别。');

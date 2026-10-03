@@ -8,19 +8,20 @@ const {masks,rasters}=require('./ocr.cjs');
 
 // Negative spacing unions foreground pixels; drawing a neighbour must not erase
 // the preceding symbol with its background. Other rows supply clean references.
-function render(rows,{height=48,gap=-4,referenceGap=4}={}){
+function render(rows,{height=48,gap=-4,referenceGap=4,rowHeights=[]}={}){
  const margin=10,rowHeight=height+14;
- const glyphWidth=id=>Math.round(rasters[id].width/rasters[id].height*height);
- const width=Math.max(...rows.map((row,i)=>margin*2+row.reduce((sum,id)=>sum+glyphWidth(id)+(i?referenceGap:gap),0)));
+ const glyphWidth=(id,h=height)=>Math.round(rasters[id].width/rasters[id].height*h);
+ const width=Math.max(...rows.map((row,i)=>margin*2+row.reduce((sum,id)=>sum+glyphWidth(id,rowHeights[i]||height)+(i?referenceGap:gap),0)));
  const image={width,height:rows.length*rowHeight+margin*2,data:new Uint8Array(width*(rows.length*rowHeight+margin*2)*4).fill(244)};
  for(let at=3;at<image.data.length;at+=4)image.data[at]=255;
  rows.forEach((row,i)=>{
   let left=margin;
+  const h=rowHeights[i]||height;
   for(const id of row){
-   const source=rasters[id],w=glyphWidth(id);
-   for(let y=0;y<height;y++)for(let x=0;x<w;x++){
+   const source=rasters[id],w=glyphWidth(id,h);
+   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
     const sx=Math.min(source.width-1,Math.floor((x+.5)*source.width/w));
-    const sy=Math.min(source.height-1,Math.floor((y+.5)*source.height/height));
+    const sy=Math.min(source.height-1,Math.floor((y+.5)*source.height/h));
     const alpha=source.data[(sy*source.width+sx)*4+3]/255;
     const value=Math.round(244-209*alpha),at=((margin+i*rowHeight+y)*width+left+x)*4;
     for(let channel=0;channel<3;channel++)image.data[at+channel]=Math.min(image.data[at+channel],value);
@@ -143,6 +144,22 @@ async function run(){
  const replacement=new Map(masks.map((mask,i)=>[mask.id,'opaque-raster-'+i]));
  const renamed=await OCR.recognize(image,masks.map(mask=>({...mask,id:replacement.get(mask.id)})));
  assert.deepEqual(summary(renamed),summary(result,id=>replacement.get(id)),'Opaque IDs cannot change pixels, references, cuts, scores or confidence');
+
+ // A short unrelated row previously disabled all native-size page matching.
+ // It must keep its own small-resolution guards while larger rows can refine.
+ const mixedImage=render([...rows,['Q']],{rowHeights:[48,48,48,48,28]}),mixedBytes=Buffer.from(mixedImage.data);
+ const mixed=await OCR.recognize(mixedImage,masks);
+ assert.deepEqual(mixed.lines.map(ids),[...rows,['Q']]);
+ assert.equal(mixed.lines[0].pageMatching?.method,'repeated-glyphs');
+ assert.equal(mixed.lines.at(-1).pageMatching,undefined);
+ assert(mixed.lines.at(-1).tokens.every(token=>!token.certain),'An unrelated small row stays pending');
+ assert.deepEqual(Buffer.from(mixedImage.data),mixedBytes);
+ const mixedMask=OCR.binarize(mixedImage,{threshold:mixed.threshold,polarity:mixed.polarity});
+ for(const line of mixed.lines)covered(mixedMask,line.tokens,line.box);
+ const mixedRenamed=await OCR.recognize(mixedImage,masks.map(mask=>({...mask,id:replacement.get(mask.id)})));
+ assert.deepEqual(summary(mixedRenamed),summary(mixed,id=>replacement.get(id)));
+ const mixedManual=await OCR.recognize(mixedImage,masks,{threshold:mixed.threshold});
+ assert.equal(mixedManual.pageRefinement,undefined);assert.notDeepEqual(ids(mixedManual.lines[0]),target);
 
  const coarseEvents=[],coarse=await OCR.recognize(image,masks,{detail:false},event=>coarseEvents.push(event));
  assert.equal(coarse.detail,false);assert.equal(coarse.pageRefinement,undefined);assert.equal(coarse.thresholdSearch,undefined);
