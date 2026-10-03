@@ -101,8 +101,13 @@
       const coarse=.64*(2*overlap/total)+.36*((near1+near2)/total);
       // Fine wedges add detail, coarse shape stays dominant for noisy scans.
       const fine=candidate.fine&&t.fine?fineScore(candidate.fine,t.fine):coarse;
-      const score=Math.max(0,.7*coarse+.3*fine-.38*aspect);
-      ranked.push({id:t.id,score});
+      const nativeScore=Math.max(0,.7*coarse+.3*fine-.38*aspect);
+      let score=nativeScore;
+      if(t.references&&nativeScore>=.65){
+        const local=matchDescriptor(candidate,t.references);
+        if(local.length>=2)score=Math.max(score,Math.min(nativeScore+.06,(local[0].score+local[1].score)/2));
+      }
+      ranked.push({id:t.id,score,...(t.references?{nativeScore}:{})});
     }
     return ranked.sort((a,b)=>b.score-a.score).slice(0,5);
   }
@@ -158,7 +163,34 @@
       }
       split.push({start:from,end:a.end});
     }
-    return split;
+    if(touching!=='components')return split;
+    // Slanted, disconnected wedges can overlap in their horizontal projection.
+    // Component edges offer cuts even when no blank column or valley exists.
+    // They only add competing boundaries; every foreground pixel stays present.
+    const cuts=componentCuts(mask,box),out=[];
+    for(const atom of split){
+      const points=[atom.start,...cuts.filter(x=>x>atom.start&&x<atom.end),atom.end];
+      for(let i=1;i<points.length;i++)out.push({start:points[i-1],end:points[i]});
+    }
+    return out;
+  }
+  function componentCuts(mask,box){
+    const {width,height}=box,seen=new Uint8Array(width*height),queue=new Int32Array(width*height),cuts=new Set();
+    const ink=i=>mask.data[(box.y+Math.floor(i/width))*mask.width+box.x+i%width];
+    for(let start=0;start<seen.length;start++){
+      if(seen[start]||!ink(start))continue;
+      let head=0,tail=1,left=width,right=-1,top=height,bottom=-1;queue[0]=start;seen[start]=1;
+      while(head<tail){
+        const i=queue[head++],x=i%width,y=Math.floor(i/width);
+        left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);
+        for(let yy=Math.max(0,y-1);yy<=Math.min(height-1,y+1);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(width-1,x+1);xx++){
+          const next=yy*width+xx;
+          if(!seen[next]&&ink(next)){seen[next]=1;queue[tail++]=next;}
+        }
+      }
+      if(tail>=3&&bottom-top+1>=Math.max(3,height*.12)){cuts.add(box.x+left);cuts.add(box.x+right+1);}
+    }
+    return [...cuts].sort((a,b)=>a-b);
   }
   function recognizeLine(mask,box,templates,touching=false){
     const atoms=atomsFor(mask,box,touching),n=atoms.length;
@@ -166,7 +198,7 @@
     const costs=new Float64Array(n+1).fill(Infinity),back=Array(n+1),edges=[];costs[0]=0;
     for(let i=0;i<n;i++){
       if(!Number.isFinite(costs[i]))continue;
-      for(let j=i;j<Math.min(n,i+14);j++){
+      for(let j=i;j<Math.min(n,i+(touching==='components'?28:14));j++){
         if(j>i&&atoms[j].start-atoms[j-1].end>box.height*.4)break;
         const x=atoms[i].start,width=atoms[j].end-x;
         if(width>box.height*1.9){
@@ -404,6 +436,89 @@
     // Mixing locally supported cuts must not bypass the document-size limit.
     return lines.reduce((n,l)=>n+l.tokens.length,0)<=1500?{...chosen,lines}:chosen;
   }
+  function supportedPageChanges(original,tokens,box){
+    // Compare connected horizontal regions, not an average across the page.
+    // A better match elsewhere must not authorize an unrelated new partition
+    // with no repeated-shape evidence of its own.
+    const entries=[...original.map(token=>({token,side:'before'})),...tokens.map(token=>({token,side:'after'}))]
+      .sort((a,b)=>a.token.box.x-b.token.box.x),groups=[];
+    for(const entry of entries){
+      let group=groups[groups.length-1];
+      if(!group||entry.token.box.x>=group.end){group={end:0,before:[],after:[]};groups.push(group);}
+      group.end=Math.max(group.end,entry.token.box.x+entry.token.box.width);group[entry.side].push(entry.token);
+    }
+    return groups.every(group=>{
+      const before=group.before.sort((a,b)=>a.box.x-b.box.x),after=group.after.sort((a,b)=>a.box.x-b.box.x);
+      if(before.length===after.length&&before.every((token,i)=>token.id===after[i].id))return true;
+      if(!before.length||!after.length)return false;
+      const width=after.reduce((sum,token)=>sum+token.box.width,0);
+      const benefit=after.reduce((sum,token)=>{
+        const native=token.candidates?.find(candidate=>candidate.id===token.id)?.nativeScore;
+        return sum+(Number.isFinite(native)?Math.max(0,token.score-native):0)*token.box.width;
+      },0);
+      return benefit/width>.005&&imageEvidence({lines:[{box,tokens:after}]})>imageEvidence({lines:[{box,tokens:before}]})+.008;
+    });
+  }
+  async function refineRepeatedGlyphs(image,baseline,templates,options,progress){
+    if(baseline.lines.length<3)return baseline;
+    const mask=binarize(image,{threshold:baseline.threshold,polarity:baseline.polarity}),byId=new Map();
+    const median=values=>{const a=values.sort((a,b)=>a-b),n=a.length;return n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2;};
+    // References are frozen before this pass. Only independently confident,
+    // size-consistent repetitions may support another row; no iterative learning.
+    baseline.lines.forEach((line,row)=>{if(options.cancelled?.())throw Error('已取消识别。');line.tokens.forEach(token=>{
+      if(!token.certain||token.score<.84||token.box.height<30)return;
+      const descriptor=describe(mask,token.box),ranked=matchDescriptor(descriptor,templates);
+      if(ranked[0]?.id!==token.id||ranked[0].score<.84||ranked[0].score-(ranked[1]?.score||0)<.035)return;
+      if(!byId.has(token.id))byId.set(token.id,[]);
+      byId.get(token.id).push({row,box:token.box,score:ranked[0].score,descriptor});
+    });});
+    if([...byId.values()].filter(items=>items.length>=3).length<3)return baseline;
+    const lines=[];let changed=0,count=0;
+    for(let row=0;row<baseline.lines.length;row++){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      const line=baseline.lines[row];let selected=line;
+      if(line.box.height>=30){
+        let supported=0;
+        const adapted=templates.map(template=>{
+          const pool=(byId.get(template.id)||[]).filter(item=>item.row!==row);
+          if(pool.length<3||new Set(pool.map(item=>item.row)).size<2)return template;
+          const width=median(pool.map(item=>item.box.width)),height=median(pool.map(item=>item.box.height));
+          const peers=pool.filter(item=>Math.abs(Math.log(item.box.width/width))<=.12&&Math.abs(Math.log(item.box.height/height))<=.12);
+          if(peers.length<3||new Set(peers.map(item=>item.row)).size<2)return template;
+          supported++;
+          // Keep a bounded variety of accepted shapes, not just a handful of
+          // near-perfect native matches: print variation is what this pass adds.
+          return {...template,references:peers.sort((a,b)=>b.score-a.score).slice(0,16).map(item=>({id:template.id,...item.descriptor}))};
+        });
+        if(supported>=3){
+          const rescored=line.tokens.map(token=>{
+            if(!token.id)return token;
+            const template=adapted.find(t=>t.id===token.id);
+            const score=matchDescriptor(describe(mask,token.box),[template])[0]?.score||0;
+            return {...token,score};
+          });
+          try{
+            const tokens=recognizeLine(mask,line.box,adapted,'components');
+            const differs=tokens.length!==line.tokens.length||tokens.some((token,i)=>token.id!==line.tokens[i]?.id);
+            if(differs&&supportedPageChanges(rescored,tokens,line.box)&&imageEvidence({lines:[{box:line.box,tokens}]})>imageEvidence({lines:[{box:line.box,tokens:rescored}]})+.002){
+              for(const token of tokens){
+                const peer=line.tokens.find(t=>t.id===token.id&&overlap(t.box,token.box)>=.85);
+                token.certain=token.certain&&Boolean(peer?.certain);
+              }
+              selected={...line,tokens,pageMatching:{method:'repeated-glyphs',referenceIds:supported}};changed++;
+            }
+          }catch(error){
+            if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
+          }
+        }
+      }
+      lines.push(selected);count+=selected.tokens.length;
+      progress({done:row+1,total:baseline.lines.length,pass:4});
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    if(options.cancelled?.())throw Error('已取消识别。');
+    return changed&&count<=1500?{...baseline,lines,pageRefinement:{rows:changed}}:baseline;
+  }
   async function recognize(image,templateMasks,options={},progress=()=>{}){
     const mask=binarize(image,options),templates=prepareTemplates(templateMasks,options);
     const baseline=await recognizeMask(mask,templates,options,p=>progress({...p,pass:1}));
@@ -455,7 +570,8 @@
       }
     }
     chosen=thresholdConsensus(chosen,passes);
-    return {...chosen,thresholdSearch:{baseline:baseline.threshold,selected:chosen.threshold,passes:passes.map(p=>({threshold:p.threshold,evidence:imageEvidence(p)}))}};
+    const result={...chosen,thresholdSearch:{baseline:baseline.threshold,selected:chosen.threshold,passes:passes.map(p=>({threshold:p.threshold,evidence:imageEvidence(p)}))}};
+    return refineRepeatedGlyphs(image,result,templates,options,progress);
   }
   function tokenGlyph(token){return token.id||token.candidates?.[0]?.id||null;}
   function tokenReading(token,mapping){

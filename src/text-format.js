@@ -99,20 +99,48 @@
   // Do not apply a generic trailing-s rule to gods, souls or other plurals.
   text=text.replace(/\b(poseidon)(s)\b/gi,(_,name,s)=>{possessives++;return name+"'"+s;});
   const words=[...text.matchAll(/[A-Za-z]+/g)].map(m=>({text:m[0],lower:m[0].toLowerCase(),start:m.index,end:m.index+m[0].length}));
-  const inserts=new Map();let count=possessives,start=0,finite=false;
+  const inserts=new Map();let count=possessives,start=0,finite=false,question=false;
   const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see think granted saw ends remains knows know broken lies stands begins ends'.split(' '));
+  const copulas=new Set('is are was were'.split(' ')),nominalStarts=new Set();
+  const dependent=new Set('and but or nor neither either also not as than that which who whom whose what when where why how whatever whoever whenever wherever whether if unless because since while whilst whereas though although before after until once so except including with without of for from to in into on onto at by through under over between among near around against about despite during'.split(' '));
+  const modifiers=new Set('very quite rather still already almost fully entirely'.split(' '));
+  const predicates=new Set('open closed quiet silent cold warm hot dark bright ready safe lost broken gone dead alive awake asleep empty full clear blue red green'.split(' '));
+  const determiners=new Set('the a an this these those my your his her its our their each every any all both'.split(' '));
+  // Conservative adjacent copular clauses: a complete, short predicate followed
+  // by a short nominal subject. Repeated predicates work without a topic-specific
+  // noun/adjective list. Connectives and relatives keep their clause together.
+  let priorCopula=-1;
+  for(let i=0;i<words.length;i++)if(copulas.has(words[i].lower)){
+   if(priorCopula>=0){
+    let complement=priorCopula+1;
+    while(complement<i&&modifiers.has(words[complement].lower))complement++;
+    const candidate=complement+1,subjectWords=words.slice(candidate,i),predicate=words[complement]?.lower||'';
+    const repeated=predicate===words[i+1]?.lower,complete=repeated||/(?:ing|ed)$/.test(predicate)||predicates.has(predicate);
+    const anchored=subjectWords.length===1||repeated||determiners.has(subjectWords[0]?.lower);
+    const shortNominal=subjectWords.length>=1&&subjectWords.length<=4&&anchored&&subjectWords.every((w,n)=>!dependent.has(w.lower)&&!verbs.has(w.lower)&&!(n&&/^(the|a|an)$/.test(w.lower)&&!(n===1&&/^(all|both)$/.test(subjectWords[0].lower))));
+    // Dummy "it is clear/likely ..." can introduce a complement without "that".
+    const complementClause=words[priorCopula-1]?.lower==='it'&&/^(clear|likely|possible|certain|true|obvious|important|necessary|known|expected|believed|understood|said|assumed|reported|thought|suggested|supposed|proven|accepted|suspected)$/.test(predicate);
+    if(complete&&shortNominal&&!complementClause&&!/[.!?:;,]|\[/.test(text.slice(words[priorCopula].end,words[i].start)))nominalStarts.add(candidate);
+   }
+   priorCopula=i;
+  }
+  const questionWords=new Set('what who where when why how'.split(' '));
+  const questionAuxiliaries=new Set('is are was were do does did can could will would should has have had must'.split(' '));
+  const indirect=new Set('know knows knew known wonder wonders wondered ask asks asked explain explains explained remember remembers remembered understand understands understood tell tells told say says said see sees saw hear hears heard'.split(' '));
   for(let i=0;i<words.length;i++){
    const w=words[i],prior=words[i-1],gap=prior?text.slice(prior.end,w.start):'';
-   if(/[.!?]/.test(gap)&&!gap.includes('[?]')){start=i;finite=false;}
+   if(/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))){start=i;finite=false;question=false;}
    const prev=prior?.lower,n=i-start;
    const boundary=/^(if|however|otherwise|meanwhile|nevertheless|therefore|though)$/.test(w.lower)&&!['as','even','only','and','but'].includes(prev);
    const subject=/^(you|it|they|we|this|there)$/.test(w.lower)&&/^(can|may|must|will|should|is|are|was|were|has|have)$/.test(words[i+1]?.lower||'')&&!['that','which','where','who','when','because','if','though','as','so'].includes(prev);
    // Optative clauses ("may he live ...") start a new wish, unlike the ordinary
    // permission construction ("you may draw ..."). Never change source case.
    const wish=w.lower==='may'&&/^(he|she|it|they|we|you)$/.test(words[i+1]?.lower||'')&&/^(live|rot|rest|prosper|survive|find|be|have|fall|remain|burn|perish)$/.test(words[i+2]?.lower||'')&&!['and','but','that','whether'].includes(prev);
-   if(n>=5&&finite&&(boundary||subject||wish)&&!/[.!?:;]|\[/.test(gap)){
-    inserts.set(w.start,'.\n');count++;start=i;finite=false;
+   if(finite&&(nominalStarts.has(i)||n>=5&&(boundary||subject||wish))&&!/[.!?:;]|\[/.test(gap)){
+    inserts.set(w.start,question?'?\n':'.\n');count++;start=i;finite=false;question=false;
    }
+   const directQuestion=questionWords.has(w.lower)&&questionAuxiliaries.has(words[i+1]?.lower)&&(i===start||finite&&/^(and|but)$/.test(prev)&&!words.slice(start,i).some(token=>indirect.has(token.lower)));
+   if(directQuestion&&!/\[/.test(text.slice(words[start]?.start??0,w.start)))question=true;
    if(verbs.has(w.lower))finite=true;
   }
   // A short leading conditional followed by an instruction needs a comma.
@@ -127,7 +155,7 @@
   }
   let out=text;
   for(const [at,value] of [...inserts].sort((a,b)=>b[0]-a[0]))out=out.slice(0,at).replace(/[ \t]+$/,'')+value+out.slice(at);
-  if(words.length>=3&&/[A-Za-z0-9]$/.test(out)&&!out.endsWith('[未映射]')){out+='.';count++;}
+  if(words.length>=3&&/[A-Za-z0-9]$/.test(out)&&!out.endsWith('[未映射]')){out+=question?'?':'.';count++;}
   return {text:out,count};
  }
  function reflow(payload,formatted){

@@ -25,6 +25,49 @@ const story=perLetter('TheDragoncoilsintheDarkBelowIfyouwantproceedtoaBattleIfyo
 const punctuated=formatter.suggest(story);
 assert(punctuated.text.includes('Below.\nIf you want, proceed'));assert(punctuated.text.includes('If you win, see paragraph nine three zero one.'));assert(punctuated.punctuationCount>=4);validSpans(story,punctuated);
 assert.equal(formatter.suggest(plain('Ifyouwinseeparagraph9301')).text,'If you win, see paragraph 9301.');
+// Synthetic adjacent statements/questions exercise sentence suggestions without
+// including any user screenshot transcription or story passage in public tests.
+function wordGlyphs(words){
+ const spans=[];let text='';
+ for(const word of words.split(' ')){const start=text.length;text+=word;spans.push({glyph:'word-'+spans.length,start,end:text.length,text:word});}
+ return {text,spans};
+}
+const sentenceCases=[
+ ['A key is rusting and what is the key that is rusting The lock is rusting Bolts are rusting','A key is rusting and what is the key that is rusting?\nThe lock is rusting.\nBolts are rusting.'],
+ ['The lamp is glowing Reflections are glowing The window is glowing','The lamp is glowing.\nReflections are glowing.\nThe window is glowing.'],
+ ['What is the key that is missing The door is locked','What is the key that is missing?\nThe door is locked.'],
+ ['the gate is closed all doors are closed','the gate is closed.\nall doors are closed.'],
+ ['WHY IS THE GATE CLOSED','WHY IS THE GATE CLOSED?']
+];
+for(const [words,expected] of sentenceCases)for(const payload of [perLetter(words.replace(/ /g,'')),wordGlyphs(words)]){
+ const frozen=JSON.stringify(payload),output=formatter.suggest(payload);
+ assert.equal(output.text,expected);assert.equal(output.unknown.length,0);validSpans(payload,output);
+ assert.equal(JSON.stringify(payload),frozen);assert.equal(reflow(payload,output.text).text,output.text);
+ const unpunctuated=formatter.suggest(payload,{punctuate:false});
+ assert.equal(unpunctuated.text,words);assert.equal(unpunctuated.punctuationCount,0);validSpans(payload,unpunctuated);
+}
+for(const words of [
+ 'The gate is closed and the hall is closed',
+ 'The gate is closed because the hall is closed',
+ 'The gate is closed whereas the hall is open',
+ 'The lamp is glowing also whatever is felt as cold or warm that comes with the light for its required condition that too is glowing',
+ 'I know what is cold and what is warm',
+ 'It is clear the gate is open',
+ 'It is expected the gate is closed',
+ 'The room is painted white the gate is blue'
+])assert.equal(formatter.suggest(perLetter(words.replace(/ /g,''))).text,words+'.');
+assert.equal(formatter.suggest(perLetter('Thelampisglo\nwing')).text,'The lamp is glowing.');
+assert.equal(formatter.suggest(perLetter('Thelampisglo\nwing\nReflectionsareglowing')).text,'The lamp is glowing.\nReflections are glowing.');
+const existingQuestion=formatter.suggest(perLetter('Whatisthekeythatismissing?Thedoorislocked.'));
+assert.equal(existingQuestion.text,'What is the key that is missing? The door is locked.');assert.equal(existingQuestion.punctuationCount,0);
+const ambiguousMark=perLetter('Whatisthekeythatismissing!/?thedoorislockedboltsarerusting'),ambiguousOutput=formatter.suggest(ambiguousMark);
+assert.equal(ambiguousOutput.text,'What is the key that is missing!/? the door is locked.\nbolts are rusting.');validSpans(ambiguousMark,ambiguousOutput);
+assert.equal(formatter.suggest(ambiguousMark,{punctuate:false}).text,'What is the key that is missing!/? the door is locked bolts are rusting');
+const mixedCaseWords=wordGlyphs('THE lamp is glowing AND what is the lamp that is glowing THE lock is glowing lights are glowing');
+const mixedCaseOutput=formatter.suggest(mixedCaseWords);
+assert.equal(mixedCaseOutput.text,'THE lamp is glowing AND what is the lamp that is glowing?\nTHE lock is glowing.\nlights are glowing.');validSpans(mixedCaseWords,mixedCaseOutput);
+assert.equal(formatter.suggest(perLetter('Thelampisglowing[?]Thewindowisglowing')).text,'The lamp is glowing [?] The window is glowing.');
+console.log('PASS synthetic sentence suggestions: direct questions, adjacent/repeated copular statements, lowercase/uppercase and word-valued spans; coordinated/relative/complement clauses, source punctuation and image line wraps preserved.');
 const a=formatter.suggest(plain('the[?]dragon[未映射]falls'));assert(a.text.includes('[?]'));assert(a.text.includes('[未映射]'));
 assert.equal(formatter.suggest(plain('abcXYZ123')).text.replace(/[\s.,]/g,''),'abcXYZ123');
 assert.equal(formatter.suggest(plain('')).text,'');
