@@ -144,6 +144,17 @@
   function atomsFor(mask,box,touching=false){
     const cols=[];
     for(let x=box.x;x<box.x+box.width;x++){let n=0;for(let y=box.y;y<box.y+box.height;y++)n+=mask.data[y*mask.width+x];cols.push(n);}
+    // A bounded reference-cluster pass can test cuts absent from component
+    // edges. Blank columns stay blank and every original ink column is covered.
+    if(touching==='reference-grid'){
+      const step=box.height>48?2:1,grid=[];
+      for(let i=0;i<cols.length;i+=step){
+        let first=i,last=Math.min(cols.length,i+step)-1;
+        while(first<=last&&!cols[first])first++;while(last>=first&&!cols[last])last--;
+        if(first<=last)grid.push({start:box.x+first,end:box.x+last+1});
+      }
+      return grid;
+    }
     const atoms=[];let start=-1;
     for(let i=0;i<=cols.length;i++){
       if(cols[i]){if(start<0)start=i;}
@@ -198,7 +209,7 @@
     const costs=new Float64Array(n+1).fill(Infinity),back=Array(n+1),edges=[];costs[0]=0;
     for(let i=0;i<n;i++){
       if(!Number.isFinite(costs[i]))continue;
-      for(let j=i;j<Math.min(n,i+(touching==='components'?28:14));j++){
+      for(let j=i;j<Math.min(n,i+(touching==='reference-grid'?Math.ceil(box.height*1.9/(box.height>48?2:1)):touching==='components'?28:14));j++){
         if(j>i&&atoms[j].start-atoms[j-1].end>box.height*.4)break;
         const x=atoms[i].start,width=atoms[j].end-x;
         if(width>box.height*1.9){
@@ -461,14 +472,61 @@
       // references when every replacement also has strong native-template
       // evidence. Confident old labels and ordinary changes keep the .008 gate.
       // nativeScore exists only for IDs with held-out cross-row references.
-      const nativeTie=before.length>=2&&before.length<=6&&after.length>=2&&after.length<=6&&
-        before.every(token=>!token.certain&&Number.isFinite(token.segmentationMargin)&&token.segmentationMargin>=0&&token.segmentationMargin<.01)&&
-        after.every(token=>{
+      const pendingPartition=before.length>=2&&before.length<=6&&after.length>=2&&after.length<=6&&
+        before.every(token=>!token.certain&&Number.isFinite(token.segmentationMargin)&&token.segmentationMargin>=0&&token.segmentationMargin<.045);
+      const nativeLabels=after.every(token=>{
           const first=token.candidates?.[0];
           return first?.id===token.id&&Number.isFinite(first.nativeScore)&&first.nativeScore>=.84&&first.score-(token.candidates?.[1]?.score||0)>=.035;
         });
-      return benefit/width>.005&&(qualityGain>.008||nativeTie&&qualityGain>.002);
+      const nativeTie=pendingPartition&&nativeLabels&&before.every(token=>token.segmentationMargin<.01);
+      // Strong held-out support may settle other still-pending partitions, but
+      // never excuse a worse local image objective or a confirmed old boundary.
+      const strongTie=pendingPartition&&nativeLabels&&benefit/width>.02&&qualityGain>0;
+      return benefit/width>.005&&(qualityGain>.008||nativeTie&&qualityGain>.002||strongTie);
     });
+  }
+  function referenceGridSupported(before,native,after,adapted,box){
+    if(box.height<40||box.height>96||box.width>160||before.length<2||before.length>6||after.length<2||after.length>6||
+      before.some(t=>!t.id||t.manual||t.box.height<30||adapted.find(a=>a.id===t.id)?.references))return false;
+    // The finer native search must reproduce the original reading while proving
+    // its boundaries are near a rival. Old confidence based on missing cut sites
+    // is not sufficient to mark the recovered reading as confirmed.
+    if(native.length!==before.length||native.some((t,i)=>t.id!==before[i].id||overlap(t.box,before[i].box)<.85||
+      !Number.isFinite(t.segmentationMargin)||t.segmentationMargin<0||t.segmentationMargin>=.01))return false;
+    if(after.length===before.length&&after.every((t,i)=>t.id===before[i].id))return false;
+    if(after.some(t=>{
+      const first=t.candidates?.[0],nativeScore=first?.nativeScore??first?.score;
+      return first?.id!==t.id||!Number.isFinite(nativeScore)||nativeScore<.84||first.score-(t.candidates?.[1]?.score||0)<.035;
+    }))return false;
+    const supported=new Set(after.filter(t=>adapted.find(a=>a.id===t.id)?.references).map(t=>t.id));
+    if(supported.size<2||!after.some(t=>Number.isFinite(t.candidates[0].nativeScore)&&t.score-t.candidates[0].nativeScore>=.015))return false;
+    return imageEvidence({lines:[{box,tokens:after}]})>imageEvidence({lines:[{box,tokens:before}]});
+  }
+  function refineReferenceClusters(mask,line,adapted,templates,options,budget){
+    let tokens=line.tokens,regions=0;
+    if(line.box.height<40||line.box.height>96||!budget.remaining)return {tokens,regions};
+    const runs=[];
+    for(let i=0;i<tokens.length;){
+      if(adapted.find(t=>t.id===tokens[i].id)?.references){i++;continue;}
+      const from=i;while(i<tokens.length&&!adapted.find(t=>t.id===tokens[i].id)?.references)i++;
+      if(i-from>=2&&i-from<=6)runs.push({from,to:i});
+    }
+    for(const {from,to}of runs.reverse()){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      if(!budget.remaining)break;
+      const before=tokens.slice(from,to),x=before[0].box.x,end=before.at(-1).box.x+before.at(-1).box.width;
+      if(end-x>160||before.some(t=>!t.id||t.manual||t.box.height<30))continue;
+      const box={x,y:line.box.y,width:end-x,height:line.box.height};budget.remaining--;
+      const native=recognizeLine(mask,box,templates,'reference-grid');
+      if(native.length!==before.length||native.some((t,i)=>t.id!==before[i].id||overlap(t.box,before[i].box)<.85||
+        !Number.isFinite(t.segmentationMargin)||t.segmentationMargin<0||t.segmentationMargin>=.01))continue;
+      const after=recognizeLine(mask,box,adapted,'reference-grid');
+      const rescored=before.map(t=>({...t,score:matchDescriptor(describe(mask,t.box),adapted.filter(a=>a.id===t.id))[0]?.score||0}));
+      if(!referenceGridSupported(rescored,native,after,adapted,box))continue;
+      for(const token of after)token.certain=false;
+      tokens=[...tokens.slice(0,from),...after,...tokens.slice(to)];regions++;
+    }
+    return {tokens,regions};
   }
   async function refineRepeatedGlyphs(image,baseline,templates,options,progress){
     if(baseline.lines.length<3)return baseline;
@@ -484,7 +542,7 @@
       byId.get(token.id).push({row,box:token.box,score:ranked[0].score,descriptor});
     });});
     if([...byId.values()].filter(items=>items.length>=3).length<3)return baseline;
-    const lines=[];let changed=0,count=0;
+    const lines=[],gridBudget={remaining:8};let changed=0,count=0;
     for(let row=0;row<baseline.lines.length;row++){
       if(options.cancelled?.())throw Error('已取消识别。');
       const line=baseline.lines[row];let selected=line;
@@ -523,6 +581,11 @@
             }
           }catch(error){
             if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
+          }
+          const finer=refineReferenceClusters(mask,selected,adapted,templates,options,gridBudget);
+          if(finer.regions){
+            if(selected===line)changed++;
+            selected={...selected,tokens:finer.tokens,pageMatching:{method:'repeated-glyphs',referenceIds:supported,gridRegions:finer.regions}};
           }
         }
       }

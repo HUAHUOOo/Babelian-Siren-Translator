@@ -100,7 +100,7 @@
   text=text.replace(/\b(poseidon)(s)\b/gi,(_,name,s)=>{possessives++;return name+"'"+s;});
   const words=[...text.matchAll(/[A-Za-z]+/g)].map(m=>({text:m[0],lower:m[0].toLowerCase(),start:m.index,end:m.index+m[0].length}));
   const inserts=new Map();let count=possessives,start=0,finite=false,question=false;
-  const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see think granted saw ends remains knows know broken lies stands begins ends'.split(' '));
+  const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see think granted saw ends remains knows know broken lies stands begins ends find finds fade fades understand understands realize realizes notice notices remember remembers explain explains declare declares report reports'.split(' '));
   const copulas=new Set('is are was were'.split(' ')),nominalStarts=new Set();
   const dependent=new Set('and but or nor neither either also not as than that which who whom whose what when where why how whatever whoever whenever wherever whether if unless because since while whilst whereas though although before after until once so except including with without of for from to in into on onto at by through under over between among near around against about despite during'.split(' '));
   const modifiers=new Set('very quite rather still already almost fully entirely'.split(' '));
@@ -110,7 +110,7 @@
   // by a short nominal subject. Repeated predicates work without a topic-specific
   // noun/adjective list. Connectives and relatives keep their clause together.
   let priorCopula=-1;
-  for(let i=0;i<words.length;i++)if(copulas.has(words[i].lower)){
+  for(let i=0;i<words.length;i++)if(copulas.has(words[i].lower)||/^(has|have|had)$/.test(words[i].lower)&&words[i+1]?.lower==='been'){
    if(priorCopula>=0){
     let complement=priorCopula+1;
     while(complement<i&&modifiers.has(words[complement].lower))complement++;
@@ -122,11 +122,47 @@
     const complementClause=words[priorCopula-1]?.lower==='it'&&/^(clear|likely|possible|certain|true|obvious|important|necessary|known|expected|believed|understood|said|assumed|reported|thought|suggested|supposed|proven|accepted|suspected)$/.test(predicate);
     if(complete&&shortNominal&&!complementClause&&!/[.!?:;,]|\[/.test(text.slice(words[priorCopula].end,words[i].start)))nominalStarts.add(candidate);
    }
-   priorCopula=i;
+   if(copulas.has(words[i].lower))priorCopula=i;
   }
   const questionWords=new Set('what who where when why how'.split(' '));
   const questionAuxiliaries=new Set('is are was were do does did can could will would should has have had must'.split(' '));
   const indirect=new Set('know knows knew known wonder wonders wondered ask asks asked explain explains explained remember remembers remembered understand understands understood tell tells told say says said see sees saw hear hears heard'.split(' '));
+  const reporting=new Set('understand understands realize realizes notice notices remember remembers know knows explain explains declare declares report reports'.split(' '));
+  const finiteStarts=new Set([...copulas,'has','have','had','can','may','must','will','would','should','finds','fades',...reporting]);
+  const pronouns=new Set('i he she it we you they there this these those'.split(' '));
+  function nominalSubject(at){
+   if(!words[at]||dependent.has(words[at].lower)||verbs.has(words[at].lower))return false;
+   if(finiteStarts.has(words[at+1]?.lower))return true;
+   if(!determiners.has(words[at].lower))return false;
+   for(let end=at+2;end<=Math.min(words.length-1,at+4);end++){
+    const subject=words.slice(at+1,end);
+    if(subject.every(w=>!dependent.has(w.lower)&&!verbs.has(w.lower))&&finiteStarts.has(words[end].lower))return true;
+   }
+   return false;
+  }
+  function frontedEnd(at){
+   const kind=words[at].lower;
+   for(let end=at+2;end<Math.min(words.length,at+16);end++){
+    if(/[.!?:;,]|\[/.test(text.slice(words[at].end,words[end].start)))return -1;
+    if(!nominalSubject(end))continue;
+    const phrase=words.slice(at+1,end);
+    if(kind==='when'||kind==='while'){
+     if(phrase.length===1&&/(?:ed|ing)$/.test(phrase[0].lower)||phrase.length>=3&&phrase.some(w=>finiteStarts.has(w.lower)))return end;
+    }else if(!phrase.some(w=>verbs.has(w.lower)||/^(that|which|who|if|when|because|while|and|but|or)$/.test(w.lower)))return end;
+   }
+   return -1;
+  }
+  const fronted=new Map(),frontedStarts=new Set(),colons=new Set();
+  const completed=word=>/^(out|done|ready|closed|open|safe)$/.test(word||'')||/(?:ed|ing)$/.test(word||'');
+  for(let i=0;i<words.length;i++){
+   const kind=words[i].lower,isFront=/^(when|while|with|without)$/.test(kind)||kind==='of'&&/^(this|these|those|that)$/.test(words[i+1]?.lower||'');
+   const prior=words[i-1],gap=prior?text.slice(prior.end,words[i].start):'';
+   if(isFront&&(i===0||/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))||/^[A-Z]/.test(words[i].text)&&completed(prior?.lower))){
+    const end=frontedEnd(i);
+    if(end>=0){fronted.set(end,i);if(i&&!/[.!?]/.test(gap))frontedStarts.add(i);}
+   }
+   if(i&&reporting.has(prior.lower)&&/^[A-Z]/.test(words[i].text)&&nominalSubject(i)&&!/[.!?:;,]|\[/.test(gap))colons.add(i);
+  }
   // Only repeated, short nominal complements of a participial predicate form
   // this list. Nested relatives, finite clauses, markers and existing punctuation
   // are not evidence for inserting commas between ordinary occurrences of with.
@@ -150,9 +186,21 @@
   for(let i=0;i<words.length;i++){
    const w=words[i],prior=words[i-1],gap=prior?text.slice(prior.end,w.start):'';
    if(/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))){start=i;finite=false;question=false;}
+   const front=fronted.get(i);
+   if(front!==undefined&&front>=start&&!/[.!?:;,]|\[/.test(text.slice(words[front].end,w.start))){
+    inserts.set(w.start,', ');count++;start=i;finite=false;question=false;
+   }
+   if(colons.has(i)){
+    inserts.set(w.start,': ');count++;start=i;finite=false;question=false;
+   }
    const prev=prior?.lower,n=i-start;
    const boundary=/^(if|however|otherwise|meanwhile|nevertheless|therefore|though)$/.test(w.lower)&&!['as','even','only','and','but'].includes(prev);
-   const subject=/^(you|it|they|we|this|there)$/.test(w.lower)&&/^(can|may|must|will|should|is|are|was|were|has|have)$/.test(words[i+1]?.lower||'')&&!['that','which','where','who','when','because','if','though','as','so'].includes(prev);
+   const subject=pronouns.has(w.lower)&&finiteStarts.has(words[i+1]?.lower)&&!['that','which','where','who','whom','whose','what','when','whether','because','if','unless','though','as','so','while','before','after','until','since','and','but','or','nor'].includes(prev);
+   const quotedReport=subject&&n>=3&&/^[A-Z]/.test(w.text)&&reporting.has(words[i+1]?.lower)&&colons.has(i+2);
+   // A free-relative subject has its own later copula; it is not an auxiliary
+   // question. Keep an ordinary indirect "what can ..." complement intact.
+   const relativeSubject=w.lower==='what'&&/^(can|may|must|will|would|could|should)$/.test(words[i+1]?.lower||'')&&words[i+2]?.lower==='be'&&
+    (/(?:ed|ing)$/.test(words[i+3]?.lower||'')||/^(done|said|seen|known)$/.test(words[i+3]?.lower||''))&&copulas.has(words[i+4]?.lower);
    // Optative clauses ("may he live ...") start a new wish, unlike the ordinary
    // permission construction ("you may draw ..."). Never change source case.
    const wish=w.lower==='may'&&/^(he|she|it|they|we|you)$/.test(words[i+1]?.lower||'')&&/^(live|rot|rest|prosper|survive|find|be|have|fall|remain|burn|perish)$/.test(words[i+2]?.lower||'')&&!['and','but','that','whether'].includes(prev);
@@ -160,10 +208,10 @@
    // speaker clause. Never split a relative or an ordinary "words I say" phrase.
    const report=/^(i|we|he|she|they)$/.test(w.lower)&&/^(say|said|declare|declared|insist|insisted|warn|warned)$/.test(words[i+1]?.lower||'')&&
     n>=5&&/ing$/.test(words[start]?.lower||'')&&words[start+1]?.lower==='with'&&participialList(start,i).length>=3;
-   if((report||finite&&(nominalStarts.has(i)||n>=5&&(boundary||subject||wish)))&&!/[.!?:;]|\[/.test(gap)){
+   if(!inserts.has(w.start)&&(report||finite&&(nominalStarts.has(i)||frontedStarts.has(i)||quotedReport||n>=5&&(boundary||subject||wish||relativeSubject&&completed(prev))))&&!/[.!?:;]|\[/.test(gap)){
     inserts.set(w.start,question?'?\n':'.\n');count++;start=i;finite=false;question=false;
    }
-   const directQuestion=questionWords.has(w.lower)&&questionAuxiliaries.has(words[i+1]?.lower)&&(i===start||finite&&/^(and|but)$/.test(prev)&&!words.slice(start,i).some(token=>indirect.has(token.lower)));
+   const directQuestion=!relativeSubject&&questionWords.has(w.lower)&&questionAuxiliaries.has(words[i+1]?.lower)&&(i===start||finite&&/^(and|but)$/.test(prev)&&!words.slice(start,i).some(token=>indirect.has(token.lower)));
    if(directQuestion&&!/\[/.test(text.slice(words[start]?.start??0,w.start)))question=true;
    if(verbs.has(w.lower))finite=true;
   }

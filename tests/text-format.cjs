@@ -90,6 +90,34 @@ for(const words of [
  'Traveling with a map with a lamp with a compass that we carry I say it is safe'
 ])assert.equal(formatter.suggest(wordGlyphs(words)).text,words+'.');
 console.log('PASS synthetic repeated-preposition lists: short participial complements, independent reporting clause, word glyph case and source marks; two-item/nested/relative/unknown/already-punctuated phrases preserved.');
+const frontedCases=[
+ ['When he finds the key the door is open','When he finds the key, the door is open.'],
+ ['When closed there is silence','When closed, there is silence.'],
+ ['The lamp is glowing With the key the gate is open','The lamp is glowing.\nWith the key, the gate is open.'],
+ ['He realizes The gate is open','He realizes: The gate is open.'],
+ ['The gate is closed THE lamp has been repaired','The gate is closed.\nTHE lamp has been repaired.'],
+ ['The work has been carried out what can be repaired is ready','The work has been carried out.\nwhat can be repaired is ready.'],
+ ['The work is done OF this there is no doubt','The work is done.\nOF this, there is no doubt.'],
+ ['When he is ready there is light He understands The gate is open','When he is ready, there is light.\nHe understands: The gate is open.']
+];
+for(const [words,expected]of frontedCases)for(const payload of [perLetter(words.replace(/ /g,'')),wordGlyphs(words)]){
+ const frozen=JSON.stringify(payload),output=formatter.suggest(payload);
+ assert.equal(output.text,expected);validSpans(payload,output);assert.equal(JSON.stringify(payload),frozen);
+ assert.equal(formatter.suggest(payload,{punctuate:false}).text,words);
+}
+for(const words of [
+ 'I know what can be done',
+ 'The light that fades out with the sunset is dim',
+ 'He understands that The door is locked',
+ 'When [?] there is light',
+ 'When he is ready',
+ 'The gate is closed while the lamp is glowing',
+ 'The gate is closed for what he has placed inside',
+ 'The gate is closed and he has repaired the lamp',
+ 'The light is glowing with the fading of the sunset'
+])assert.equal(formatter.suggest(wordGlyphs(words)).text,words+'.');
+assert.equal(formatter.suggest(wordGlyphs('What can be repaired')).text,'What can be repaired?');
+console.log('PASS synthetic fronted clauses and statements: temporal/prepositional comma, reporting colon, perfect passive and free-relative subject; complements, relatives, questions, source case/unknown markers and spans preserved.');
 const a=formatter.suggest(plain('the[?]dragon[未映射]falls'));assert(a.text.includes('[?]'));assert(a.text.includes('[未映射]'));
 assert.equal(formatter.suggest(plain('abcXYZ123')).text.replace(/[\s.,]/g,''),'abcXYZ123');
 assert.equal(formatter.suggest(plain('')).text,'');

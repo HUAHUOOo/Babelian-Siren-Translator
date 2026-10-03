@@ -1156,6 +1156,17 @@ summary { color:var(--muted); }
   function atomsFor(mask,box,touching=false){
     const cols=[];
     for(let x=box.x;x<box.x+box.width;x++){let n=0;for(let y=box.y;y<box.y+box.height;y++)n+=mask.data[y*mask.width+x];cols.push(n);}
+    // A bounded reference-cluster pass can test cuts absent from component
+    // edges. Blank columns stay blank and every original ink column is covered.
+    if(touching==='reference-grid'){
+      const step=box.height>48?2:1,grid=[];
+      for(let i=0;i<cols.length;i+=step){
+        let first=i,last=Math.min(cols.length,i+step)-1;
+        while(first<=last&&!cols[first])first++;while(last>=first&&!cols[last])last--;
+        if(first<=last)grid.push({start:box.x+first,end:box.x+last+1});
+      }
+      return grid;
+    }
     const atoms=[];let start=-1;
     for(let i=0;i<=cols.length;i++){
       if(cols[i]){if(start<0)start=i;}
@@ -1210,7 +1221,7 @@ summary { color:var(--muted); }
     const costs=new Float64Array(n+1).fill(Infinity),back=Array(n+1),edges=[];costs[0]=0;
     for(let i=0;i<n;i++){
       if(!Number.isFinite(costs[i]))continue;
-      for(let j=i;j<Math.min(n,i+(touching==='components'?28:14));j++){
+      for(let j=i;j<Math.min(n,i+(touching==='reference-grid'?Math.ceil(box.height*1.9/(box.height>48?2:1)):touching==='components'?28:14));j++){
         if(j>i&&atoms[j].start-atoms[j-1].end>box.height*.4)break;
         const x=atoms[i].start,width=atoms[j].end-x;
         if(width>box.height*1.9){
@@ -1473,14 +1484,61 @@ summary { color:var(--muted); }
       // references when every replacement also has strong native-template
       // evidence. Confident old labels and ordinary changes keep the .008 gate.
       // nativeScore exists only for IDs with held-out cross-row references.
-      const nativeTie=before.length>=2&&before.length<=6&&after.length>=2&&after.length<=6&&
-        before.every(token=>!token.certain&&Number.isFinite(token.segmentationMargin)&&token.segmentationMargin>=0&&token.segmentationMargin<.01)&&
-        after.every(token=>{
+      const pendingPartition=before.length>=2&&before.length<=6&&after.length>=2&&after.length<=6&&
+        before.every(token=>!token.certain&&Number.isFinite(token.segmentationMargin)&&token.segmentationMargin>=0&&token.segmentationMargin<.045);
+      const nativeLabels=after.every(token=>{
           const first=token.candidates?.[0];
           return first?.id===token.id&&Number.isFinite(first.nativeScore)&&first.nativeScore>=.84&&first.score-(token.candidates?.[1]?.score||0)>=.035;
         });
-      return benefit/width>.005&&(qualityGain>.008||nativeTie&&qualityGain>.002);
+      const nativeTie=pendingPartition&&nativeLabels&&before.every(token=>token.segmentationMargin<.01);
+      // Strong held-out support may settle other still-pending partitions, but
+      // never excuse a worse local image objective or a confirmed old boundary.
+      const strongTie=pendingPartition&&nativeLabels&&benefit/width>.02&&qualityGain>0;
+      return benefit/width>.005&&(qualityGain>.008||nativeTie&&qualityGain>.002||strongTie);
     });
+  }
+  function referenceGridSupported(before,native,after,adapted,box){
+    if(box.height<40||box.height>96||box.width>160||before.length<2||before.length>6||after.length<2||after.length>6||
+      before.some(t=>!t.id||t.manual||t.box.height<30||adapted.find(a=>a.id===t.id)?.references))return false;
+    // The finer native search must reproduce the original reading while proving
+    // its boundaries are near a rival. Old confidence based on missing cut sites
+    // is not sufficient to mark the recovered reading as confirmed.
+    if(native.length!==before.length||native.some((t,i)=>t.id!==before[i].id||overlap(t.box,before[i].box)<.85||
+      !Number.isFinite(t.segmentationMargin)||t.segmentationMargin<0||t.segmentationMargin>=.01))return false;
+    if(after.length===before.length&&after.every((t,i)=>t.id===before[i].id))return false;
+    if(after.some(t=>{
+      const first=t.candidates?.[0],nativeScore=first?.nativeScore??first?.score;
+      return first?.id!==t.id||!Number.isFinite(nativeScore)||nativeScore<.84||first.score-(t.candidates?.[1]?.score||0)<.035;
+    }))return false;
+    const supported=new Set(after.filter(t=>adapted.find(a=>a.id===t.id)?.references).map(t=>t.id));
+    if(supported.size<2||!after.some(t=>Number.isFinite(t.candidates[0].nativeScore)&&t.score-t.candidates[0].nativeScore>=.015))return false;
+    return imageEvidence({lines:[{box,tokens:after}]})>imageEvidence({lines:[{box,tokens:before}]});
+  }
+  function refineReferenceClusters(mask,line,adapted,templates,options,budget){
+    let tokens=line.tokens,regions=0;
+    if(line.box.height<40||line.box.height>96||!budget.remaining)return {tokens,regions};
+    const runs=[];
+    for(let i=0;i<tokens.length;){
+      if(adapted.find(t=>t.id===tokens[i].id)?.references){i++;continue;}
+      const from=i;while(i<tokens.length&&!adapted.find(t=>t.id===tokens[i].id)?.references)i++;
+      if(i-from>=2&&i-from<=6)runs.push({from,to:i});
+    }
+    for(const {from,to}of runs.reverse()){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      if(!budget.remaining)break;
+      const before=tokens.slice(from,to),x=before[0].box.x,end=before.at(-1).box.x+before.at(-1).box.width;
+      if(end-x>160||before.some(t=>!t.id||t.manual||t.box.height<30))continue;
+      const box={x,y:line.box.y,width:end-x,height:line.box.height};budget.remaining--;
+      const native=recognizeLine(mask,box,templates,'reference-grid');
+      if(native.length!==before.length||native.some((t,i)=>t.id!==before[i].id||overlap(t.box,before[i].box)<.85||
+        !Number.isFinite(t.segmentationMargin)||t.segmentationMargin<0||t.segmentationMargin>=.01))continue;
+      const after=recognizeLine(mask,box,adapted,'reference-grid');
+      const rescored=before.map(t=>({...t,score:matchDescriptor(describe(mask,t.box),adapted.filter(a=>a.id===t.id))[0]?.score||0}));
+      if(!referenceGridSupported(rescored,native,after,adapted,box))continue;
+      for(const token of after)token.certain=false;
+      tokens=[...tokens.slice(0,from),...after,...tokens.slice(to)];regions++;
+    }
+    return {tokens,regions};
   }
   async function refineRepeatedGlyphs(image,baseline,templates,options,progress){
     if(baseline.lines.length<3)return baseline;
@@ -1496,7 +1554,7 @@ summary { color:var(--muted); }
       byId.get(token.id).push({row,box:token.box,score:ranked[0].score,descriptor});
     });});
     if([...byId.values()].filter(items=>items.length>=3).length<3)return baseline;
-    const lines=[];let changed=0,count=0;
+    const lines=[],gridBudget={remaining:8};let changed=0,count=0;
     for(let row=0;row<baseline.lines.length;row++){
       if(options.cancelled?.())throw Error('已取消识别。');
       const line=baseline.lines[row];let selected=line;
@@ -1535,6 +1593,11 @@ summary { color:var(--muted); }
             }
           }catch(error){
             if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
+          }
+          const finer=refineReferenceClusters(mask,selected,adapted,templates,options,gridBudget);
+          if(finer.regions){
+            if(selected===line)changed++;
+            selected={...selected,tokens:finer.tokens,pageMatching:{method:'repeated-glyphs',referenceIds:supported,gridRegions:finer.regions}};
           }
         }
       }
@@ -2096,7 +2159,7 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
   text=text.replace(/\b(poseidon)(s)\b/gi,(_,name,s)=>{possessives++;return name+"'"+s;});
   const words=[...text.matchAll(/[A-Za-z]+/g)].map(m=>({text:m[0],lower:m[0].toLowerCase(),start:m.index,end:m.index+m[0].length}));
   const inserts=new Map();let count=possessives,start=0,finite=false,question=false;
-  const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see think granted saw ends remains knows know broken lies stands begins ends'.split(' '));
+  const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see think granted saw ends remains knows know broken lies stands begins ends find finds fade fades understand understands realize realizes notice notices remember remembers explain explains declare declares report reports'.split(' '));
   const copulas=new Set('is are was were'.split(' ')),nominalStarts=new Set();
   const dependent=new Set('and but or nor neither either also not as than that which who whom whose what when where why how whatever whoever whenever wherever whether if unless because since while whilst whereas though although before after until once so except including with without of for from to in into on onto at by through under over between among near around against about despite during'.split(' '));
   const modifiers=new Set('very quite rather still already almost fully entirely'.split(' '));
@@ -2106,7 +2169,7 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
   // by a short nominal subject. Repeated predicates work without a topic-specific
   // noun/adjective list. Connectives and relatives keep their clause together.
   let priorCopula=-1;
-  for(let i=0;i<words.length;i++)if(copulas.has(words[i].lower)){
+  for(let i=0;i<words.length;i++)if(copulas.has(words[i].lower)||/^(has|have|had)$/.test(words[i].lower)&&words[i+1]?.lower==='been'){
    if(priorCopula>=0){
     let complement=priorCopula+1;
     while(complement<i&&modifiers.has(words[complement].lower))complement++;
@@ -2118,11 +2181,47 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
     const complementClause=words[priorCopula-1]?.lower==='it'&&/^(clear|likely|possible|certain|true|obvious|important|necessary|known|expected|believed|understood|said|assumed|reported|thought|suggested|supposed|proven|accepted|suspected)$/.test(predicate);
     if(complete&&shortNominal&&!complementClause&&!/[.!?:;,]|\[/.test(text.slice(words[priorCopula].end,words[i].start)))nominalStarts.add(candidate);
    }
-   priorCopula=i;
+   if(copulas.has(words[i].lower))priorCopula=i;
   }
   const questionWords=new Set('what who where when why how'.split(' '));
   const questionAuxiliaries=new Set('is are was were do does did can could will would should has have had must'.split(' '));
   const indirect=new Set('know knows knew known wonder wonders wondered ask asks asked explain explains explained remember remembers remembered understand understands understood tell tells told say says said see sees saw hear hears heard'.split(' '));
+  const reporting=new Set('understand understands realize realizes notice notices remember remembers know knows explain explains declare declares report reports'.split(' '));
+  const finiteStarts=new Set([...copulas,'has','have','had','can','may','must','will','would','should','finds','fades',...reporting]);
+  const pronouns=new Set('i he she it we you they there this these those'.split(' '));
+  function nominalSubject(at){
+   if(!words[at]||dependent.has(words[at].lower)||verbs.has(words[at].lower))return false;
+   if(finiteStarts.has(words[at+1]?.lower))return true;
+   if(!determiners.has(words[at].lower))return false;
+   for(let end=at+2;end<=Math.min(words.length-1,at+4);end++){
+    const subject=words.slice(at+1,end);
+    if(subject.every(w=>!dependent.has(w.lower)&&!verbs.has(w.lower))&&finiteStarts.has(words[end].lower))return true;
+   }
+   return false;
+  }
+  function frontedEnd(at){
+   const kind=words[at].lower;
+   for(let end=at+2;end<Math.min(words.length,at+16);end++){
+    if(/[.!?:;,]|\[/.test(text.slice(words[at].end,words[end].start)))return -1;
+    if(!nominalSubject(end))continue;
+    const phrase=words.slice(at+1,end);
+    if(kind==='when'||kind==='while'){
+     if(phrase.length===1&&/(?:ed|ing)$/.test(phrase[0].lower)||phrase.length>=3&&phrase.some(w=>finiteStarts.has(w.lower)))return end;
+    }else if(!phrase.some(w=>verbs.has(w.lower)||/^(that|which|who|if|when|because|while|and|but|or)$/.test(w.lower)))return end;
+   }
+   return -1;
+  }
+  const fronted=new Map(),frontedStarts=new Set(),colons=new Set();
+  const completed=word=>/^(out|done|ready|closed|open|safe)$/.test(word||'')||/(?:ed|ing)$/.test(word||'');
+  for(let i=0;i<words.length;i++){
+   const kind=words[i].lower,isFront=/^(when|while|with|without)$/.test(kind)||kind==='of'&&/^(this|these|those|that)$/.test(words[i+1]?.lower||'');
+   const prior=words[i-1],gap=prior?text.slice(prior.end,words[i].start):'';
+   if(isFront&&(i===0||/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))||/^[A-Z]/.test(words[i].text)&&completed(prior?.lower))){
+    const end=frontedEnd(i);
+    if(end>=0){fronted.set(end,i);if(i&&!/[.!?]/.test(gap))frontedStarts.add(i);}
+   }
+   if(i&&reporting.has(prior.lower)&&/^[A-Z]/.test(words[i].text)&&nominalSubject(i)&&!/[.!?:;,]|\[/.test(gap))colons.add(i);
+  }
   // Only repeated, short nominal complements of a participial predicate form
   // this list. Nested relatives, finite clauses, markers and existing punctuation
   // are not evidence for inserting commas between ordinary occurrences of with.
@@ -2146,9 +2245,21 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
   for(let i=0;i<words.length;i++){
    const w=words[i],prior=words[i-1],gap=prior?text.slice(prior.end,w.start):'';
    if(/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))){start=i;finite=false;question=false;}
+   const front=fronted.get(i);
+   if(front!==undefined&&front>=start&&!/[.!?:;,]|\[/.test(text.slice(words[front].end,w.start))){
+    inserts.set(w.start,', ');count++;start=i;finite=false;question=false;
+   }
+   if(colons.has(i)){
+    inserts.set(w.start,': ');count++;start=i;finite=false;question=false;
+   }
    const prev=prior?.lower,n=i-start;
    const boundary=/^(if|however|otherwise|meanwhile|nevertheless|therefore|though)$/.test(w.lower)&&!['as','even','only','and','but'].includes(prev);
-   const subject=/^(you|it|they|we|this|there)$/.test(w.lower)&&/^(can|may|must|will|should|is|are|was|were|has|have)$/.test(words[i+1]?.lower||'')&&!['that','which','where','who','when','because','if','though','as','so'].includes(prev);
+   const subject=pronouns.has(w.lower)&&finiteStarts.has(words[i+1]?.lower)&&!['that','which','where','who','whom','whose','what','when','whether','because','if','unless','though','as','so','while','before','after','until','since','and','but','or','nor'].includes(prev);
+   const quotedReport=subject&&n>=3&&/^[A-Z]/.test(w.text)&&reporting.has(words[i+1]?.lower)&&colons.has(i+2);
+   // A free-relative subject has its own later copula; it is not an auxiliary
+   // question. Keep an ordinary indirect "what can ..." complement intact.
+   const relativeSubject=w.lower==='what'&&/^(can|may|must|will|would|could|should)$/.test(words[i+1]?.lower||'')&&words[i+2]?.lower==='be'&&
+    (/(?:ed|ing)$/.test(words[i+3]?.lower||'')||/^(done|said|seen|known)$/.test(words[i+3]?.lower||''))&&copulas.has(words[i+4]?.lower);
    // Optative clauses ("may he live ...") start a new wish, unlike the ordinary
    // permission construction ("you may draw ..."). Never change source case.
    const wish=w.lower==='may'&&/^(he|she|it|they|we|you)$/.test(words[i+1]?.lower||'')&&/^(live|rot|rest|prosper|survive|find|be|have|fall|remain|burn|perish)$/.test(words[i+2]?.lower||'')&&!['and','but','that','whether'].includes(prev);
@@ -2156,10 +2267,10 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
    // speaker clause. Never split a relative or an ordinary "words I say" phrase.
    const report=/^(i|we|he|she|they)$/.test(w.lower)&&/^(say|said|declare|declared|insist|insisted|warn|warned)$/.test(words[i+1]?.lower||'')&&
     n>=5&&/ing$/.test(words[start]?.lower||'')&&words[start+1]?.lower==='with'&&participialList(start,i).length>=3;
-   if((report||finite&&(nominalStarts.has(i)||n>=5&&(boundary||subject||wish)))&&!/[.!?:;]|\[/.test(gap)){
+   if(!inserts.has(w.start)&&(report||finite&&(nominalStarts.has(i)||frontedStarts.has(i)||quotedReport||n>=5&&(boundary||subject||wish||relativeSubject&&completed(prev))))&&!/[.!?:;]|\[/.test(gap)){
     inserts.set(w.start,question?'?\n':'.\n');count++;start=i;finite=false;question=false;
    }
-   const directQuestion=questionWords.has(w.lower)&&questionAuxiliaries.has(words[i+1]?.lower)&&(i===start||finite&&/^(and|but)$/.test(prev)&&!words.slice(start,i).some(token=>indirect.has(token.lower)));
+   const directQuestion=!relativeSubject&&questionWords.has(w.lower)&&questionAuxiliaries.has(words[i+1]?.lower)&&(i===start||finite&&/^(and|but)$/.test(prev)&&!words.slice(start,i).some(token=>indirect.has(token.lower)));
    if(directQuestion&&!/\[/.test(text.slice(words[start]?.start??0,w.start)))question=true;
    if(verbs.has(w.lower))finite=true;
   }

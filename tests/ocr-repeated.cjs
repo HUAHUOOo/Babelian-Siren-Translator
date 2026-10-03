@@ -108,6 +108,20 @@ function checkLocalSupportGuard(){
  tieCase('a one-symbol replacement is not a close multi-symbol partition',(_,after)=>{after.splice(1);after[0].box.width=60;after[0].score=after[0].candidates[0].score=.89;after[0].candidates[0].nativeScore=.88;});
  tieCase('unbounded old partition cannot borrow the tie exception',before=>{before.splice(0,before.length,...Array.from({length:7},(_,i)=>({...token('old-'+i,i*8,8,.991),segmentationMargin:.003})));});
  tieCase('unbounded new partition cannot borrow the tie exception',(_,after)=>{after.splice(0,after.length,...Array.from({length:7},(_,i)=>token('new-'+i,i*8,8,.995,.986)));});
+ const strongCase=(name,edit,accept=false)=>{
+  const before=tieBefore(),after=tieAfter();
+  before.forEach(t=>{t.segmentationMargin=.023;});
+  after.forEach(t=>{t.score=t.candidates[0].score=.9015;t.candidates[0].nativeScore=.8755;});
+  edit(before,after);cases.push({name,before,after,accept});
+ };
+ strongCase('strong references settle a still-pending non-close partition',()=>{},true);
+ strongCase('strong references do not settle confirmed old boundaries',before=>{before[0].certain=true;});
+ strongCase('ordinary reference gain cannot use the strong-support exception',(_,after)=>{after.forEach(t=>{t.candidates[0].nativeScore=.8915;});});
+ strongCase('strong support remains strictly above .02',(_,after)=>{after.forEach(t=>{t.candidates[0].nativeScore=.882;});});
+ strongCase('non-pending margin cannot use strong support',before=>{before[0].segmentationMargin=.045;});
+ strongCase('strong support cannot excuse worse local quality',(_,after)=>{after.forEach(t=>{t.score=t.candidates[0].score=.899;});});
+ strongCase('strong support still requires native evidence',(_,after)=>{after[0].candidates[0].nativeScore=.839;});
+ strongCase('strong support still requires an unambiguous label',(_,after)=>{after[0].candidates.push({id:'rival',score:.88});});
  const rename=tokens=>tokens.map(token=>({...token,id:'opaque-'+token.id,candidates:token.candidates.map(candidate=>({...candidate,id:'opaque-'+candidate.id}))}));
  for(const {name,before,after,accept} of cases){
   const frozen=JSON.stringify([before,after]);
@@ -118,8 +132,59 @@ function checkLocalSupportGuard(){
  console.log('PASS local page-change guard: independent reference/quality gains; bounded pending native ties; confirmed/weak/unbounded partition rejection; width weighting, fragment penalty, opaque IDs and unchanged inputs.');
 }
 
+function checkReferenceGridGuard(){
+ const source=fs.readFileSync(require.resolve('../src/ocr-engine.js'),'utf8'),scope={module:{exports:{}}};
+ vm.runInNewContext(source.replace('return {binarize,','return {referenceGridSupported,refineReferenceClusters,binarize,'),scope);
+ const supported=scope.module.exports.referenceGridSupported,refine=scope.module.exports.refineReferenceClusters;
+ const make=(id,x,width,score,nativeScore)=>({id,box:{x,y:0,width,height:40},score,certain:true,manual:false,
+  candidates:[{id,score,...(nativeScore===undefined?{}:{nativeScore})}]});
+ const setup=()=>{
+  const before=Array.from({length:3},(_,i)=>make('old-'+i,i*40,40,.9));
+  const native=before.map(t=>({...t,segmentationMargin:.003}));
+  const after=Array.from({length:4},(_,i)=>make('new-'+i,i*30,30,.93,i<2?.91:undefined));
+  const adapted=after.map((t,i)=>({id:t.id,...(i<2?{references:[{},{},{}]}:{})}));
+  return {before,native,after,adapted,box:{x:0,y:0,width:120,height:40}};
+ };
+ const cases=[['native near-tie plus independent shape evidence',()=>{},true],
+  ['missing native rival',r=>{r.native[0].segmentationMargin=.01;}],
+  ['non-finite native rival',r=>{r.native[0].segmentationMargin=Infinity;}],
+  ['negative native rival',r=>{r.native[0].segmentationMargin=-.001;}],
+  ['native path must reproduce old IDs',r=>{r.native[0].id='unrelated';}],
+  ['native boxes must reproduce old footprint',r=>{r.native[0].box={...r.native[0].box,x:10};}],
+  ['manual old selection is protected',r=>{r.before[0].manual=true;}],
+  ['old supported glyph is not an unsupported cluster',r=>{r.adapted.push({id:r.before[0].id,references:[{}]});}],
+  ['new weak native match',r=>{r.after[0].candidates[0].nativeScore=.839;}],
+  ['new close label rival',r=>{r.after[0].candidates.push({id:'rival',score:.92});}],
+  ['new first candidate disagrees with ID',r=>{r.after[0].candidates[0].id='unrelated';}],
+  ['two distinct supported IDs are required',r=>{delete r.adapted[1].references;}],
+  ['one reference improvement of at least .015 is required',r=>{r.after.slice(0,2).forEach(t=>{t.candidates[0].nativeScore=.92;});}],
+  ['local objective must improve',r=>{r.after.forEach(t=>{t.score=t.candidates[0].score=.905;t.candidates[0].nativeScore=.885;});}],
+  ['small row cannot enter the pixel-grid pass',r=>{r.box.height=39;}],
+  ['oversized row cannot enter the pixel-grid pass',r=>{r.box.height=97;}],
+  ['oversized region cannot enter the pixel-grid pass',r=>{r.box.width=161;}],
+  ['tiny original glyph stays protected',r=>{r.before[0].box={...r.before[0].box,height:29};}],
+  ['unknown original glyph stays protected',r=>{r.before[0].id=null;}],
+  ['one old glyph is not a cluster',r=>{r.before=r.before.slice(0,1);r.native=r.native.slice(0,1);}],
+  ['unbounded replacement is rejected',r=>{r.after.push(...r.after.slice(0,3));}],
+  ['unchanged IDs do not constitute a recovery',r=>{r.after=r.before.map(t=>({...t}));}]
+ ];
+ for(const [name,edit,accept=false]of cases){
+  const r=setup();edit(r);const frozen=JSON.stringify(r);
+  assert.equal(supported(r.before,r.native,r.after,r.adapted,r.box),accept,name);
+  const rename=t=>({...t,id:t.id&&'opaque-'+t.id,candidates:t.candidates.map(c=>({...c,id:'opaque-'+c.id}))});
+  assert.equal(supported(r.before.map(rename),r.native.map(rename),r.after.map(rename),r.adapted.map(t=>({...t,id:'opaque-'+t.id})),r.box),accept,name+' with opaque IDs');
+  assert.equal(JSON.stringify(r),frozen,'Guard does not mutate image results');
+ }
+ const r=setup(),line={box:r.box,tokens:r.before};
+ assert.equal(refine(null,line,r.adapted,[],{}, {remaining:0}).tokens,r.before,'Exhausted document budget skips pixel work');
+ assert.equal(refine(null,{...line,box:{...r.box,height:39}},r.adapted,[],{}, {remaining:8}).tokens,r.before,'Small rows skip pixel work');
+ assert.throws(()=>refine(null,line,r.adapted,[],{cancelled:()=>true},{remaining:8}),/取消/);
+ console.log('PASS bounded reference grid: finer native rival, original footprint, independent new IDs, strong native matches and actual local gain; size/budget/manual/unknown/weak/opaque/cancellation guards.');
+}
+
 async function run(){
  checkLocalSupportGuard();
+ checkReferenceGridGuard();
  const target=['l','l','t','h','a','t'];
  const reference=['l','t','h','a','l','t','h','a'];
  const rows=[target,reference,reference.slice().reverse(),reference];
@@ -155,6 +220,7 @@ async function run(){
  const templates=OCR.prepareTemplates(masks),box=result.lines[0].box;
  const native=OCR.recognizeLine(mask,box,templates),components=OCR.recognizeLine(mask,box,templates,'components');
  covered(mask,native,box);covered(mask,components,box);
+ const grid=OCR.recognizeLine(mask,box,templates,'reference-grid');covered(mask,grid,box);
  assert.notDeepEqual(components.map(token=>token.box),native.map(token=>token.box),'Disconnected-component edges offer additional competing cut sites');
  const insideInk=components.slice(1).some(token=>{
   const x=token.box.x;

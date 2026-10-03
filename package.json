@@ -1,6 +1,6 @@
 {
   "name": "babelian-siren-translator",
-  "version": "1.9.21",
+  "version": "1.9.22",
   "private": true,
   "description": "Babelian & Siren Translator: offline glyph generation, screenshot recognition and manual review for Aeon Trespass: Odyssey",
   "scripts": {
