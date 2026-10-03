@@ -352,8 +352,20 @@
     }
     return {width,height,data,threshold,polarity};
   }
+  function thinningThreshold(gray,width,box,threshold,polarity){
+    const hist=new Uint32Array(256),split=polarity==='light'?254-threshold:threshold;
+    for(let y=box.y;y<box.y+box.height;y++)for(let x=box.x;x<box.x+box.width;x++){
+      const value=gray[y*width+x];hist[polarity==='light'?255-value:value]++;
+    }
+    // A printed background stripe may dominate the darkest histogram mode.
+    // Use the dark foreground decile so that texture is not treated as ink.
+    let total=0;for(let i=0;i<=split;i++)total+=hist[i];
+    let foreground=0,cumulative=hist[0];while(foreground<split&&cumulative<total*.1)cumulative+=hist[++foreground];
+    const value=Math.max(0,Math.round(split-(split-foreground)/12));
+    return polarity==='light'?254-value:value;
+  }
   async function refineSmallRows(image,gray,baseline,templates,thresholds,options,progress){
-    const lines=[];let refined=0,count=0;
+    const lines=[];let refined=0,count=0,cutRows=0,cutPixels=0;
     for(let row=0;row<baseline.lines.length;row++){
       if(options.cancelled?.())throw Error('已取消识别。');
       const original=baseline.lines[row],b=original.box;
@@ -362,8 +374,18 @@
       const x=Math.max(0,b.x-2),y=Math.max(0,b.y-2),region={x,y,width:Math.min(image.width,b.x+b.width+2)-x,height:Math.min(image.height,b.y+b.height+2)-y};
       let chosen=original,quality=imageEvidence({lines:[original]}),selectedThreshold=baseline.threshold;
       const passes=[original];
-      if(b.height>=30&&b.height<40&&region.width*region.height*9<=1200000&&hasSoftEdges(gray,image.width,b,baseline.threshold,baseline.polarity)){
-        for(const threshold of [baseline.threshold,...thresholds]){
+      const small=b.height>=30&&b.height<40&&region.width*region.height*9<=1200000;
+      const thin=small?thinningThreshold(gray,image.width,b,baseline.threshold,baseline.polarity):baseline.threshold;
+      const extra=small&&quality<.86&&cutRows<12&&
+        cutPixels+region.width*region.height*9*(thresholds.length+2)<=6000000&&
+        (hasSoftEdges(gray,image.width,b,baseline.threshold,baseline.polarity)||hasSoftEdges(gray,image.width,b,thin,baseline.polarity));
+      // Soft small print can hide cuts even on the fractional sampling grid.
+      // Compare bounded valley/component alternatives and a slightly thinner
+      // threshold; sharp inputs and already-strong rows keep the old path.
+      // Scores alone choose the row. No labels, words or supplied answers enter.
+      if(extra){cutRows++;cutPixels+=region.width*region.height*9*(thresholds.length+2);}
+      if(small&&(extra||hasSoftEdges(gray,image.width,b,baseline.threshold,baseline.polarity))){
+        for(const threshold of [...new Set([baseline.threshold,...thresholds,...(extra&&Math.abs(thin-baseline.threshold)>=4?[thin]:[])])]){
           if(options.cancelled?.())throw Error('已取消识别。');
           const mask=subpixelMask(gray,image,region,threshold,baseline.polarity),bands=rowBands(mask,false,templates);
           if(bands.length!==1)continue;
@@ -372,13 +394,23 @@
             return {x:left,y:top,width:Math.min(image.width,Math.ceil((box.x+box.width)/3+x))-left,height:Math.min(image.height,Math.ceil((box.y+box.height)/3+y))-top};
           };
           if(overlap(mapBox(bands[0]),b)<.8)continue;
-          let tokens;
-          try{tokens=recognizeLine(mask,bands[0],templates);}
+          let tokens,cutSearch=false;
+          try{
+            tokens=recognizeLine(mask,bands[0],templates);
+            if(extra&&imageEvidence({lines:[{box:bands[0],tokens}]})<.86){
+              let best=imageEvidence({lines:[{box:bands[0],tokens}]});
+              for(const mode of [true,'dense','components']){
+                if(options.cancelled?.())throw Error('已取消识别。');
+                const alternative=recognizeLine(mask,bands[0],templates,mode),score=imageEvidence({lines:[{box:bands[0],tokens:alternative}]});
+                if(score>best){tokens=alternative;best=score;cutSearch=true;}
+              }
+            }
+          }
           catch(error){
             if(/^(单行内容过多|无法切分这一行)/.test(error.message))continue;
             throw error;
           }
-          const pass={box:bands[0],tokens};
+          const pass={box:bands[0],tokens,...(cutSearch?{smallCutSearch:true}:{})};
           const evidence=imageEvidence({lines:[pass]});
           // Evaluate before rounding to source-pixel boxes. Rounding must not
           // become extra evidence for a wider or more fragmented candidate.
@@ -396,6 +428,7 @@
           // The original resolution gate still applies, never the enlarged
           // sampling grid. A new choice also needs another pass's support.
           token.certain=token.certain&&b.height>=30&&token.samplingStable;
+          if(chosen.smallCutSearch)token.certain=token.certain&&original.tokens.some(t=>t.certain&&t.id===token.id&&overlap(t.box,token.box)>=.85);
         }
         chosen={...chosen,sampling:{scale:3,threshold:selectedThreshold,sourceHeight:b.height}};
       }

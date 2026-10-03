@@ -200,12 +200,22 @@
    }
    return -1;
   }
+  // A clause-initial connective may introduce a nominal subject directly or a
+  // fronted phrase with its own later subject. Do not punctuate medial adverbs,
+  // fragments, unresolved markers or already-punctuated text as new evidence.
+  const discourseStarts=new Set();
+  for(let i=0;i<words.length-1;i++)if(/^(therefore|thus|hence|consequently|however|nevertheless|meanwhile|otherwise)$/.test(words[i].lower)){
+   const gap=i?text.slice(words[i-1].end,words[i].start):'';
+   if(i&&!/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,'')))continue;
+   const next=i+1,front=/^(with|without|when|while)$/.test(words[next].lower),end=front?frontedEnd(next):-1;
+   if((nominalSubject(next)||end>=0)&&!/[.!?:;,]|\[/.test(text.slice(words[i].end,words[end>=0?end:next].start)))discourseStarts.add(next);
+  }
   const fronted=new Map(),frontedStarts=new Set(),colons=new Set();
   const completed=word=>/^(out|done|ready|closed|open|safe)$/.test(word||'')||/(?:ed|ing)$/.test(word||'');
   for(let i=0;i<words.length;i++){
    const kind=words[i].lower,isFront=/^(when|while|with|without)$/.test(kind)||kind==='of'&&/^(this|these|those|that)$/.test(words[i+1]?.lower||'');
    const prior=words[i-1],gap=prior?text.slice(prior.end,words[i].start):'';
-   if(isFront&&(i===0||/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))||/^[A-Z]/.test(words[i].text)&&completed(prior?.lower))){
+   if(isFront&&(i===0||discourseStarts.has(i)||/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))||/^[A-Z]/.test(words[i].text)&&completed(prior?.lower))){
     const end=frontedEnd(i);
     if(end>=0){fronted.set(end,i);if(i&&!/[.!?]/.test(gap))frontedStarts.add(i);}
    }
@@ -234,6 +244,7 @@
   for(let i=0;i<words.length;i++){
    const w=words[i],prior=words[i-1],gap=prior?text.slice(prior.end,w.start):'';
    if(/[.!?]/.test(gap.replace(/\[\?\]|\[未映射\]/g,''))){start=i;finite=false;question=false;}
+   if(discourseStarts.has(i)){inserts.set(w.start,', ');count++;}
    const front=fronted.get(i);
    if(front!==undefined&&front>=start&&!/[.!?:;,]|\[/.test(text.slice(words[front].end,w.start))){
     inserts.set(w.start,', ');count++;start=i;finite=false;question=false;

@@ -91,6 +91,10 @@ for(const words of [
 ])assert.equal(formatter.suggest(wordGlyphs(words)).text,words+'.');
 console.log('PASS synthetic repeated-preposition lists: short participial complements, independent reporting clause, word glyph case and source marks; two-item/nested/relative/unknown/already-punctuated phrases preserved.');
 const frontedCases=[
+ ['Therefore with this old key a locked door is opened','Therefore, with this old key, a locked door is opened.'],
+ ['Thus without a map we are lost','Thus, without a map, we are lost.'],
+ ['However the gate is closed','However, the gate is closed.'],
+ ['Consequently when he is ready the gate is open','Consequently, when he is ready, the gate is open.'],
  ['When he finds the key the door is open','When he finds the key, the door is open.'],
  ['When closed there is silence','When closed, there is silence.'],
  ['The lamp is glowing With the key the gate is open','The lamp is glowing.\nWith the key, the gate is open.'],
@@ -106,6 +110,10 @@ for(const [words,expected]of frontedCases)for(const payload of [perLetter(words.
  assert.equal(formatter.suggest(payload,{punctuate:false}).text,words);
 }
 for(const words of [
+ 'The door is therefore locked',
+ 'Therefore with a map',
+ 'Therefore with [?] a lock is opened',
+ 'Therefore, with a key, the gate is open',
  'I know what can be done',
  'The light that fades out with the sunset is dim',
  'He understands that The door is locked',
