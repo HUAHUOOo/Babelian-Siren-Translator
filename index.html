@@ -2159,7 +2159,7 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
   text=text.replace(/\b(poseidon)(s)\b/gi,(_,name,s)=>{possessives++;return name+"'"+s;});
   const words=[...text.matchAll(/[A-Za-z]+/g)].map(m=>({text:m[0],lower:m[0].toLowerCase(),start:m.index,end:m.index+m[0].length}));
   const inserts=new Map();let count=possessives,start=0,finite=false,question=false;
-  const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see think granted saw ends remains knows know broken lies stands begins ends find finds fade fades understand understands realize realizes notice notices remember remembers explain explains declare declares report reports'.split(' '));
+  const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see sees think granted saw ends remains knows know broken lies stands begins ends find finds feel feels hear hears sense senses observe observes fade fades understand understands realize realizes notice notices remember remembers explain explains declare declares report reports'.split(' '));
   const copulas=new Set('is are was were'.split(' ')),nominalStarts=new Set();
   const dependent=new Set('and but or nor neither either also not as than that which who whom whose what when where why how whatever whoever whenever wherever whether if unless because since while whilst whereas though although before after until once so except including with without of for from to in into on onto at by through under over between among near around against about despite during'.split(' '));
   const modifiers=new Set('very quite rather still already almost fully entirely'.split(' '));
@@ -2189,6 +2189,54 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
   const reporting=new Set('understand understands realize realizes notice notices remember remembers know knows explain explains declare declares report reports'.split(' '));
   const finiteStarts=new Set([...copulas,'has','have','had','can','may','must','will','would','should','finds','fades',...reporting]);
   const pronouns=new Set('i he she it we you they there this these those'.split(' '));
+  // Repeated finite predicates can share a subject. Require three or more
+  // identical short verb/object/preposition headers and simple complements;
+  // ordinary repeated words, nested clauses and existing marks are not lists.
+  const listVerbs=new Set('find finds see sees feel feels hear hears sense senses observe observes notice notices'.split(' '));
+  const listPrepositions=new Set('in on at with from through'.split(' ')),predicateLists=[];
+  const plainNominal=part=>part.length>=1&&part.length<=5&&part.every(w=>!verbs.has(w.lower)&&!dependent.has(w.lower));
+  for(let i=1;i<words.length;i++){
+   if(!listVerbs.has(words[i].lower)||!/^(i|he|she|we|you|they)$/.test(words[i-1].lower)||
+     i!==1&&!/[.!?:;]/.test(text.slice(words[i-2].end,words[i-1].start)))continue;
+   let headerEnd=i+2;
+   while(headerEnd<=Math.min(words.length-1,i+4)&&!listPrepositions.has(words[headerEnd].lower))headerEnd++;
+   const object=words.slice(i+1,headerEnd);
+   if(headerEnd>i+4||!listPrepositions.has(words[headerEnd]?.lower)||!plainNominal(object)||
+     /[.!?:;,]|\[/.test(text.slice(words[i-1].end,words[headerEnd].end)))continue;
+   const header=words.slice(i,headerEnd+1).map(w=>w.lower),positions=[i];let after=headerEnd+1,tail=after,valid=true;
+   for(;;){
+    let next=after;
+    while(next<words.length&&next-after<=5&&!verbs.has(words[next].lower)&&!dependent.has(words[next].lower)&&
+      !/[.!?:;,]|\[/.test(text.slice(words[next-1].end,words[next].start)))next++;
+    const complement=words.slice(after,next);
+    if(!plainNominal(complement)||/[.!?:;,]|\[/.test(text.slice(words[after-1].end,words[next-1].end))){valid=false;break;}
+    tail=next;
+    if(!header.every((value,n)=>words[next+n]?.lower===value)||/[.!?:;,]|\[/.test(text.slice(words[next-1].end,words[next+header.length-1]?.end??text.length)))break;
+    positions.push(next);after=next+header.length;
+   }
+   if(valid&&positions.length>=3)predicateLists.push({positions,tail});
+  }
+  // A fronted free relative may resume with "in/on/... that ... he ...".
+  // Its resumption is one main clause, not a new sentence at the pronoun.
+  // Restrict this to a clause start or the end of a verified predicate list.
+  const resumptions=new Set(),resumedSubjects=new Set(),correlativeStarts=new Set();
+  for(let i=0;i<words.length;i++)if(/^(whatever|whichever)$/.test(words[i].lower)){
+   const coordinator=i>0&&/^(and|but)$/.test(words[i-1].lower),at=coordinator?i-1:i;
+   const followsList=coordinator&&predicateLists.some(list=>list.tail===at);
+   if(at!==0&&!followsList&&!/[.!?]/.test(text.slice(words[at-1].end,words[at].start)))continue;
+   for(let j=i+4;j<Math.min(words.length,i+80);j++){
+    if(/[.!?;:]|\[/.test(text.slice(words[i].end,words[j].start)))break;
+    if(!listPrepositions.has(words[j].lower)||!/^(that|this|those|these)$/.test(words[j+1]?.lower||''))continue;
+    let subject=j+2;if(/^(too|also)$/.test(words[subject]?.lower||''))subject++;
+    if(!/^(i|he|she|we|you|they|it)$/.test(words[subject]?.lower||'')||
+      !finiteStarts.has(words[subject+1]?.lower)&&!listVerbs.has(words[subject+1]?.lower)||
+      !words.slice(i+1,j).some(w=>finiteStarts.has(w.lower))||/[.!?;:]|\[/.test(text.slice(words[j].end,words[subject].start)))continue;
+    resumedSubjects.add(subject);
+    if(!/[,;:]\s*$/.test(text.slice(0,words[j].start)))resumptions.add(j);
+    if(followsList)correlativeStarts.add(at);
+    break;
+   }
+  }
   function nominalSubject(at){
    if(!words[at]||dependent.has(words[at].lower)||verbs.has(words[at].lower))return false;
    if(finiteStarts.has(words[at+1]?.lower))return true;
@@ -2254,7 +2302,7 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
    }
    const prev=prior?.lower,n=i-start;
    const boundary=/^(if|however|otherwise|meanwhile|nevertheless|therefore|though)$/.test(w.lower)&&!['as','even','only','and','but'].includes(prev);
-   const subject=pronouns.has(w.lower)&&finiteStarts.has(words[i+1]?.lower)&&!['that','which','where','who','whom','whose','what','when','whether','because','if','unless','though','as','so','while','before','after','until','since','and','but','or','nor'].includes(prev);
+   const subject=!resumedSubjects.has(i)&&pronouns.has(w.lower)&&finiteStarts.has(words[i+1]?.lower)&&!['that','which','where','who','whom','whose','what','when','whether','because','if','unless','though','as','so','while','before','after','until','since','and','but','or','nor'].includes(prev);
    const quotedReport=subject&&n>=3&&/^[A-Z]/.test(w.text)&&reporting.has(words[i+1]?.lower)&&colons.has(i+2);
    // A free-relative subject has its own later copula; it is not an auxiliary
    // question. Keep an ordinary indirect "what can ..." complement intact.
@@ -2267,7 +2315,7 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
    // speaker clause. Never split a relative or an ordinary "words I say" phrase.
    const report=/^(i|we|he|she|they)$/.test(w.lower)&&/^(say|said|declare|declared|insist|insisted|warn|warned)$/.test(words[i+1]?.lower||'')&&
     n>=5&&/ing$/.test(words[start]?.lower||'')&&words[start+1]?.lower==='with'&&participialList(start,i).length>=3;
-   if(!inserts.has(w.start)&&(report||finite&&(nominalStarts.has(i)||frontedStarts.has(i)||quotedReport||n>=5&&(boundary||subject||wish||relativeSubject&&completed(prev))))&&!/[.!?:;]|\[/.test(gap)){
+   if(!inserts.has(w.start)&&(report||finite&&(nominalStarts.has(i)||frontedStarts.has(i)||correlativeStarts.has(i)||quotedReport||n>=5&&(boundary||subject||wish||relativeSubject&&completed(prev))))&&!/[.!?:;]|\[/.test(gap)){
     inserts.set(w.start,question?'?\n':'.\n');count++;start=i;finite=false;question=false;
    }
    const directQuestion=!relativeSubject&&questionWords.has(w.lower)&&questionAuxiliaries.has(words[i+1]?.lower)&&(i===start||finite&&/^(and|but)$/.test(prev)&&!words.slice(start,i).some(token=>indirect.has(token.lower)));
@@ -2291,6 +2339,9 @@ globalThis.GlyphSamplesUI={mount({library,container,language,labels,download}){
     for(const at of participialList(listStart,i).slice(1))if(!inserts.has(words[at].start)){inserts.set(words[at].start,', ');count++;}
     listStart=i;
    }
+  }
+  for(const at of [...predicateLists.flatMap(list=>list.positions.slice(1)),...resumptions])if(!inserts.has(words[at].start)){
+   inserts.set(words[at].start,', ');count++;
   }
   let out=text;
   for(const [at,value] of [...inserts].sort((a,b)=>b[0]-a[0]))out=out.slice(0,at).replace(/[ \t]+$/,'')+value+out.slice(at);

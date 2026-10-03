@@ -118,6 +118,37 @@ for(const words of [
 ])assert.equal(formatter.suggest(wordGlyphs(words)).text,words+'.');
 assert.equal(formatter.suggest(wordGlyphs('What can be repaired')).text,'What can be repaired?');
 console.log('PASS synthetic fronted clauses and statements: temporal/prepositional comma, reporting colon, perfect passive and free-relative subject; complements, relatives, questions, source case/unknown markers and spans preserved.');
+const sharedPredicateCases=[
+ ['She finds comfort in the garden finds comfort in the library finds comfort in the hall','She finds comfort in the garden, finds comfort in the library, finds comfort in the hall.'],
+ ['He sees light in the window sees light in the mirror sees light in the water','He sees light in the window, sees light in the mirror, sees light in the water.'],
+ ['I feel joy in spring feel joy in summer feel joy in winter','I feel joy in spring, feel joy in summer, feel joy in winter.'],
+ ['She finds comfort in the garden finds comfort in the library finds comfort in the hall AND whatever is felt as cold or warm that comes from the air for its required condition in that too she finds comfort','She finds comfort in the garden, finds comfort in the library, finds comfort in the hall.\nAND whatever is felt as cold or warm that comes from the air for its required condition, in that too she finds comfort.'],
+ ['Whatever is felt as cold or warm in that too he finds comfort','Whatever is felt as cold or warm, in that too he finds comfort.'],
+ ['AND whatever is felt as cold or warm in that he finds comfort','AND whatever is felt as cold or warm, in that he finds comfort.']
+];
+for(const [words,expected]of sharedPredicateCases)for(const payload of [perLetter(words.replace(/ /g,'')),wordGlyphs(words)]){
+ const frozen=JSON.stringify(payload),output=formatter.suggest(payload);
+ assert.equal(output.text,expected);assert.equal(output.unknown.length,0);validSpans(payload,output);assert.equal(JSON.stringify(payload),frozen);
+ assert.equal(formatter.suggest(payload,{punctuate:false}).text,words);
+}
+for(const words of [
+ 'She finds comfort in the garden finds comfort in the library',
+ 'She finds comfort in the garden finds joy in the library finds peace in the hall',
+ 'She finds comfort in the garden and she finds comfort in the library and she finds comfort in the hall',
+ 'I know she finds comfort in the garden finds comfort in the library finds comfort in the hall',
+ 'She finds comfort in the garden that is open finds comfort in the library finds comfort in the hall',
+ 'She finds comfort in the garden [?] finds comfort in the library finds comfort in the hall',
+ 'She finds [?] comfort in the garden finds comfort in the library finds comfort in the hall',
+ 'She finds comfort in the garden finds [?] comfort in the library finds comfort in the hall',
+ 'She finds comfort in the garden, finds comfort in the library, finds comfort in the hall',
+ 'Whatever is felt as cold or warm, in that too he finds comfort',
+ 'The light that is felt as cold in that room is fading'
+])assert.equal(formatter.suggest(wordGlyphs(words)).text,words+'.');
+const wrappedList=wordGlyphs('She finds comfort in the garden finds comfort in the library finds comfort in the hall');
+const atWrap=wrappedList.spans[5].start;
+const physicalWrap={text:wrappedList.text.slice(0,atWrap)+'\n'+wrappedList.text.slice(atWrap),spans:wrappedList.spans.map(s=>s.start>=atWrap?{...s,start:s.start+1,end:s.end+1}:s)};
+assert.equal(formatter.suggest(physicalWrap).text,sharedPredicateCases[0][1]);validSpans(physicalWrap,formatter.suggest(physicalWrap));
+console.log('PASS synthetic shared-subject predicate lists and resumed free relatives: repeated short headers, commas, complete clause boundary and resumption kept intact; two-item/different-object/nested/marked/existing-punctuation phrases and source spans preserved.');
 const a=formatter.suggest(plain('the[?]dragon[未映射]falls'));assert(a.text.includes('[?]'));assert(a.text.includes('[未映射]'));
 assert.equal(formatter.suggest(plain('abcXYZ123')).text.replace(/[\s.,]/g,''),'abcXYZ123');
 assert.equal(formatter.suggest(plain('')).text,'');
