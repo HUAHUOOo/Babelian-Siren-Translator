@@ -330,6 +330,13 @@
   }
   return {
    state,generate,clear:()=>{draft=null;},
+   snapshot:()=>draft?JSON.parse(JSON.stringify({payload:draft.payload,options:JSON.parse(draft.signature)[1],value:draft.value,dirty:draft.dirty})):null,
+   restore(saved){
+    if(saved===null){draft=null;return null;}
+    if(!saved||typeof saved.value!=='string'||saved.value.length>100000||typeof saved.dirty!=='boolean')throw Error('整理草稿格式不正确。');
+    const payload=JSON.parse(JSON.stringify(saved.payload)),options=JSON.parse(JSON.stringify(saved.options)),output=formatter.suggest(payload,options);
+    draft={payload,signature:key(payload,options),value:saved.value,meta:output,dirty:saved.dirty,stale:false};return state();
+   },
    update(payload,options){
     if(!draft)return generate(payload,options);
     if(key(payload,options)===draft.signature){draft.stale=false;return state();}

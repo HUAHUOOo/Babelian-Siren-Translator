@@ -34,6 +34,7 @@ function htmlFor(mode,glyphs,parts,siren){
   '__BABELIAN_DEEP_JS__':read('babelian-deep.js'),
   '__GLYPH_SAMPLES_JS__':read('glyph-samples.js'),
   '__OCR_CORRECTION_JS__':read('ocr-correction.js'),
+  '__OCR_WORK_JS__':read('ocr-work.js'),
   '__TRANSLATION_JS__':read('translation.js'),
   '__OCR_UI_JS__':read('ocr-ui.js'),
   '__TEXT_FORMAT_JS__':read('text-format.js'),

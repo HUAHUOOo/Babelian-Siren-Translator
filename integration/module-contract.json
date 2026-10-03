@@ -63,7 +63,10 @@
     "siren-paired-two-row-keyboard",
     "siren-manual-deep-region",
     "babelian-manual-deep-candidates",
-    "explicit-local-correction-samples"
+    "explicit-local-correction-samples",
+    "babelian-original-neighbor-context",
+    "babelian-correction-undo-redo",
+    "babelian-explicit-recognition-work"
   ],
   "siren": {
     "alphabet": "A-Z",
@@ -118,6 +121,16 @@
     "assets/page-focus-router.js",
     "api/campaign-state.php"
   ],
+  "babelianRecognitionWork": {
+    "format": "ato-babelian-recognition-work",
+    "version": 1,
+    "maxBytes": 7340032,
+    "persistence": "memory-and-explicit-json-export",
+    "includedInCampaignState": false,
+    "includesMapping": false,
+    "historyPersistence": "session-only",
+    "historyMaxSteps": 40
+  },
   "correctionSamples": {
     "format": "ato-glyph-samples",
     "version": 1,
