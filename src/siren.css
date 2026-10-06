@@ -71,3 +71,8 @@
     .glyph-sample-row select {max-width:200px;padding:6px;border:1px solid var(--line);border-radius:0;background:var(--panel);color:var(--ink)}
 
     @media(max-width:760px){.siren-card{padding:14px}.siren-heading span{display:block}.siren-group-actions button{padding:8px}}
+
+    #siren-source-canvas[data-selecting=true] {cursor:crosshair;touch-action:none}
+    #siren-missing-preview {display:block;width:min(100%,360px);height:auto;border:2px solid #b65606;background:#fffdf7}
+    #siren-pending-tools {position:sticky;top:0;z-index:2;background:var(--panel);border:1px solid var(--line);padding:8px 12px}
+    #siren-pending-status {margin:0}

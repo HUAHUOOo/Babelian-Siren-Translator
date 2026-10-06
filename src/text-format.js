@@ -18,15 +18,25 @@
    costs.set(word,Math.min(costs.get(word)??Infinity,8));max=Math.max(max,word.length);
   }
   const phrases=new Map();
-  for(const phrase of ['narrow hell',...(domainTerms.phrases||[])]){
+  // Weak grammatical preferences resolve rare dictionary-name collisions in
+  // joined OCR text. They change only spacing, never letters or glyph choices.
+  const grammarPairs=[
+   ...['i','we','you','he','she','they'].flatMap(subject=>['sat','met','ate','ran','saw','said','went','came'].map(verb=>subject+' '+verb)),
+   ...['for','with','from'].flatMap(preposition=>['me','us','you','him','her','them'].map(pronoun=>preposition+' '+pronoun)),
+   ...['be','do','go','see','say','make'].map(verb=>'to '+verb)
+  ];
+  const grammar=new Set(grammarPairs),grammarKeys=new Set(grammarPairs.map(phrase=>phrase.replace(/ /g,'')));
+  for(const phrase of ['narrow hell',...grammarPairs,...(domainTerms.phrases||[])]){
    const parts=phrase.split(' '),key=parts.join('');
    if(parts.length<2||parts.length>10||key.length>120||parts.some(p=>!/^[a-z]{1,40}$/.test(p)))continue;
-   const cost=parts.reduce((sum,p)=>sum+(costs.get(p)??8),0)-Math.min(3,.6*(parts.length-1));
+   const cost=parts.reduce((sum,p)=>sum+(costs.get(p)??8),0)-(grammar.has(phrase)?1.2:Math.min(3,.6*(parts.length-1)));
    if(cost<(phrases.get(key)?.cost??Infinity))phrases.set(key,{parts,cost});
    max=Math.max(max,key.length);
   }
   function split(text,extra=[]){
    const lower=text.toLowerCase(),n=lower.length,local=new Map();
+   // Preserve a known, separately written title-case name such as a country.
+   if(/^[A-Z][a-z]+$/.test(text)&&grammarKeys.has(lower)&&costs.has(lower))return [{text,known:true}];
    for(const word of extra){const w=word.toLowerCase();if(/^[a-z]{2,40}$/.test(w))local.set(w,5.5);}
    const limit=Math.max(max,...Array.from(local.keys(),w=>w.length),1);
    const dp=new Float64Array(n+1).fill(Infinity),back=Array(n+1);dp[0]=0;
@@ -67,7 +77,7 @@
     // A recognized word-valued glyph supplies a real boundary even though
     // neighboring letter-valued glyphs have no spaces in the raw transcript.
     // Keep THE + N distinct from THEN; ordinary glyph spacing is not evidence.
-    if(/^[A-Za-z]{2,40}$/.test(value)&&costs.has(value.toLowerCase())){boundaries.add(span.start);boundaries.add(span.end);}
+    if(/^[A-Za-z]{2,40}$/.test(value)&&costs.has(value.toLowerCase())||/^[A-Za-z]{1,16}(?:\/[A-Za-z]{1,16}){1,2}$/.test(value)){boundaries.add(span.start);boundaries.add(span.end);}
    }
    const chars=[];
    for(let i=0;i<=payload.text.length;i++){

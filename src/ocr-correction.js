@@ -9,6 +9,14 @@
     if(right-x<2||bottom-y<2)throw Error('框选范围太小，请完整框住一个字形。');
     return {x,y,width:right-x,height:bottom-y};
   }
+  function splitBoxes(box,percent=50){
+    if(!box||![box.x,box.y,box.width,box.height].every(Number.isInteger)||box.width<4||box.height<1)throw Error('当前字形太窄，拆分后每侧至少需要2像素。');
+    if(!Number.isFinite(percent)||percent<10||percent>90)throw Error('拆分位置应在10%至90%之间。');
+    // Use source-image pixels for both the preview and the committed split.
+    // Rounding at display scale would drift on zoomed/downscaled screenshots.
+    const cut=Math.max(2,Math.min(box.width-2,Math.round(box.width*percent/100)));
+    return [{...box,width:cut},{...box,x:box.x+cut,width:box.width-cut}];
+  }
   function overlaps(result,position,box){
     const found=[];
     result.lines.forEach((row,li)=>row.tokens.forEach((t,ti)=>{
@@ -102,5 +110,5 @@
     return {token,position:nextPosition,overlap:overlaps(result,nextPosition,box),rematched:true,
       affected:affected.length,released:freed.left+freed.right,replaced:last-first+1,generated:replacement.length,neighborCount:left.length+right.length};
   }
-  return {rectangle,overlaps,released,exclusionsFor,exclude,replace};
+  return {rectangle,splitBoxes,overlaps,released,exclusionsFor,exclude,replace};
 });

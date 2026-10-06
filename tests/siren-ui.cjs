@@ -41,7 +41,7 @@ function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDe
  assert.equal(el('title').textContent,'塞壬语生成');
  assert(el('keyboard-panel').hidden);await el('keyboard').children[0].click();assert.equal(ui.snapshot().groups[0].items.length,0,'Hidden keyboard cannot add glyphs');await click('open-add');assert(!el('keyboard-panel').hidden);await click('keyboard-close');assert(el('keyboard-panel').hidden);
  for(const id of ['new-item','delete-item','unknown','strip-panel','strip','use-crop','crop-x','crop-y','crop-width','crop-height'])assert(!el(id),'Removed UI '+id);
- assert.equal(el('source-canvas').listeners.size,0,'Image preview is no longer an interactive crop tool');
+ assert(el('source-canvas').listeners.has('pointerdown'),'Narrow missing-group rescan accepts an explicit source ROI');assert(el('missing-panel').hidden);assert(el('missing-run').disabled);
  assert(el('batch-panel').hidden);assert(el('precision-panel').hidden);assert(el('key-add').checked);assert(el('key-replace').disabled);
  await click('precision-toggle');assert(!el('precision-panel').hidden);await click('precision-toggle');assert(el('precision-panel').hidden);
  await key(0);await key(1);assert.equal(el('raw').value,real.read(ui.snapshot()).text);assert(warns());

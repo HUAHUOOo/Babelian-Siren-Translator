@@ -53,7 +53,20 @@
           else if((item.manualAdded||item.rotationMode)&&item.letter){hits=crossings(points,{...item,rotation:C.rotationFor(group,item)});if(!hits.length)reason='人工调整字形尚未与大螺旋相交，请调整或标记交点';}
           else reason='请确认字母并标记该小螺旋的最内侧交点';
         }else {hits=crossings(points,{...item,rotation:C.rotationFor(group,item)});if(!hits.length)reason=item.letter?'未与大螺旋相交':'尚未选择字母，无法判断交点';}
-        return {id:item.id,first:hits[0]||null,hits,at:hits[0]?.at??null,total,reason};
+        // Screenshot fits can have a stable glyph identity but an unstable first
+        // contact. Probe neighbouring positions without moving the stored pose.
+        // This is advisory only: retain the nominal crossings and reading order.
+        let orderSensitive=false;
+        if(review&&item.fit&&!item.contact&&!item.positionLocked&&item.rotationMode!=='manual'&&hits.length){
+          const displacement=(group.baseSize??500)*.006;
+          const jumpThreshold=(group.baseSize??500)*.25;
+          const pose={...item,letter:item.letter||item.fit.candidates?.[0]?.letter,rotation:item.fit.rotation};
+          for(const [dx,dy] of [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]){
+            const first=crossings(points,{...pose,x:pose.x+dx*displacement,y:pose.y+dy*displacement})[0];
+            if(!first||Math.abs(first.at-hits[0].at)>jumpThreshold){orderSensitive=true;break;}
+          }
+        }
+        return {id:item.id,first:hits[0]||null,hits,at:hits[0]?.at??null,total,reason,orderSensitive};
       });
       const result={items,points,total};cache.set(group,{signature,result});return result;
     }

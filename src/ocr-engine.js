@@ -579,7 +579,11 @@
     for(let row=0;row<baseline.lines.length;row++){
       if(options.cancelled?.())throw Error('已取消识别。');
       const line=baseline.lines[row];let selected=line;
-      if(line.box.height>=40&&(!line.sampling||line.sampling.sourceHeight>=40)){
+      // Small print still has useful independently confirmed repetitions.
+      // Use the original 30-pixel confidence floor, never an enlarged sampling
+      // height. All cross-row, native-match and local-change gates still apply;
+      // newly recovered boundaries remain pending rather than self-confirmed.
+      if(line.box.height>=30&&(!line.sampling||line.sampling.sourceHeight>=30)){
         let supported=0;
         const adapted=templates.map(template=>{
           const pool=(byId.get(template.id)||[]).filter(item=>item.row!==row);
@@ -644,9 +648,10 @@
     const thresholds=[...new Set([1/6,1/3].map(f=>Math.max(0,Math.min(254,Math.round(mask.threshold+(background-mask.threshold)*f)))))].filter(t=>Math.abs(t-mask.threshold)>=4);
     if(baseline.lines.some(l=>l.box.height<40)){
       const refined=await refineSmallRows(image,gray,baseline,templates,thresholds,options,progress);
-      // One shorter row must not disable native-size page matching elsewhere.
-      // Entirely small pages keep their existing sampling-only path.
-      return baseline.lines.filter(l=>l.box.height>=40).length>=3?refineRepeatedGlyphs(image,refined,templates,options,progress):refined;
+      // A small page can also supply independent native-resolution references.
+      // Sub-30-pixel rows cannot supply confident references or be recovered by
+      // this pass; interpolation never changes their original resolution gate.
+      return baseline.lines.filter(l=>l.box.height>=30).length>=3?refineRepeatedGlyphs(image,refined,templates,options,progress):refined;
     }
     const passes=[baseline];let previousMask=mask;
     for(const threshold of thresholds){

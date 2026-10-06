@@ -39,9 +39,12 @@
     return g.items.map((item,index)=>({item,index,...metrics.get(item.id),at:metrics.get(item.id)?.at??null})).sort((a,b)=>(a.at??Infinity)-(b.at??Infinity)||a.index-b.index);
   }
   function read(doc,analyze){
-    let ambiguous=false,unknown=0,unplaced=0;const unplacedGroups=[],partial=doc.mode==='review';
+    let ambiguous=false,unknown=0,unplaced=0,orderSensitive=0;const unplacedGroups=[],orderSensitiveGroups=[],partial=doc.mode==='review';
     const groups=doc.groups.map((g,index)=>{
       const all=ordered(g,analyze?.(g)),lost=all.filter(e=>e.at===null),missing=lost.length,ties=new Set();unplaced+=missing;
+      // Sensitivity is an advisory about the fit, separate from a known tie.
+      const sensitive=all.filter(e=>e.orderSensitive).length;orderSensitive+=sensitive;
+      if(sensitive)orderSensitiveGroups.push({index,count:sensitive});
       if(missing)unplacedGroups.push({index,letters:lost.map(e=>e.item.letter||'?')});
       // Keep the relative order of located screenshot letters. Unlocated items
       // are reported separately, never appended as though their position were known.
@@ -51,7 +54,7 @@
       for(let i=1;i<row.length;i++)if(row[i].at-row[i-1].at<1){ties.add(i-1);ties.add(i);ambiguous=true;}
       return row.map((entry,i)=>{if(!entry.item.letter||ties.has(i)){unknown++;return '[?]';}return entry.item.letter;}).join('');
     });
-    return {text:groups.join(partial?' ':'').trim(),groups,ambiguous,unknown,unplaced,unplacedGroups};
+    return {text:groups.join(partial?' ':'').trim(),groups,ambiguous,unknown,unplaced,unplacedGroups,orderSensitive,orderSensitiveGroups};
   }
   function addGroup(doc){if(doc.groups.length>=MAX_GROUPS)throw Error('每份工作最多50组，请分段保存。');const g=group();doc.groups.push(g);return g;}
   function add(g,letter=null,point=null){

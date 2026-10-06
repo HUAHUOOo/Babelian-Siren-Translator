@@ -240,7 +240,10 @@
    const coarse=scaled(bitmap,options.coarseSide||192),target=dilate(coarse,1),pts=baseTemplate.points(96),negativePts=baseTemplate.negativePoints(64),b=inkBounds(coarse);
    const maxDim=Math.max(b.width,b.height),sizes=[];
    for(let sz=Math.max(22,Math.min(b.width,b.height)*.22);sz<=maxDim*1.35;sz*=1.10)sizes.push(sz);
-   const best=[],step=5;
+   // A five-pixel centre grid can step over an entire valid pose in a small,
+   // densely overlaid base. Keep the same bounded candidate budget and final
+   // pixel thresholds, but sample centres closely enough to preserve those poses.
+   const best=[],step=3;
    for(let si=0;si<sizes.length;si++){
     const size=sizes[si];
     for(let rotation=-180;rotation<180;rotation+=15)for(let cy=b.y;cy<=b.y+b.height;cy+=step)for(let cx=b.x;cx<=b.x+b.width;cx+=step){
@@ -252,7 +255,17 @@
    for(let i=0;i<best.length;i++){
     const p=best[i],initial={cx:p.cx*factor,cy:p.cy*factor,size:p.size*factor,rotation:p.rotation};
     const first=refine(near,baseTemplate,initial,null,{samples:200,steps:[6,4,2,1],background:true});
-    const exact=refine(medium,baseTemplate,first,null,{samples:480,steps:[2,1,.5],background:true});
+    let exact=refine(medium,baseTemplate,first,null,{samples:480,steps:[2,1,.5],background:true});
+    if(exact.score>=(options.baseThreshold??.81)&&exact.visible>.97){
+     // A coarse angular shoulder can survive local descent in crowded ink.
+     // Restart either side of the same supported pose; replace it only with a
+     // stronger fully visible pixel fit. This never relaxes the admission floor.
+     const anchor=exact;
+     for(const delta of [-12,12]){
+      const alternate=refine(medium,baseTemplate,{...anchor,rotation:normalize(anchor.rotation+delta)},null,{samples:480,steps:[6,3,1,.5],background:true});
+      if(alternate.visible>.97&&alternate.score>exact.score)exact=alternate;
+     }
+    }
     if(exact.score>=(options.baseThreshold??.81)&&exact.visible>.97){
      const v={...exact,cx:exact.cx/medium.scale,cy:exact.cy/medium.scale,size:exact.size/medium.scale};
      insertTop(refined,v,50,v.size*.40);
@@ -279,7 +292,9 @@
    const letterNames=Object.keys(letters),proposals=[],locations=[];
    // The boundary band has its own proposal budget: extra near-edge starts
    // must not evict established interior poses before pixel refinement.
-   for(let cy=y0;cy<=y1;cy+=4)for(let cx=x0;cx<=x1;cx+=4)if(containsLocator(baseSmall,{x:cx,y:cy}))locations.push({cx,cy,edge:!strictLocator(baseSmall,{x:cx,y:cy})});
+   // Small screenshot strokes can fall between four-pixel seed centres.
+   // Denser starts retain the same per-letter proposal and refinement budgets.
+   for(let cy=y0;cy<=y1;cy+=2)for(let cx=x0;cx<=x1;cx+=2)if(containsLocator(baseSmall,{x:cx,y:cy}))locations.push({cx,cy,edge:!strictLocator(baseSmall,{x:cx,y:cy})});
    for(let li=0;li<letterNames.length;li++){
     const letter=letterNames[li],pts=letters[letter].points(64),top=[],edgeTop=[];
     for(const {cx,cy,edge} of locations){
@@ -311,9 +326,13 @@
    for(const p of refined){
     if(chosen.length>=6)break;
     if(chosen.some(v=>Math.hypot(v.cx-p.cx,v.cy-p.cy)<Math.min(v.size,p.size)*.28))continue;
-    if(p.score<(options.letterThreshold??.86)||p.visible<.97)continue;
+    // Keep a well-supported but weak location available for manual review.
+    // This is a proposal floor only; it never lowers the confirmation floor.
+    const confirmationFloor=options.letterThreshold??.86;
+    if(p.score<Math.min(confirmationFloor,.78)||p.visible<.97)continue;
     const points=letters[p.letter].points(420),novel=support(image,points,p,{width:image.width,height:image.height,ink:explained});
-    if(novel.uniqueFraction<.24||novel.uniqueSupport<.78)continue;
+    if(novel.uniqueFraction<.24||novel.uniqueSupport<.70)continue;
+    const weakProposal=p.score<confirmationFloor||novel.uniqueSupport<.78;
     const alternatives=refined.filter(v=>Math.hypot(v.cx-p.cx,v.cy-p.cy)<p.size*.35),distinct=[],rivals=[];
     // Every accepted location is compared against all 26 letters, including
     // classes pruned by the global coarse search; a missing runner-up is not confidence.
@@ -330,7 +349,7 @@
     distinct.sort((a,b)=>b.score-a.score);
     if(!distinct.length)continue;
     const winner=distinct[0],margin=distinct.length>1?winner.score-Math.max(...rivals.filter(r=>r.letter!==winner.letter).map(r=>r.score)):0;
-    const item={...winner,letter:margin<(options.marginThreshold??.04)?null:winner.letter,matchedLetter:winner.letter,margin,outsideRivals:rivals.filter(r=>r.outside),candidates:distinct.slice(0,26)};
+    const item={...winner,weakProposal,letter:weakProposal||margin<(options.marginThreshold??.04)?null:winner.letter,matchedLetter:winner.letter,margin,outsideRivals:rivals.filter(r=>r.outside),candidates:distinct.slice(0,26)};
     chosen.push(item);
     const mask=placedMask(letters[winner.letter],winner,image);for(let i=0;i<explained.length;i++)explained[i]=Math.max(explained[i],mask.ink[i]);
    }
@@ -435,7 +454,12 @@
     const margin=rivals.length?(best.benefit-rivals[0].benefit)/Math.max(1,best.benefit):0;
     // Relative reconstruction separation is not a calibrated probability.
     for(const candidate of allowed.slice(0,3))Object.assign(candidate,support(bitmap,letters[candidate.letter].points(420),candidate,{width:bitmap.width,height:bitmap.height,ink:bm}));
-    const letter=p.margin>=0&&best.benefit>0&&best.score>=.86&&margin>=.08?best.letter:null;
+    // A retained weak seed can be confirmed only after joint fitting restores
+    // the ordinary independent-ink floor as well as score and separation.
+    const letter=(!p.weakProposal||best.uniqueSupport>=.78)&&p.margin>=0&&best.benefit>0&&best.score>=.86&&margin>=.08?best.letter:null;
+    // A weak proposal must still explain independent source ink after
+    // joint fitting; weak or redundant masks do not become phantom slots.
+    if(p.weakProposal&&(best.benefit<=0||best.score<.78||best.uniqueSupport<.70||best.uniqueFraction<.24))return null;
     return {...p,...best,letter,margin,candidates:allowed.slice(0,3)};
    }).filter(Boolean);
   }

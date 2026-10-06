@@ -6,13 +6,14 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   let mode='generate',groupIndex=0,itemId=null,images=null,geometry=null,ready=false,drag=null,centerMode=false,contactMode=false,pendingPoint=null,precisionEdit=null;
   const stripBounds=new WeakMap(),tile=document.createElement('canvas');tile.width=600;tile.height=600;
   let source=null,sourceTicket=0,sourceLoading=false,importTicket=0,loadingImport=false,keyboardPoint=null,templates=null,scanBusy=false,scanTicket=0;
-  let deep=null;
+  let deep=null,missing=null,reviewFocus=null;
+  const sourceRegions=new Map();let sourcePaintKey='';
   const keyboardImages=[];
   const manualImages=new Map(),overlapSources=new Map(),overlapCache=new WeakMap();let overlapEngine=null;
   const scan=SirenScan.create({engineSource:SirenRecognition.workerSource(),onProgress:p=>{
     const stages={'base-regions':'分割大螺旋','base-windows':'分窗寻找大螺旋','base-coarse':'寻找大螺旋','base-refine':'对齐大螺旋','group':'匹配分组','letters-coarse':'比较26个字形','letters-refine':'微调字形位置与大小','letters-joint':'整组像素核验','letters-complete':'整理候选'};
     const regionStages={'region-coarse':'细搜定位与字形','region-refine':'精调候选','region-verify':'原图像素核验'};
-    $(deep?.running?'siren-deep-status':'siren-scan-status').textContent=(p.index?'第 '+p.index+'/'+p.count+' 组 · ':'')+(stages[p.stage]||regionStages[p.stage]||'正在匹配')+' '+Math.round((p.progress||0)*100)+'%';
+    $(missing?.running?'siren-missing-status':deep?.running?'siren-deep-status':'siren-scan-status').textContent=(p.index?'第 '+p.index+'/'+p.count+' 组 · ':'')+(stages[p.stage]||regionStages[p.stage]||'正在匹配')+' '+Math.round((p.progress||0)*100)+'%';
   }});
   const revisions={generate:0,review:0},savedRevisions={generate:0,review:0};
   const backgrounds=new Map(),drafts={generate:null,review:null},formatter=BabelianTextFormat.create(wordData);
@@ -27,7 +28,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   const incomplete=()=>mode==='review'&&reading().unplaced>0;
   const formatOptions=()=>({punctuate:true});
   function showKeyboard(open){$('siren-keyboard-panel').hidden=!open;$('siren-open-add').setAttribute('aria-expanded',String(open&&!itemId));$('siren-open-replace').setAttribute('aria-expanded',String(open&&!!itemId));}
-  function selectItem(id=null,keepKeyboard=false){clearDeep();precisionEdit=null;itemId=id;pendingPoint=null;keyboardPoint=id?{x:item().x,y:item().y}:null;contactMode=false;$('siren-key-add').checked=!id;$('siren-key-replace').checked=!!id;if(!keepKeyboard)showKeyboard(false);}
+  function selectItem(id=null,keepKeyboard=false){reviewFocus=null;clearDeep();precisionEdit=null;itemId=id;pendingPoint=null;keyboardPoint=id?{x:item().x,y:item().y}:null;contactMode=false;$('siren-key-add').checked=!id;$('siren-key-replace').checked=!!id;if(!keepKeyboard)showKeyboard(false);}
   function renderKeyboardAngle(){
     const point=keyboardPoint||item(),angle=point&&g()?C.rotationFor(g(),point):0;
     for(const img of keyboardImages)img.style.transform='rotate('+angle+'deg)';
@@ -35,15 +36,19 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   }
   function scanControls(){
     $('siren-auto-scan').disabled=!source||!ready||scanBusy||sourceLoading;
+    $('siren-missing-toggle').disabled=!source||!ready||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
+    $('siren-missing-run').disabled=!missing?.region||!!missing?.drag||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
+    $('siren-missing-add').disabled=!missing?.preview||scanBusy||sourceLoading||loadingImport||missing.revision!==revisions.review||missing.source!==source||doc().groups.length>=50;
+    $('siren-next-pending').disabled=mode!=='review'||scanBusy||!!drag||loadingImport||!pendingEntries().length;
     $('siren-fit-group').disabled=!g()?.image||scanBusy;$('siren-fit-group').hidden=mode!=='review';$('siren-scan-cancel').hidden=!scanBusy;
     $('siren-deep-toggle').hidden=mode!=='review';$('siren-deep-toggle').disabled=!g()?.image||scanBusy;
     $('siren-deep-run').disabled=!deep?.region||!!deep?.drag||scanBusy;
     $('siren-deep-apply').disabled=!deep?.preview||scanBusy||!!item()?.positionLocked;
     $('siren-add-sample').hidden=mode!=='review'||!samples;$('siren-add-sample').disabled=!g()?.image||!item()?.letter||scanBusy||!!drag;
   }
-  function cancelScan(){scanTicket++;scan.cancel();scanBusy=false;scanControls();}
+  function cancelScan(){scanTicket++;scan.cancel();scanBusy=false;if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
   function remember(){history[mode].push(JSON.stringify(doc()));if(history[mode].length>30)history[mode].shift();revisions[mode]++;}
-  function changed(){clearDeep();translation.invalidate();if(draft().state())draft().update(payload(),formatOptions());render();}
+  function changed(){clearDeep();clearMissing();translation.invalidate();if(draft().state())draft().update(payload(),formatOptions());render();}
   function image(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('图片无法读取，请重新选择。'));img.src=src;});}
   async function cropImage(src){
     if(backgrounds.has(src))return backgrounds.get(src);
@@ -112,6 +117,9 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     if(deep&&deep.group===g()){
       const r=deep.region;if(r){context.strokeStyle='#087bea';context.lineWidth=2;context.strokeRect(r.x,r.y,r.width,r.height);}
       const p=deep.preview;if(p){const a=assets.letters[p.letter],h=p.size*a.height/a.width;context.save();context.translate(p.x,p.y);context.rotate(p.rotation*Math.PI/180);context.globalAlpha=.65;context.drawImage(manualImage(p.letter),-p.size*(a.pivotX??.5),-h*(a.pivotY??.5),p.size,h);context.restore();}
+    }
+    if(reviewFocus&&reviewFocus.groupId===g()?.id&&reviewFocus.itemId===itemId&&item()){
+      const token=item();context.save();context.strokeStyle='#b65606';context.lineWidth=4;context.beginPath();context.arc(token.x,token.y,Math.max(18,token.size*.22),0,Math.PI*2);context.stroke();context.restore();
     }context.restore();}
   function drawStrip(canvas,maxSide=8192,groups=doc().groups){
     const tileContext=tile.getContext('2d',{willReadFrequently:true});
@@ -137,6 +145,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   function renderFields(){
     const current=item(),group=g(),entries=group?row(group):[],index=entries.findIndex(e=>e.item.id===itemId),metric=entries[index],locked=!!current?.positionLocked,groupLocked=group?.items.some(i=>i.positionLocked);
     $('siren-selection').textContent=current?(metric.at===null?'未定位':((entries.some(e=>e.at===null)?'已定位相对':'')+'第'+(index+1)+'项'))+'：'+(current.letter||'待确认')+'。'+(metric.reason||('首交点在大螺旋路径 '+(metric.at/metric.total*100).toFixed(1)+'% 处，'+(mode==='review'?(current.contact?'人工标记。':'基于拟合笔画，需复核。'):'共 '+metric.hits.length+' 处相交。'))):'先添加或选择一个小螺旋。';
+    if(metric?.orderSensitive)$('siren-selection').textContent+=' 读序对细微移动敏感，请核对最内侧交点。';
     $('siren-key-add').checked=!current;$('siren-key-replace').checked=!!current;$('siren-key-replace').disabled=!current;
     for(const name of ['radius','angle','rotation']){
       const el=$('siren-'+name);el.disabled=!current||locked;
@@ -157,7 +166,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     $('siren-group-label').textContent=group?'第'+(groupIndex+1)+'组 · '+group.items.length+'/6':'请先载入图片并自动匹配';
     $('siren-items').replaceChildren();
     if(group)entries.forEach((e,n)=>{const b=button((e.at===null?'未定位':n+1)+' '+(e.item.letter||'?')+(e.item.manualAdded?' · 人工':'')+(e.item.positionLocked?' · 锁定':''),()=>{selectItem(e.item.id);renderFields();draw();},e.item.id===itemId);if(e.item.manualAdded)b.className='siren-manual-item';$('siren-items').append(b);});
-    renderKeyboardAngle();renderMatch();renderOverlap();
+    renderKeyboardAngle();renderMatch();renderOverlap();renderPending();renderSource();
   }
   function renderMatch(){
     const token=item();$('siren-match-review').hidden=!token;
@@ -192,9 +201,9 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   }
   function renderReading(){
     const result=reading();$('siren-raw').value=result.text;
-    $('siren-reading-groups').textContent=(result.unplaced?'未定位：'+result.unplacedGroups.map(x=>'第'+(x.index+1)+'组 '+x.letters.join('、')).join('；'):'')+(result.ambiguous?' 部分字形顺序待确认。':'');
+    $('siren-reading-groups').textContent=(result.unplaced?'未定位：'+result.unplacedGroups.map(x=>'第'+(x.index+1)+'组 '+x.letters.join('、')).join('；'):'')+(result.ambiguous?' 部分字形顺序待确认。':'')+(result.orderSensitive?' '+result.orderSensitive+' 个字形的读序对细微位置变化敏感，请核对最内侧交点（第 '+result.orderSensitiveGroups.map(v=>v.index+1).join('、')+' 组）。':'');
     $('siren-copy-raw').disabled=!result.text;$('siren-format').disabled=!result.text;
-    renderFormatted();
+    renderFormatted();renderPending();
   }
   function render(){
     $('siren-title').textContent=mode==='generate'?'塞壬语生成':'塞壬语翻译';
@@ -206,13 +215,13 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     $('siren-mode-generate').setAttribute('aria-pressed',String(mode==='generate'));$('siren-mode-review').setAttribute('aria-pressed',String(mode==='review'));
     $('siren-center').textContent=centerMode?'请点击画布中的大螺旋中心（再点按钮可取消）':'设置大螺旋中心';
     $('siren-stage-hint').textContent='拖动调整位置；红圈为首交点。';
-    renderGroups();renderFields();renderReading();draw();scanControls();
+    renderGroups();renderFields();renderReading();draw();scanControls();renderSource();
   }
-  function switchMode(next){if(!['generate','review'].includes(next))throw Error('未知塞壬语功能。');if(loadingImport||!ready)return;if(next===mode){render();return;}cancelScan();sourceTicket++;sourceLoading=false;selections[mode]=groupIndex;mode=next;groupIndex=selections[mode];selectItem();centerMode=false;drag=null;translation.invalidate();$('siren-path').checked=mode==='review';render();}
+  function switchMode(next){if(!['generate','review'].includes(next))throw Error('未知塞壬语功能。');if(loadingImport||!ready)return;if(next===mode){render();return;}cancelScan();clearMissing();sourceTicket++;sourceLoading=false;selections[mode]=groupIndex;mode=next;groupIndex=selections[mode];selectItem();centerMode=false;drag=null;translation.invalidate();$('siren-path').checked=mode==='review';render();}
   function pick(letter){
     try{
       if($('siren-keyboard-panel').hidden)return;
-      if(!g())throw Error(mode==='review'?'先在截图中框选大螺旋并加入解读。':'请先添加大螺旋。');
+      if(!g())throw Error(mode==='review'?'先载入图片并点击自动分割并匹配。':'请先添加大螺旋。');
       if($('siren-key-replace').checked){
         if(!item())throw Error('先选择要替换的小螺旋。');if(item().positionLocked)return;remember();C.invalidateFit(item());item().letter=letter;item().rotationMode??='auto';
         // Keep a manually corrected letter when resetting its position, without
@@ -300,18 +309,67 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     try{const next=C.fromText($('siren-source-text').value);for(const group of next.groups)if(!geometry.arrange(group))throw Error('当前字形组合无法自动排出可靠交点顺序，请改为逐字添加。');if(doc().groups.some(g=>g.items.length)&&!confirm('重新生成会替换当前生成画布。可撤销；原英文空格不会编码。继续？'))return;remember();docs.generate=next;groupIndex=0;selectItem();$('siren-batch-panel').hidden=true;$('siren-batch-toggle').setAttribute('aria-expanded','false');changed();note('已按交点顺序生成，并将所有大螺旋横向连续排列。空格不编码，可自由拖动修改。');}catch(e){note(e.message);}
   });
   $('siren-mode-generate').addEventListener('click',()=>switchMode('generate'));$('siren-mode-review').addEventListener('click',()=>switchMode('review'));
+  // Pending order follows the current document and geometric reading order only.
+  function reviewEntries(){
+    return docs.review.groups.flatMap((group,index)=>{
+      const entries=C.ordered(group,geometry?.analyze(group,true)),ties=new Set(),placed=entries.filter(e=>e.at!==null);
+      for(let i=1;i<placed.length;i++)if(placed[i].at-placed[i-1].at<1){ties.add(placed[i].item.id);ties.add(placed[i-1].item.id);}
+      return entries.map(e=>({group,index,item:e.item,reasons:[!e.item.letter?'字母待确认':null,e.at===null?'未定位':null,ties.has(e.item.id)?'交点同序待确认':null,e.orderSensitive?'读序敏感':null].filter(Boolean)}));
+    });
+  }
+  function pendingEntries(){return mode==='review'?reviewEntries().filter(e=>e.reasons.length):[];}
+  function sourcePoint(group,token){
+    const frame=sourceRegions.get(group?.id)?.frame;
+    if(!source||!frame||!token)return null;
+    const p={x:frame.x+token.x*frame.scaleX,y:frame.y+token.y*frame.scaleY};
+    return p.x>=0&&p.y>=0&&p.x<=source.width&&p.y<=source.height?p:null;
+  }
+  function renderPending(){
+    $('siren-pending-tools').hidden=mode!=='review';if(mode!=='review')return;
+    const entries=pendingEntries(),current=entries.find(e=>e.group.id===g()?.id&&e.item.id===itemId);
+    $('siren-next-pending').disabled=!entries.length||scanBusy||!!drag||loadingImport;
+    $('siren-pending-status').textContent=entries.length?'待复核 '+entries.length+' 项'+(current?' · 第 '+(entries.indexOf(current)+1)+' 项，第 '+(current.index+1)+' 组：'+current.reasons.join('、'):'')+(reviewFocus&&!sourcePoint(g(),item())?' · 无此项原图定位，已高亮编辑裁片':''):'没有 ?、未定位或读序敏感项；仍请核对原图有无漏字漏组。';
+  }
+  $('siren-next-pending').addEventListener('click',()=>{
+    if(mode!=='review'||scanBusy||drag||loadingImport)return;
+    const all=reviewEntries(),pending=all.filter(e=>e.reasons.length);if(!pending.length){renderPending();return;}
+    const current=all.findIndex(e=>e.group.id===g()?.id&&e.item.id===itemId);
+    const next=pending.find(e=>all.indexOf(e)>current)||pending[0];
+    clearMissing();groupIndex=next.index;selectItem(next.item.id);reviewFocus={groupId:g().id,itemId};centerMode=false;render();
+    $('siren-groups').children[groupIndex]?.scrollIntoView?.({block:'nearest',inline:'nearest'});
+    stage.focus({preventScroll:true});stage.scrollIntoView?.({block:'nearest'});
+    const p=sourcePoint(g(),item()),canvas=$('siren-source-canvas'),wrap=$('siren-source-wrap');
+    if(p){const rect=canvas.getBoundingClientRect();wrap.scrollTop=Math.max(0,p.y*rect.height/source.height-(wrap.clientHeight||0)/2);}
+  });
   function renderSource(){
     const canvas=$('siren-source-canvas'),c=canvas.getContext('2d');if(!source)return;
+    const marked=docs.review.groups.map((group,index)=>({index,region:sourceRegions.get(group.id)})).filter(v=>v.region);
+    const focus=mode==='review'&&reviewFocus&&reviewFocus.groupId===g()?.id&&reviewFocus.itemId===itemId?sourcePoint(g(),item()):null;
+    const key=marked.map(v=>v.index+':'+[v.region.x,v.region.y,v.region.width,v.region.height].join(',')).join('|')+JSON.stringify([focus,missing?.region,!!missing]);
+    if(sourcePaintKey===key)return;sourcePaintKey=key;
     canvas.width=source.width;canvas.height=source.height;c.drawImage(source,0,0);
+    const scale=Math.max(1,source.width/700),lineWidth=2*scale,fontSize=16*scale;
+    c.save();c.lineWidth=lineWidth;c.font='bold '+fontSize+'px sans-serif';c.textBaseline='top';
+    for(const {index,region:r} of marked){
+      c.strokeStyle='#1671bf';c.strokeRect(r.x,r.y,r.width,r.height);
+      const label=String(index+1),w=c.measureText(label).width+8*scale,h=fontSize+6*scale;
+      const x=Math.max(0,Math.min(source.width-w,r.x)),y=Math.max(0,Math.min(source.height-h,r.y));
+      c.fillStyle='#1671bf';c.fillRect(x,y,w,h);c.fillStyle='#fff';c.fillText(label,x+4*scale,y+3*scale);
+    }
+    if(focus){c.strokeStyle='#b65606';c.lineWidth=3*scale;c.beginPath();c.arc(focus.x,focus.y,14*scale,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(focus.x-22*scale,focus.y);c.lineTo(focus.x+22*scale,focus.y);c.moveTo(focus.x,focus.y-22*scale);c.lineTo(focus.x,focus.y+22*scale);c.stroke();}
+    if(missing?.region){const r=missing.region;c.fillStyle='#db861d22';c.fillRect(r.x,r.y,r.width,r.height);c.strokeStyle='#b65606';c.lineWidth=3*scale;c.strokeRect(r.x,r.y,r.width,r.height);}
+    c.restore();
+    $('siren-source-canvas').setAttribute('data-selecting',String(!!missing));
+    $('siren-source-coverage').textContent=marked.length?'原图中已加入 '+marked.length+' 组，蓝框编号对应下方组序。请对照原图检查有无漏组；蓝框是检测范围，不是准确率。':'识别后会在原图标出本次加入的大螺旋范围；请核对数量与原图一致。';
   }
-  async function loadSourceFile(file){
-    if(!file||!ready||loadingImport)return;cancelScan();const ticket=++sourceTicket;sourceLoading=true;scanControls();let url;
+  async function loadSourceFile(file,{strict=false}={}){
+    if(!file||!ready||loadingImport)return;cancelScan();clearMissing();reviewFocus=null;const ticket=++sourceTicket;sourceLoading=true;scanControls();let url;
     try{
       if(file.size>16*1024*1024||!/^image\/(png|jpeg|webp)$/.test(file.type))throw Error('请选择16MB以内的 PNG / JPG / WebP 图片。');
       url=URL.createObjectURL(file);const img=await image(url);if(ticket!==sourceTicket)return;
       if(img.width*img.height>24000000||img.width>12000||img.height>12000)throw Error('图片尺寸过大，请先裁小到2400万像素以内。');
-      source=img;renderSource();scanControls();$('siren-scan-status').textContent='图片已载入，点击“自动分割并匹配”。已有解读组保留。';note('图片仅在本机处理。');
-    }catch(e){if(ticket===sourceTicket)note(e.message);}finally{if(url)URL.revokeObjectURL(url);if(ticket===sourceTicket){sourceLoading=false;scanControls();}}
+      source=img;sourceRegions.clear();sourcePaintKey=null;renderSource();scanControls();$('siren-scan-status').textContent='图片已载入，点击“自动分割并匹配”。已有解读组保留。';note('图片仅在本机处理。');return true;
+    }catch(e){if(ticket===sourceTicket)note(e.message);if(strict)throw e;}finally{if(url)URL.revokeObjectURL(url);if(ticket===sourceTicket){sourceLoading=false;scanControls();}}
   }
   $('siren-image-file').addEventListener('change',async event=>{await loadSourceFile(event.target.files[0]);event.target.value='';});
   const acceptsPaste=()=>!$('panel-siren').hidden&&mode==='review'&&ready&&!loadingImport;
@@ -329,18 +387,108 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
       throw Error('剪贴板中没有 PNG / JPG / WebP 图片，请先复制截图。');
     }catch(e){note('无法读取剪贴板：'+e.message+' 也可用 Ctrl+V 或选择文件。');}
   });
-  function scanImage(operation){
+  function sourceRegion(result,canvas,frame,region={x:0,y:0,width:source.width,height:source.height}){
+    const base=result.base,ratioX=region.width/canvas.width,ratioY=region.height/canvas.height;
+    const cx=region.x+base.cx*ratioX,cy=region.y+base.cy*ratioY,sizeX=base.size*ratioX,sizeY=base.size*ratioY;
+    const x=Math.max(0,cx-sizeX*.65),y=Math.max(0,cy-sizeY*.65),right=Math.min(source.width,cx+sizeX*.65),bottom=Math.min(source.height,cy+sizeY*.65);
+    return {x,y,width:Math.max(0,right-x),height:Math.max(0,bottom-y),base:{cx,cy,sizeX,sizeY},frame:{x:region.x+(frame.x-frame.dx/frame.scale)*ratioX,y:region.y+(frame.y-frame.dy/frame.scale)*ratioY,scaleX:ratioX/frame.scale,scaleY:ratioY/frame.scale}};
+  }
+  function duplicateSource(region){
+    // Compare source coordinates, never PNG identity: repeated glyph pictures can
+    // be distinct groups. Stored base positions survive later manual edits.
+    const candidate=region.base;
+    return docs.review.groups.find(group=>{
+      const previous=sourceRegions.get(group.id)?.base;if(!previous)return false;
+      const dx=(candidate.cx-previous.cx)/Math.max(8,Math.min(candidate.sizeX,previous.sizeX)),dy=(candidate.cy-previous.cy)/Math.max(8,Math.min(candidate.sizeY,previous.sizeY));
+      return Math.hypot(dx,dy)<.45;
+    });
+  }
+  function clearMissing(){
+    const running=missing?.running;missing=null;
+    $('siren-missing-panel').hidden=true;$('siren-missing-preview').hidden=true;
+    $('siren-missing-toggle').setAttribute('aria-expanded','false');$('siren-source-canvas').setAttribute('data-selecting','false');
+    if(running)cancelScan();
+  }
+  function missingCurrent(job){return missing===job&&source===job.source&&sourceTicket===job.sourceTicket&&mode==='review'&&doc()===job.target&&revisions.review===job.revision&&!loadingImport&&!sourceLoading;}
+  function updateMissingRegion(p){
+    const a=missing.drag.start,x=Math.floor(Math.min(a.x,p.x)+1e-7),y=Math.floor(Math.min(a.y,p.y)+1e-7);
+    missing.region={x,y,width:Math.min(source.width,Math.ceil(Math.max(a.x,p.x)-1e-7))-x,height:Math.min(source.height,Math.ceil(Math.max(a.y,p.y)-1e-7))-y};
+  }
+  $('siren-missing-toggle').addEventListener('click',()=>{
+    if(missing){clearMissing();scanControls();renderSource();return;}
+    if(!ready||!source||scanBusy||sourceLoading||loadingImport||mode!=='review'||drag)return;
+    if(doc().groups.length>=50){note('已达到50组，请分段保存。');return;}
+    clearDeep();reviewFocus=null;centerMode=false;contactMode=false;showKeyboard(false);
+    missing={source,sourceTicket,target:doc(),revision:revisions.review,region:null,preview:null,drag:null,running:false};
+    $('siren-missing-panel').hidden=false;$('siren-missing-toggle').setAttribute('aria-expanded','true');
+    $('siren-missing-status').textContent='请在原图拖框，圈住一个漏掉的大螺旋及完整笔画。';scanControls();renderSource();
+    $('siren-source-canvas').focus({preventScroll:true});$('siren-source-canvas').scrollIntoView?.({block:'nearest'});
+  });
+  const sourceCanvas=$('siren-source-canvas');
+  sourceCanvas.addEventListener('pointerdown',event=>{
+    if(!missing||scanBusy||sourceLoading||loadingImport||drag||event.button!==0)return;
+    event.preventDefault();sourceCanvas.focus({preventScroll:true});sourceCanvas.setPointerCapture(event.pointerId);
+    missing.drag={id:event.pointerId,start:point(event,sourceCanvas,source.width,source.height)};missing.region=null;missing.preview=null;$('siren-missing-preview').hidden=true;
+    $('siren-missing-status').textContent='拖框只保留一个大螺旋，包含完整笔画和少量边距。';scanControls();renderSource();
+  });
+  sourceCanvas.addEventListener('pointermove',event=>{
+    if(missing?.drag?.id!==event.pointerId)return;updateMissingRegion(point(event,sourceCanvas,source.width,source.height));renderSource();
+  });
+  function finishMissingRegion(event){
+    if(missing?.drag?.id!==event.pointerId)return;
+    if(event.type==='pointerup'&&Number.isFinite(event.clientX)&&Number.isFinite(event.clientY))updateMissingRegion(point(event,sourceCanvas,source.width,source.height));
+    else if(event.type!=='pointerup')missing.region=null;
+    missing.drag=null;const r=missing.region;if(r&&(r.width<24||r.height<24))missing.region=null;
+    $('siren-missing-status').textContent=missing.region?'已框选 '+missing.region.width+' × '+missing.region.height+' 原图像素。点击识别，已有工作不会改变。':'框选已取消或范围太小；请重新圈住一个完整的大螺旋。';scanControls();renderSource();
+  }
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])sourceCanvas.addEventListener(type,finishMissingRegion);
+  function cancelMissingKey(event){if(event.key==='Escape'&&missing){event.preventDefault();clearMissing();scanControls();renderSource();}}
+  sourceCanvas.addEventListener('keydown',cancelMissingKey);
+  document.addEventListener('keydown',cancelMissingKey);
+  $('siren-missing-close').addEventListener('click',()=>{clearMissing();scanControls();renderSource();});
+  $('siren-missing-run').addEventListener('click',async()=>{
+    if(!missing?.region||missing.drag||scanBusy||sourceLoading||loadingImport||mode!=='review'||drag)return;
+    if(doc().groups.length>=50){$('siren-missing-status').textContent='已达到50组，请分段保存。';return;}
+    const job=missing,ticket=++scanTicket;job.revision=revisions.review;job.target=doc();job.sourceTicket=sourceTicket;job.running=true;job.preview=null;scanBusy=true;$('siren-missing-preview').hidden=true;scanControls();
+    $('siren-missing-status').textContent='仅识别框内漏组，尚未改变已有工作。';
+    try{
+      const input=scanImage('detect',job.region),results=await scan.run({image:input.image,templates,operation:'detect',limit:2});
+      if(ticket!==scanTicket||!missingCurrent(job))return;
+      if(!results.length)throw Error('框内未找到可靠的大螺旋。请包含完整笔画、留少量边距，或换用更清晰的图片。');
+      if(results.length!==1)throw Error('框内包含多个大螺旋；请缩小范围，只圈住一个漏组。');
+      let frame;const group=await scanResultGroup(results[0],input.canvas,false,value=>{frame=value;});
+      if(ticket!==scanTicket||!missingCurrent(job))return;
+      const region=sourceRegion(results[0],input.canvas,frame,job.region),duplicate=duplicateSource(region);
+      if(duplicate)throw Error('该位置已对应第 '+(docs.review.groups.indexOf(duplicate)+1)+' 组，未重复添加。若要修改已有组，请选择该组后复核。');
+      job.preview={group,region};const canvas=$('siren-missing-preview'),ctx=canvas.getContext('2d');canvas.width=600;canvas.height=600;paint(ctx,group,{guides:true,review:true});canvas.hidden=false;
+      $('siren-missing-status').textContent='找到 1 组、'+group.items.length+' 个小螺旋，其中 '+group.items.filter(i=>!i.letter).length+' 个字母待确认。请对照候选与原图，确认这是漏组后再追加。';
+    }catch(e){if(ticket===scanTicket&&missing===job)$('siren-missing-status').textContent=/大螺旋过多/.test(e.message)?'框内包含多个大螺旋；请缩小范围，只圈住一个漏组。':e.message;}
+    finally{if(ticket===scanTicket){job.running=false;scanBusy=false;if(missing===job&&!missingCurrent(job)){$('siren-missing-status').textContent='识别期间工作或原图已变化，结果未应用；请重新框选补扫。';job.preview=null;}scanControls();}}
+  });
+  $('siren-missing-add').addEventListener('click',()=>{
+    const job=missing;if(!job?.preview||scanBusy||drag)return;
+    if(!missingCurrent(job)){job.preview=null;$('siren-missing-preview').hidden=true;$('siren-missing-status').textContent='工作或原图已变化，候选已失效；请重新补扫。';scanControls();return;}
+    if(doc().groups.length>=50){$('siren-missing-status').textContent='已达到50组，请分段保存。';return;}
+    if(duplicateSource(job.preview.region)){$('siren-missing-status').textContent='这一位置已在工作中，未重复添加。';job.preview=null;scanControls();return;}
+    const unmapped=doc().groups.some(group=>!sourceRegions.has(group.id));
+    if(unmapped&&!confirm('部分已有组没有当前原图定位，无法自动排除它们是否重复。请对照已有组与候选：确认这是缺失的一组，再追加？'))return;
+    if(!missingCurrent(job))return;
+    const {group,region}=job.preview;remember();groupIndex=doc().groups.length;doc().groups.push(group);sourceRegions.set(group.id,region);selectItem();centerMode=false;changed();
+    $('siren-scan-status').textContent='已补入第 '+(groupIndex+1)+' 组，原有各组、人工修改和顺序保持不变；可一次撤销。';note('');
+  });
+  function scanImage(operation,region=null){
     const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
     if(operation==='fit'){
       const bg=backgrounds.get(g()?.image);if(!bg)throw Error('当前组没有可用截图。');canvas.width=bg.width;canvas.height=bg.height;ctx.drawImage(bg,0,0,canvas.width,canvas.height);
     }else{
       if(!source||source.width<8||source.height<8)throw Error('请先粘贴或选择要识别的图片。');
-      const ratio=Math.min(1,3600/Math.max(source.width,source.height),Math.sqrt(12000000/(source.width*source.height)));canvas.width=Math.max(1,Math.round(source.width*ratio));canvas.height=Math.max(1,Math.round(source.height*ratio));
-      ctx.drawImage(source,0,0,source.width,source.height,0,0,canvas.width,canvas.height);
+      const r=region||{x:0,y:0,width:source.width,height:source.height},ratio=Math.min(1,3600/Math.max(r.width,r.height),Math.sqrt(12000000/(r.width*r.height)));
+      canvas.width=Math.max(1,Math.round(r.width*ratio));canvas.height=Math.max(1,Math.round(r.height*ratio));
+      ctx.drawImage(source,r.x,r.y,r.width,r.height,0,0,canvas.width,canvas.height);
     }
     return {canvas,image:ctx.getImageData(0,0,canvas.width,canvas.height)};
   }
-  async function scanResultGroup(result,canvas,keepFrame){
+  async function scanResultGroup(result,canvas,keepFrame,onFrame=()=>{}){
     const base=result.base;if(!base||!Number.isFinite(base.cx)||!Number.isFinite(base.cy)||!Number.isFinite(base.size))throw Error('识别返回了无效的位置。');
     // Defence at the result boundary too; imported/manual groups are untouched.
     const items=result.items.filter(p=>containsLocator(base,p));
@@ -372,7 +520,8 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
       token.fit={rotation:p.rotation,score:p.score,candidates:raw.candidates.filter(p=>containsLocator(base,p)).slice(0,3).map(convert),...(raw.method==='joint-pixel'?{method:raw.method}:{})};
     }
     // Reuse the work-file validator before any new result can mutate existing work.
-    return C.decode({format:C.FORMAT,version:C.VERSION,mode:'review',groups:[group]}).groups[0];
+    const validated=C.decode({format:C.FORMAT,version:C.VERSION,mode:'review',groups:[group]}).groups[0];
+    onFrame({x,y,scale,dx,dy});return validated;
   }
   function clearDeep(){const running=deep?.running;deep=null;$('siren-deep-panel').hidden=true;$('siren-deep-toggle').setAttribute('aria-expanded','false');$('siren-deep-candidates').replaceChildren();if(running)cancelScan();}
   function updateDeepRegion(p){const a=deep.drag.start;deep.region={x:Math.min(a.x,p.x),y:Math.min(a.y,p.y),width:Math.abs(a.x-p.x),height:Math.abs(a.y-p.y)};}
@@ -416,6 +565,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
       C.orient(next,target);C.rememberPose(next,target,true);
       const validated=C.decode({format:C.FORMAT,version:C.VERSION,mode:'review',groups:[next]}).groups[0];
       const selectedId=validated.items[next.items.indexOf(target)].id;
+      const sourceRegion=sourceRegions.get(g().id);if(sourceRegion)sourceRegions.set(validated.id,sourceRegion);
       remember();doc().groups[groupIndex]=validated;selectItem(selectedId);changed();note('已采用 '+p.letter+'；可撤销。');
     }catch(e){note(e.message);}
   });
@@ -427,10 +577,10 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
       catch(e){note(e.message);}
     });
   }else $('siren-samples').hidden=true;
-  async function runScan(operation){
+  async function runScan(operation,{strict=false}={}){
     if(!ready||loadingImport||scanBusy||sourceLoading||mode!=='review')return;
     if(operation==='fit'&&g()?.items.length&&!confirm('重新匹配会替换本组全部识别项（包括已锁定项）。原图保留，可撤销。继续？'))return;
-    clearDeep();
+    clearDeep();clearMissing();
     const target=doc(),targetGroup=g(),revision=revisions.review,imageTicket=sourceTicket,ticket=++scanTicket;
     scanBusy=true;scanControls();$('siren-scan-status').textContent='正在本机匹配图形，可随时取消；尚未修改原有工作。';
     try{
@@ -438,22 +588,27 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
       if(limit<1)throw Error('已达到50组，请分段保存。');
       const results=await scan.run({image:input.image,templates,operation,limit});
       if(ticket!==scanTicket)return;
-      if(!results.length)throw Error('没有找到足够可靠的大螺旋。请使用更清晰、仅包含螺旋的图片。');
-      const added=[];for(const result of results)added.push(await scanResultGroup(result,input.canvas,operation==='fit'));
+      if(!results.length)throw Error('没有找到足够可靠的大螺旋。请使用更清晰的图片，或使用“只补扫漏掉的大螺旋”框选一个漏组。');
+      const added=[],frames=[];for(const result of results)added.push(await scanResultGroup(result,input.canvas,operation==='fit',frame=>frames.push(frame)));
       if(ticket!==scanTicket||imageTicket!==sourceTicket||mode!=='review'||doc()!==target)return;
       if(revision!==revisions.review)throw Error('识别期间工作已被修改，本次结果未应用。请重新识别。');
-      remember();
+      if(operation==='fit'){
+        const region=sourceRegions.get(targetGroup?.id);if(region)sourceRegions.set(added[0].id,region);
+      }else for(let i=0;i<added.length;i++){
+        sourceRegions.set(added[i].id,sourceRegion(results[i],input.canvas,frames[i]));
+      }
+      sourcePaintKey=null;remember();
       if(operation==='fit'){const index=target.groups.indexOf(targetGroup);if(index<0)throw Error('原组已变化，请重新识别。');target.groups[index]=added[0];groupIndex=index;}
       else{groupIndex=target.groups.length;target.groups.push(...added);}
       selectItem();centerMode=false;$('siren-path').checked=true;$('siren-guides').checked=true;changed();
       const total=added.reduce((n,g)=>n+g.items.length,0),unknown=added.reduce((n,g)=>n+g.items.filter(i=>!i.letter).length,0);
-      $('siren-scan-status').textContent=added.length+' 组 · '+total+' 个小螺旋 · '+unknown+' 个待确认';note('');
-    }catch(e){if(ticket===scanTicket){$('siren-scan-status').textContent=e.message;note(e.message);}}
+      $('siren-scan-status').textContent=added.length+' 组 · '+total+' 个小螺旋 · '+unknown+' 个待确认。请核对原图蓝框，确认大螺旋数量没有遗漏。';note('');
+    }catch(e){if(ticket===scanTicket){$('siren-scan-status').textContent=e.message;note(e.message);}if(strict)throw e;}
     finally{if(ticket===scanTicket){scanBusy=false;scanControls();}}
   }
   $('siren-auto-scan').addEventListener('click',()=>runScan('detect'));
   $('siren-fit-group').addEventListener('click',()=>runScan('fit'));
-  $('siren-scan-cancel').addEventListener('click',()=>{cancelScan();$('siren-scan-status').textContent='已取消，原有解读未改变。';});
+  $('siren-scan-cancel').addEventListener('click',()=>{const wasMissing=!!missing?.running;cancelScan();if(wasMissing)$('siren-missing-status').textContent='已取消补扫，原有解读未改变。';$('siren-scan-status').textContent='已取消，原有解读未改变。';});
   async function copy(el){try{await navigator.clipboard.writeText(el.value);note('已复制。');}catch(_){el.focus();el.select();note(document.execCommand('copy')?'已复制。':'请手动复制已选中的文本。');}}
   $('siren-copy-raw').addEventListener('click',()=>copy($('siren-raw')));
   $('siren-format').addEventListener('click',()=>{if(draft().state()?.dirty&&!confirm('重新生成会替换手动修改的分词与标点。继续？'))return;draft().generate(payload(),formatOptions());$('siren-formatted').value=draft().state().value;translation.invalidate();renderFormatted();});
@@ -484,14 +639,14 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   });
   $('siren-load').addEventListener('click',()=>{if(ready&&!loadingImport)$('siren-work-file').click();});
   $('siren-work-file').addEventListener('change',async e=>{
-    const file=e.target.files[0];if(!file)return;cancelScan();const ticket=++importTicket;loadingImport=true;$('siren-tools').disabled=true;
+    const file=e.target.files[0];if(!file)return;cancelScan();clearMissing();const ticket=++importTicket;loadingImport=true;$('siren-tools').disabled=true;
     try{
       if(file.size>8*1024*1024)throw Error('工作文件超过8MB。');const next=C.decode(JSON.parse(await file.text()));
       await Promise.all(next.groups.filter(g=>g.image).map(g=>cropImage(g.image)));
       if(ticket!==importTicket)return;
       if(!confirm('载入将替换“'+(next.mode==='generate'?'生成':'解读')+'”模式的当前工作，可撤销。继续？'))return;
       mode=next.mode;remember();docs[mode]=next;groupIndex=0;selectItem();centerMode=false;draft().clear();translation.invalidate();$('siren-path').checked=mode==='review';render();note('已载入：保留截图匹配参数及自动/可调朝向。旧版默认大小按原规则迁移，v1截图工作需补标首交点。巴别语存档不变。');
-    }catch(error){note('载入失败：'+error.message);}finally{loadingImport=false;$('siren-tools').disabled=!ready;e.target.value='';}
+    }catch(error){note('载入失败：'+error.message);}finally{loadingImport=false;$('siren-tools').disabled=!ready;e.target.value='';scanControls();renderPending();}
   });
   window.addEventListener('beforeunload',event=>{if(Object.keys(revisions).some(key=>revisions[key]!==savedRevisions[key])){event.preventDefault();event.returnValue='';}});
   const loaded=Promise.all([['base',assets.base],...Object.entries(assets.letters)].map(async([key,a])=>[key,await image(a.src)]))
@@ -503,5 +658,5 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
         const b=button('',()=>pick(letter)),img=document.createElement('img');img.src=assets.letters[letter].src;img.alt='';keyboardImages.push(img);const label=document.createElement('span');label.textContent=letter;b.append(img,label);b.title='塞壬字母 '+letter;b.setAttribute('aria-label','塞壬字母 '+letter);$('siren-keyboard').append(b);
       }render();note('');
     }).catch(e=>note('塞壬语素材加载失败：'+e.message+' 请检查模块素材是否完整。'));
-  return {setMode:switchMode,refresh:()=>{if(ready)render();},pause:()=>{cancelScan();sourceTicket++;sourceLoading=false;translation.cancel();drag=null;centerMode=false;contactMode=false;showKeyboard(false);if(ready)changed();},ready:loaded,snapshot:()=>JSON.parse(JSON.stringify(doc()))};
+  return {setMode:switchMode,refresh:()=>{if(ready)render();},pause:()=>{cancelScan();clearMissing();sourceTicket++;sourceLoading=false;translation.cancel();drag=null;centerMode=false;contactMode=false;showKeyboard(false);if(ready)changed();},ready:loaded,snapshot:()=>JSON.parse(JSON.stringify(doc()))};
 }};

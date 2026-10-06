@@ -65,6 +65,12 @@
     .ocr-context { margin:12px 0; padding:8px; border:1px solid var(--line); background:var(--bg); }
     .ocr-context canvas { display:block; width:100%; height:80px; object-fit:contain; }
     .ocr-context figcaption { margin-top:6px; color:var(--muted); font-size:12px; line-height:1.6; }
+    .ocr-split-context { margin-bottom:8px; }
+    .ocr-split-label { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; color:var(--ink); }
+    #ocr-split-value { color:var(--muted); font-variant-numeric:tabular-nums; }
+    #ocr-split-at { display:block; width:100%; min-width:0; min-height:44px; margin:0; accent-color:#1768dc; cursor:ew-resize; touch-action:pan-y; }
+    #ocr-split-at:disabled { cursor:default; }
+    #ocr-split-help { margin-top:0; font-size:12px; }
     .ocr-review-images { display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:12px; }
     .ocr-review-images figure { flex:1; min-width:0; margin:0; padding:10px; text-align:center; border:1px solid var(--line); border-radius:0; background:var(--panel); }
     .ocr-review-images canvas,.ocr-review-images img { display:block; width:100%; height:100px; object-fit:contain; }
