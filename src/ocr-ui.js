@@ -36,32 +36,20 @@ globalThis.BabelianOCRUI={
     const distance=item=>Math.abs((item.rect.left+item.rect.right)/2-center);
     return location(candidates.filter(item=>gap(item)<=nearest+1).reduce((best,item)=>distance(item)<distance(best)?item:best));
   },
-  mount({glyphs,wordData,getMapping,editMapping,append,notify,samples}){
-  const $=id=>document.getElementById(id),OCR=BabelianOCR,Work=BabelianOCRWork,ids=Object.keys(glyphs),history=Work.history();
+  mount({glyphs,wordData,getMapping,editMapping,append,notify}){
+  const $=id=>document.getElementById(id),OCR=BabelianOCR,Work=BabelianOCRWork,ids=Object.keys(glyphs);
   const panel=$('panel-decode'),preview=$('ocr-preview'),ctx=preview.getContext('2d');
   let source=null,crop=null,result=null,resultImage=null,selected=null,drag=null,rebox=null;
   let templatesPromise=null,templates=null,prepared=null,worker=null,job=0,loading=0,busy=false;
   let deepSuggestion=null,splitToken=null,reviewContext=null;
-  let sourceName='截图.png',workRevision=0;
   const formatter=BabelianTextFormat.create(wordData),formattedDraft=BabelianTextFormat.createDraft(formatter);
   const translation=BabelianTranslation.createSession(BabelianTranslation.createClient(),renderTranslation);
   const label=id=>'G'+String(ids.indexOf(id)+1).padStart(2,'0');
   const mapping=()=>getMapping();
-  const options=()=>({polarity:$('ocr-polarity').value,threshold:$('ocr-auto').checked?null:Number($('ocr-threshold').value),oneLine:$('ocr-single').checked,detail:$('ocr-detail').checked});
+  // Preserve the previous automatic defaults without exposing tuning controls.
+  const options=()=>({polarity:'auto',threshold:null,oneLine:false,detail:true});
   const outputOptions=()=>({joinLines:$('ocr-join').checked});
   function message(text){$('ocr-status').textContent=text;}
-  function touchWork(){workRevision++;$('ocr-work-status').textContent='识别工作有更新，仅保存在当前页面。刷新或关闭前请点击“保存识别工作”；映射配置需另行备份。';}
-  const historySnapshot=()=>({result,selected});
-  function recordCorrection(before,label){history.record(before,historySnapshot(),label);touchWork();syncReviewControls();}
-  // Capture before an action, not before navigation. History never includes the
-  // writer, mapping, sample library, or user-edited formatting.
-  const beforeCorrection=()=>JSON.parse(JSON.stringify(historySnapshot()));
-  function restoreCorrection(direction){
-    if(busy||rebox)return;const step=direction<0?history.undo():history.redo();if(!step)return;
-    endRebox();resetSplitPreview();deepSuggestion=null;result=step.state.result;selected=step.state.selected;
-    if(selected){const t=active();if(t.id&&(t.manual||t.certain))$('ocr-pending-only').checked=false;setReviewOpen(true);}
-    renderResults();draw();focusSelected();revealSelected();touchWork();message((direction<0?'已撤销：':'已重做：')+step.label+'。映射、书写区及样本库未改变。');
-  }
   function imageElement(id){const img=document.createElement('img');img.src=glyphs[id].src;img.alt=label(id);return img;}
   function setBusy(value){busy=value;$('ocr-run').disabled=value||!source;$('ocr-cancel').hidden=!value;$('ocr-controls').disabled=value;$('ocr-deep').disabled=value;panel.setAttribute('aria-busy',String(value));syncReviewControls();}
   function cancel(){job++;if(worker){worker.terminate();worker=null;}setBusy(false);}
@@ -71,19 +59,17 @@ globalThis.BabelianOCRUI={
     result=null;resultImage=null;selected=null;deepSuggestion=null;$('ocr-deep-candidates').replaceChildren();$('ocr-deep-status').textContent='';$('ocr-results').hidden=true;$('ocr-review').hidden=true;$('ocr-inspection').hidden=true;
     setReviewOpen(false);setSegmentationOpen(false);$('ocr-output-note').textContent='';
     $('ocr-pending-only').checked=false;$('ocr-filter-empty').hidden=true;syncReviewControls();
-    history.clear();syncReviewControls();
     setTranslationOpen(false);
     $('ocr-output').value='';$('ocr-tokens').replaceChildren();$('ocr-candidates').replaceChildren();
     $('ocr-piece').width=1;$('ocr-piece').height=1;$('ocr-choice-image').removeAttribute('src');
     reviewContext=null;$('ocr-context').width=1;$('ocr-context').height=1;
     $('ocr-split-preview').width=1;$('ocr-split-preview').height=1;
   }
-  function updateCropFields(){if(!crop)return;for(const key of ['x','y','width','height'])$('ocr-crop-'+key).value=crop[key];}
   function changeCrop(next){
     if(!source||busy)return;
     const x=Math.max(0,Math.min(source.width-1,Math.round(next.x))),y=Math.max(0,Math.min(source.height-1,Math.round(next.y)));
     crop={x,y,width:Math.max(1,Math.min(source.width-x,Math.round(next.width))),height:Math.max(1,Math.min(source.height-y,Math.round(next.height)))};
-    clearResult();touchWork();updateCropFields();draw();message('框选区域已更新。点击“识别所选区域”。');
+    clearResult();draw();message('框选区域已更新。点击“识别所选区域”。');
   }
   function draw(){
     if(!source)return;
@@ -133,13 +119,11 @@ globalThis.BabelianOCRUI={
   preview.addEventListener('pointercancel',()=>{drag=null;draw();});
   function endRebox(){
     rebox=null;drag=null;$('ocr-rebox-bar').hidden=true;preview.classList.remove('reboxing');
-    for(const id of ['ocr-full','ocr-rotate','ocr-crop-apply'])$(id).disabled=false;
   }
   $('ocr-rebox').addEventListener('click',()=>{
     if(!active()||busy)return;
     resetSplitPreview();rebox={position:{...selected},box:null};drag=null;
     $('ocr-rebox-bar').hidden=false;$('ocr-rebox-apply').disabled=true;preview.classList.add('reboxing');
-    for(const id of ['ocr-full','ocr-rotate','ocr-crop-apply'])$(id).disabled=true;
     $('ocr-rebox-status').textContent=`正在重新框选第 ${selected.line+1} 行第 ${selected.token+1} 项：请在截图上拖动。`;
     setEditorVisible(false);syncReviewControls();
     $('ocr-rebox-bar').scrollIntoView({block:'start'});$('ocr-rebox-cancel').focus({preventScroll:true});draw();
@@ -151,7 +135,6 @@ globalThis.BabelianOCRUI={
     if(!rebox?.box||busy)return;
     try{
       const position={...rebox.position};
-      const before=beforeCorrection();
       const update=BabelianOCRCorrection.replace(OCR,result,position,rebox.box,resultImage,prepared);
       endRebox();selected=update.position;renderResults();draw();
       const warning=update.overlap.length?'部分框仍有几何交叠，请核对裁片（已分配给新框的像素不会重复识别）。':'';
@@ -159,7 +142,6 @@ globalThis.BabelianOCRUI={
       message(detail+warning);notify(detail+warning);
       $('ocr-review').querySelector('.ocr-review-body').scrollTop=0;revealSelected();
       $('ocr-choice').focus({preventScroll:true});
-      recordCorrection(before,'重新框选字形');
     }catch(error){$('ocr-rebox-status').textContent=error.message;}
   });
   async function loadFile(file){
@@ -176,7 +158,7 @@ globalThis.BabelianOCRUI={
       const scale=Math.min(1,2200/img.naturalWidth,Math.sqrt(6000000/(img.naturalWidth*img.naturalHeight)));
       source=document.createElement('canvas');source.width=Math.max(1,Math.round(img.naturalWidth*scale));source.height=Math.max(1,Math.round(img.naturalHeight*scale));
       source.getContext('2d').drawImage(img,0,0,source.width,source.height);
-      sourceName=file.name.slice(0,200);crop={x:0,y:0,width:source.width,height:source.height};clearResult();touchWork();updateCropFields();$('ocr-image-area').hidden=false;
+      crop={x:0,y:0,width:source.width,height:source.height};clearResult();$('ocr-image-area').hidden=false;
       $('ocr-file-info').textContent=`${file.name} · ${source.width} × ${source.height}${scale<1?'（已缩小，请优先上传裁剪后的原尺寸密码图）':''}`;
       $('ocr-run').disabled=false;draw();message('请拖动框选纯巴别语区域，排除英文、标题、插图和边框。');
     }catch(e){if(version===loading)message(e.message);}
@@ -187,65 +169,6 @@ globalThis.BabelianOCRUI={
   panel.addEventListener('dragover',e=>{e.preventDefault();});
   panel.addEventListener('drop',e=>{e.preventDefault();if(!busy)loadFile(e.dataTransfer.files[0]);});
   document.addEventListener('paste',e=>{if(panel.hidden||busy)return;const file=[...e.clipboardData.items].find(i=>i.kind==='file'&&i.type.startsWith('image/'))?.getAsFile();if(file){e.preventDefault();loadFile(file);}});
-  function workSettings(){return {polarity:$('ocr-polarity').value,threshold:Number($('ocr-threshold').value),single:$('ocr-single').checked,detail:$('ocr-detail').checked,auto:$('ocr-auto').checked,join:$('ocr-join').checked,formatEnabled:$('ocr-format-enabled').checked,punctuate:$('ocr-punctuate').checked,extraWords:$('ocr-extra-words').value};}
-  function applyWorkSettings(s){
-    $('ocr-polarity').value=s.polarity;$('ocr-threshold').value=s.threshold;$('ocr-threshold-value').textContent=s.threshold;
-    for(const [key,id] of Object.entries({single:'ocr-single',detail:'ocr-detail',auto:'ocr-auto',join:'ocr-join',formatEnabled:'ocr-format-enabled',punctuate:'ocr-punctuate'}))$(id).checked=s[key];
-    $('ocr-threshold').disabled=s.auto;$('ocr-extra-words').value=s.extraWords;
-  }
-  $('ocr-work-save').addEventListener('click',async()=>{
-    if(!source||busy||rebox)return;const revision=workRevision;
-    try{
-      const text=Work.encode({source:{width:source.width,height:source.height,name:sourceName,png:source.toDataURL('image/png')},crop,result,settings:workSettings(),draft:formattedDraft.snapshot(),view:{selected,reviewOpen:!$('ocr-tokens').hidden,pendingOnly:$('ocr-pending-only').checked,segmentationOpen:!$('ocr-segmentation').hidden}},ids);
-      await BabelianHost.download(new Blob([text],{type:'application/json'}),'巴别语识别工作.json');
-      $('ocr-work-status').textContent=revision===workRevision?'已下载识别工作。包含截图、识别与校正及整理草稿；不含映射、书写区、样本库、机翻或撤销历史。': '已下载点击保存时的识别工作；之后仍有更新，请再次保存。';
-    }catch(e){$('ocr-work-status').textContent='保存失败：'+e.message;}
-  });
-  $('ocr-work-load').addEventListener('click',()=>{if(!busy&&!rebox)$('ocr-work-file').click();});
-  $('ocr-work-file').addEventListener('change',async()=>{
-    const file=$('ocr-work-file').files[0];if(!file||busy||rebox)return;
-    const version=++loading;setBusy(true);
-    try{
-      if(file.size>Work.MAX_BYTES)throw Error('识别工作文件超过7MB。');
-      const work=Work.parse(await file.text(),ids);if(version!==loading)return;
-      if(source&&!confirm('载入将替换当前截图、识别、校正和整理草稿，并清空撤销历史。现有映射、书写区和样本库不会改变。请先保存当前识别工作，是否继续？'))return;
-      // Validate and decode into temporary objects before changing live state.
-      const img=new Image();img.src=work.source.png;await img.decode();if(version!==loading)return;
-      if(img.naturalWidth!==work.source.width||img.naturalHeight!==work.source.height)throw Error('解码后的截图尺寸不一致。');
-      const nextSource=document.createElement('canvas');nextSource.width=work.source.width;nextSource.height=work.source.height;nextSource.getContext('2d').drawImage(img,0,0);
-      const nextImage=work.result?nextSource.getContext('2d').getImageData(work.crop.x,work.crop.y,work.crop.width,work.crop.height):null;
-      const nextDraft=BabelianTextFormat.createDraft(formatter);nextDraft.restore(work.draft);
-      if(work.result)await loadTemplates(false);if(version!==loading)return;
-      const nextPrepared=work.result?OCR.prepareTemplates(templates,{detail:work.settings.detail}):null;
-      clearResult();source=nextSource;sourceName=work.source.name;crop=work.crop;result=work.result;resultImage=nextImage;prepared=nextPrepared;
-      applyWorkSettings(work.settings);formattedDraft.restore(nextDraft.snapshot());
-      let different=false;
-      if(result&&work.draft){const current=formattingInput();different=JSON.stringify([current.payload,current.options])!==JSON.stringify([work.draft.payload,work.draft.options]);if(different)formattedDraft.edit(work.draft.value);}
-      selected=work.view.selected;$('ocr-pending-only').checked=work.view.pendingOnly;
-      if(active()?.id&&(active().manual||active().certain))$('ocr-pending-only').checked=false;
-      setReviewOpen(work.view.reviewOpen);setSegmentationOpen(work.view.segmentationOpen);updateCropFields();$('ocr-image-area').hidden=false;
-      $('ocr-file-info').textContent=`${sourceName} · ${source.width} × ${source.height}（识别工作）`;
-      renderResults();draw();focusSelected();revealSelected();workRevision++;
-      // Never restore online consent, translations, mapping, samples or writer.
-      $('ocr-translate-consent').checked=false;renderTranslation(translation.state());
-      $('ocr-work-status').textContent='已载入识别工作，未覆盖现有映射、书写区或样本库。'+(different?'当前字形、映射或整理设置与草稿生成时不同，草稿已保留；重新生成建议后才能复制或追加。':'撤销历史从这里重新开始。');
-      message('识别工作已恢复，不需要重新识别。');
-      if(!selected&&result)$('ocr-results').scrollIntoView({block:'start'});
-    }catch(e){if(version===loading)$('ocr-work-status').textContent='载入失败，当前工作未替换：'+e.message;}
-    finally{if(version===loading)setBusy(false);$('ocr-work-file').value='';}
-  });
-  $('ocr-full').addEventListener('click',()=>{if(source)changeCrop({x:0,y:0,width:source.width,height:source.height});});
-  $('ocr-crop-apply').addEventListener('click',()=>{
-    const next=Object.fromEntries(['x','y','width','height'].map(k=>[k,Number($('ocr-crop-'+k).value)]));
-    if(Object.values(next).some(v=>!Number.isFinite(v))||next.width<1||next.height<1){message('请输入有效的框选坐标和尺寸。');return;}changeCrop(next);
-  });
-  $('ocr-auto').addEventListener('change',()=>{$('ocr-threshold').disabled=$('ocr-auto').checked;});
-  $('ocr-threshold').addEventListener('input',()=>{$('ocr-threshold-value').textContent=$('ocr-threshold').value;});
-  $('ocr-rotate').addEventListener('click',()=>{
-    if(!source||busy)return;
-    const canvas=document.createElement('canvas');canvas.width=source.height;canvas.height=source.width;const c=canvas.getContext('2d');c.translate(canvas.width,0);c.rotate(Math.PI/2);c.drawImage(source,0,0);source=canvas;
-    changeCrop({x:0,y:0,width:source.width,height:source.height});
-  });
   async function loadTemplates(prepare=true){
     if(!templatesPromise)templatesPromise=Promise.all(ids.map(id=>new Promise((resolve,reject)=>{
       const img=new Image();img.onload=()=>{
@@ -285,8 +208,7 @@ globalThis.BabelianOCRUI={
         }
       }else answer=await OCR.recognize(resultImage,templates,{...options(),cancelled:()=>version!==job},p=>{if(version===job)progress(p);});
       if(version!==job)return;result=answer;selected=null;renderResults();draw();
-      touchWork();
-      if(!result.lines.length)message('未找到有效字形行。请检查框选范围、黑白方向或阈值。');
+      if(!result.lines.length)message('未找到有效字形行。请检查框选范围及图片清晰度。');
       else message(`识别完成，共 ${result.lines.length} 行。${result.polarity==='dark'?'深字浅底':'浅字深底'}，阈值 ${result.threshold}。请复核橙色项目及分割边界。`);
     }catch(e){if(version===job){message('识别失败：'+e.message);clearResult();}}
     finally{if(version===job){worker?.terminate();worker=null;setBusy(false);if(result?.lines.length)$('ocr-results').scrollIntoView({block:'start'});}}
@@ -295,11 +217,11 @@ globalThis.BabelianOCRUI={
   $('ocr-cancel').addEventListener('click',()=>{loading++;cancel();message('已取消。可以调整框选后重新识别。');});
   function renderResults(){
     if(!result)return;
-    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,unmapped=0,total=0,noCandidate=0;
+    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,total=0,noCandidate=0;
     result.lines.forEach((line,li)=>{
       const row=document.createElement('div');row.className='ocr-token-line';const title=document.createElement('span');title.className='ocr-row-label';title.textContent=`第 ${li+1} 行`;row.append(title);
       line.tokens.forEach((token,ti)=>{
-        total++;const id=OCR.tokenGlyph(token),accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;if(!id)noCandidate++;else if(!map[id])unmapped++;
+        total++;const id=OCR.tokenGlyph(token),accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;if(!id)noCandidate++;
         if($('ocr-pending-only').checked&&accepted)return;
         const b=document.createElement('button');b.type='button';b.className='ocr-token';b.dataset.line=li;b.dataset.token=ti;b.classList.toggle('uncertain',!accepted);b.classList.toggle('unmapped',!!accepted&&!map[id]);b.setAttribute('aria-pressed',String(selected?.line===li&&selected?.token===ti));
         const top=document.createElement('span');top.textContent=`${ti+1} · ${id?label(id):'未知'}`;
@@ -309,7 +231,7 @@ globalThis.BabelianOCRUI={
         b.addEventListener('click',()=>select(li,ti));row.append(b);
       });if(row.children.length>1)list.append(row);
     });
-    $('ocr-results').hidden=!total;$('ocr-inspection').hidden=!total;$('ocr-summary').textContent=`${total} 个分割项 · ${unknown} 个待确认 · ${unmapped} 个未映射。相似度仅为图形评分，不是正确率。`;
+    $('ocr-results').hidden=!total;$('ocr-inspection').hidden=!total;
     $('ocr-output').value=OCR.transcribe(result,map,outputOptions());
     $('ocr-output-note').textContent=unknown?`${unknown} 项尚待确认，已有候选先按当前映射输出${noCandidate?`；${noCandidate} 项无候选，显示 [?]`:''}。需要时展开逐字复核。`:'已按当前映射输出。需要校正时，可展开逐字复核。';
     refreshFormatted();
@@ -352,27 +274,10 @@ globalThis.BabelianOCRUI={
     const items=BabelianOCRUI.pending(result),at=selected?items.findIndex(p=>p.line===selected.line&&p.token===selected.token):-1;
     const text=!items.length?'无待确认项':at>=0?`待确认 ${at+1} / ${items.length}`:`剩余 ${items.length} 项待确认`;
     $('ocr-pending-status').textContent=text;$('ocr-review-position').textContent=text;
-    for(const [direction,buttons] of [[-1,['ocr-pending-prev','ocr-review-prev']],[1,['ocr-pending-next','ocr-review-next']]]){
-      const disabled=busy||!!rebox||!BabelianOCRUI.pendingNeighbor(result,selected,direction);
-      for(const id of buttons){$(id).disabled=disabled;$(id).title='按原图读序查找待确认项，到末尾后从头查找；不自动确认。';}
-    }
     for(const id of ['ocr-confirm','ocr-confirm-next','ocr-choice','ocr-unknown','ocr-rebox'])$(id).disabled=busy||!!rebox||!active();
     syncSplitControls();
     $('ocr-merge').disabled=busy||!!rebox||!active()||selected.token>=result.lines[selected.line].tokens.length-1;
     $('ocr-pending-only').disabled=busy||!!rebox;
-    $('ocr-work-save').disabled=busy||!!rebox||!source;$('ocr-work-load').disabled=busy||!!rebox;
-    const h=history.state();
-    for(const id of ['ocr-undo','ocr-review-undo']){$(id).disabled=busy||!!rebox||!h.undo;$(id).title=h.undoLabel?`撤销：${h.undoLabel}（Ctrl / ⌘ + Z）`:'尚无校正可撤销';}
-    for(const id of ['ocr-redo','ocr-review-redo']){$(id).disabled=busy||!!rebox||!h.redo;$(id).title=h.redoLabel?`重做：${h.redoLabel}（Ctrl / ⌘ + Shift + Z）`:'尚无校正可重做';}
-    $('ocr-history-status').textContent=h.undo||h.redo?`${h.undo} 步可撤销 · ${h.redo} 步可重做`:'尚无校正记录';
-  }
-  function movePending(direction){
-    if(busy||rebox)return;
-    const next=BabelianOCRUI.pendingNeighbor(result,selected,direction);if(!next)return;
-    select(next.line,next.token);
-    const outer=$('ocr-tokens').getBoundingClientRect();
-    if(outer.bottom<0||outer.top>=innerHeight)$('ocr-tokens').scrollIntoView({block:'start'});
-    revealSelected();
   }
   function setReviewOpen(open){
     $('ocr-tokens').hidden=!open;$('ocr-review-toggle').setAttribute('aria-expanded',String(open));
@@ -390,10 +295,6 @@ globalThis.BabelianOCRUI={
     $('ocr-tokens').querySelectorAll('[aria-pressed="true"]').forEach(b=>b.setAttribute('aria-pressed','false'));syncReviewControls();draw();
   }
   $('ocr-review-toggle').addEventListener('click',()=>setReviewOpen($('ocr-tokens').hidden));
-  for(const id of ['ocr-undo','ocr-review-undo'])$(id).addEventListener('click',()=>restoreCorrection(-1));
-  for(const id of ['ocr-redo','ocr-review-redo'])$(id).addEventListener('click',()=>restoreCorrection(1));
-  for(const id of ['ocr-pending-prev','ocr-review-prev'])$(id).addEventListener('click',()=>movePending(-1));
-  for(const id of ['ocr-pending-next','ocr-review-next'])$(id).addEventListener('click',()=>movePending(1));
   $('ocr-pending-only').addEventListener('change',()=>{
     setReviewOpen(true);
     if($('ocr-pending-only').checked&&active()?.id&&(active().manual||active().certain))closeReview();
@@ -402,11 +303,6 @@ globalThis.BabelianOCRUI={
   $('ocr-review-close').addEventListener('click',()=>{const position=selected&&{...selected};closeReview();if(position)$('ocr-tokens').querySelector(`[data-line="${position.line}"][data-token="${position.token}"]`)?.focus({preventScroll:true});});
   $('ocr-segmentation-toggle').addEventListener('click',()=>setSegmentationOpen($('ocr-segmentation').hidden));
   document.addEventListener('keydown',e=>{
-    const editing=e.target.isContentEditable||e.target.closest?.('input,textarea,select,[role="textbox"]');
-    if(!e.defaultPrevented&&!e.isComposing&&!e.altKey&&(e.ctrlKey||e.metaKey)&&!busy&&!rebox&&!panel.closest('[hidden]')&&!editing&&(e.target===document.body||panel.contains(e.target))){
-      const key=e.key.toLowerCase(),direction=key==='z'?(e.shiftKey?1:-1):key==='y'&&!e.shiftKey?1:0;
-      if(direction){e.preventDefault();restoreCorrection(direction);return;}
-    }
     if(e.key==='Escape'&&!e.defaultPrevented&&!busy&&!rebox&&!panel.closest('[hidden]')&&selected){e.preventDefault();$('ocr-review-close').click();return;}
     if(!/^Arrow(Left|Right|Up|Down)$/.test(e.key)||e.defaultPrevented||e.isComposing||e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||
       panel.closest('[hidden]')||busy||rebox||drag||!active()||$('ocr-tokens').hidden||$('ocr-review').hidden)return;
@@ -503,7 +399,7 @@ globalThis.BabelianOCRUI={
     $('ocr-choice').value=OCR.tokenGlyph(token)||ids[0];showChoice();
     syncReviewControls();
   }
-  function showChoice(){const id=$('ocr-choice').value;$('ocr-choice-image').src=glyphs[id].src;$('ocr-choice-image').alt=label(id);$('ocr-add-sample').disabled=!samples||!active()?.manual||active().id!==id;}
+  function showChoice(){const id=$('ocr-choice').value;$('ocr-choice-image').src=glyphs[id].src;$('ocr-choice-image').alt=label(id);}
   $('ocr-deep').addEventListener('click',async()=>{
     const token=active();if(!token||busy||rebox)return;const signature=JSON.stringify(token),version=++job;setBusy(true);message('正在对当前字形深度比对…');
     try{await loadTemplates();await new Promise(resolve=>setTimeout(resolve,0));if(version!==job)return;
@@ -512,31 +408,19 @@ globalThis.BabelianOCRUI={
       deepSuggestion={token,signature,answer};renderReview();message('深度候选已列出；选择后点击“确认使用此字形”。原结果未改变。');
     }catch(e){if(version===job)message('深度识别未应用：'+e.message);}finally{if(version===job)setBusy(false);}
   });
-  if(samples)GlyphSamplesUI.mount({library:samples,container:$('ocr-samples'),language:'babelian',labels:()=>Object.fromEntries(ids.map(id=>[id,label(id)+' · '+(mapping()[id]||'未映射')])),download:(blob,name)=>BabelianHost.download(blob,name)});
-  $('ocr-add-sample').addEventListener('click',()=>{
-    const token=active();if(!samples||!token?.manual||token.id!==$('ocr-choice').value||busy)return;
-    try{
-      const b=token.box;if(b.width>1200||b.height>1200)throw Error('请先框选单个字形，裁片最长边不超过1200像素。');
-      const whole=document.createElement('canvas');whole.width=resultImage.width;whole.height=resultImage.height;whole.getContext('2d').putImageData(resultImage,0,0);
-      const crop=document.createElement('canvas');crop.width=b.width;crop.height=b.height;crop.getContext('2d').drawImage(whole,b.x,b.y,b.width,b.height,0,0,b.width,b.height);
-      const excludedBoxes=(token.excludedBoxes||[]).map(p=>{const x=Math.max(0,p.x-b.x),y=Math.max(0,p.y-b.y);return {x,y,width:Math.max(0,Math.min(b.width,p.x+p.width-b.x)-x),height:Math.max(0,Math.min(b.height,p.y+p.height-b.y)-y)};}).filter(p=>p.width&&p.height);
-      samples.add({language:'babelian',glyphId:token.id,image:crop.toDataURL('image/png'),annotation:{box:{x:0,y:0,width:b.width,height:b.height},excludedBoxes}});message('已加入确认样本；请在样本库中导出保存。不会自动训练。');
-    }catch(e){message(e.message);}
-  });
   $('ocr-choice').addEventListener('change',showChoice);
   function confirmChoice(advance=false){
-    const t=active();if(!t||busy||rebox)return;const before=beforeCorrection(),position={...selected};t.id=$('ocr-choice').value;t.manual=true;t.certain=false;
+    const t=active();if(!t||busy||rebox)return;const position={...selected};t.id=$('ocr-choice').value;t.manual=true;t.certain=false;
     const next=advance?BabelianOCRUI.pendingNeighbor(result,position,1):null;
-    if(next){select(next.line,next.token);recordCorrection(before,'确认字形并继续');return;}
+    if(next){select(next.line,next.token);return;}
     closeReview();renderResults();draw();
     const target=$('ocr-tokens').querySelector(`[data-line="${position.line}"][data-token="${position.token}"]`)||$('ocr-tokens').querySelector('.ocr-token')||$('ocr-review-toggle');
     target.focus({preventScroll:true});
-    recordCorrection(before,'确认字形');
     if(advance)message('待确认项已全部处理。绿色自动匹配项仍可按需复核。');
   }
   $('ocr-confirm').addEventListener('click',()=>confirmChoice());
   $('ocr-confirm-next').addEventListener('click',()=>confirmChoice(true));
-  $('ocr-unknown').addEventListener('click',()=>{const t=active();if(!t||busy||rebox)return;const before=beforeCorrection();endRebox();t.manual=false;t.certain=false;renderResults();draw();recordCorrection(before,'标为待确认');});
+  $('ocr-unknown').addEventListener('click',()=>{const t=active();if(!t||busy||rebox)return;endRebox();t.manual=false;t.certain=false;renderResults();draw();});
   $('ocr-edit-map').addEventListener('click',()=>{endRebox();if(active())editMapping($('ocr-choice').value);});
   function imageMask(excludedBoxes=[]){return BabelianOCRCorrection.exclude(OCR.binarize(resultImage,{threshold:result.threshold,polarity:result.polarity}),excludedBoxes);}
   function classify(box,excludedBoxes=BabelianOCRCorrection.exclusionsFor([active()]),preserveBox=false){
@@ -549,21 +433,18 @@ globalThis.BabelianOCRUI={
     const t=active();if(!t||busy||rebox||t.box.width<4)return;
     if(result.lines.reduce((n,row)=>n+row.tokens.length,0)>=1500){message('分割项已达1500项，请分段识别。');return;}
     try{
-      const before=beforeCorrection(),boxes=BabelianOCRCorrection.splitBoxes(t.box,Number($('ocr-split-at').value));
+      const boxes=BabelianOCRCorrection.splitBoxes(t.box,Number($('ocr-split-at').value));
       // Classify both sides before mutating. Failed matching must leave the
-      // original result, selection and undo history intact.
+      // original result and selection intact.
       const parts=boxes.map(box=>classify(box,BabelianOCRCorrection.exclusionsFor([t]),true));
       result.lines[selected.line].tokens.splice(selected.token,1,...parts);resetSplitPreview();renderResults();draw();message('已拆成两个分割项，请分别确认候选。');
-      recordCorrection(before,'拆分字形');
     }catch(error){message('未应用拆分：'+error.message);}
   });
   $('ocr-merge').addEventListener('click',()=>{
     const a=active(),list=result?.lines[selected?.line]?.tokens,b=list?.[selected.token+1];if(!a||!b||busy||rebox)return;
-    const before=beforeCorrection();
     endRebox();
     const x=Math.min(a.box.x,b.box.x),y=Math.min(a.box.y,b.box.y),right=Math.max(a.box.x+a.box.width,b.box.x+b.box.width),bottom=Math.max(a.box.y+a.box.height,b.box.y+b.box.height);
     list.splice(selected.token,2,classify({x,y,width:right-x,height:bottom-y},BabelianOCRCorrection.exclusionsFor([a,b])));renderResults();draw();message('已合并，请确认新候选。');
-    recordCorrection(before,'合并字形');
   });
   $('ocr-join').addEventListener('change',renderResults);
   function formattingInput(){
@@ -599,8 +480,6 @@ globalThis.BabelianOCRUI={
     refreshFormatted(true);
   });
   $('ocr-formatted').addEventListener('input',()=>renderFormattedState(formattedDraft.edit($('ocr-formatted').value)));
-  for(const id of ['ocr-polarity','ocr-single','ocr-detail','ocr-auto','ocr-threshold','ocr-join','ocr-format-enabled','ocr-punctuate','ocr-extra-words','ocr-formatted'])$(id).addEventListener(id==='ocr-formatted'||id==='ocr-threshold'?'input':'change',()=>{if(source)touchWork();});
-  $('ocr-format-run').addEventListener('click',()=>{if(source)touchWork();});
   $('ocr-formatted-copy').addEventListener('click',async()=>{
     try{
       const payload=formattedDraft.payload();
@@ -649,10 +528,6 @@ globalThis.BabelianOCRUI={
     catch(_){field.focus();field.select();notify(document.execCommand('copy')?'已复制识别英文。':'请在结果框中全选并复制。');}
   });
   $('ocr-append').addEventListener('click',()=>{if(result)append(OCR.toWriter(result,mapping(),outputOptions()));});
-  $('ocr-forget').addEventListener('click',()=>{
-    if(result&&!confirm('清除本次截图与识别结果？映射及书写区保持不变。'))return;
-    loading++;cancel();source=null;crop=null;clearResult();workRevision++;preview.width=1;preview.height=1;$('ocr-image-area').hidden=true;$('ocr-run').disabled=true;$('ocr-file-info').textContent='尚未选择图片';$('ocr-work-status').textContent='当前截图已清除。可载入之前单独保存的识别工作；映射和书写区保持不变。';message('截图已从本页面清除。');
-  });
   window.addEventListener('babelian-mapping-change',renderResults);
   window.addEventListener('resize',()=>{draw();drawReviewContext();});
   return {refresh:()=>{renderResults();draw();},pause:()=>{loading++;cancel();translation.cancel();},snapshot:()=>JSON.parse(JSON.stringify({crop,result,selected}))};

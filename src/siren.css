@@ -23,7 +23,26 @@
     .siren-group-actions button {white-space:nowrap}
 
 
-    #siren-precision-panel {max-width:760px;margin:12px auto 0}
+    /* Match Babelian's non-modal review window: keep the canvas accessible. */
+    #panel-siren.siren-precision-active {padding-right:max(0px,calc(432px - max(40px,calc((100vw - 1200px)/2 + 40px))))}
+    .siren-precision {position:fixed;z-index:4;top:16px;right:16px;bottom:16px;width:400px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;margin:0;padding:0;border:2px solid var(--accent);background:var(--panel);box-shadow:0 8px 28px #15100a26;overflow:hidden}
+    .siren-precision-header {flex:none;padding:14px 16px 8px;border-bottom:1px solid var(--line);background:var(--panel)}
+    .siren-precision-heading {display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .siren-precision-heading h3 {margin:0;font-size:16px}
+    .siren-precision-heading button {padding:8px 12px;min-height:40px}
+    .siren-precision-header .siren-note {margin-bottom:0}
+    .siren-precision-body {flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px}
+    .siren-precision .siren-fields {grid-template-columns:1fr;gap:12px}
+    .siren-precision .siren-actions {align-items:flex-start;flex-direction:column;gap:10px}
+    .siren-precision .siren-actions label {display:flex;align-items:center;gap:6px;min-height:32px}
+    .siren-precision .siren-actions button {max-width:100%;min-height:44px}
+    #siren-stage {scroll-margin-top:16px}
+    @media(max-width:1000px){
+      #panel-siren.siren-precision-active {padding-right:0;padding-bottom:54vh;padding-bottom:54dvh}
+      .siren-precision {top:auto;right:0;bottom:0;width:100%;max-width:none;max-height:52vh;max-height:52dvh;padding-bottom:env(safe-area-inset-bottom)}
+      .siren-precision-header {padding:10px 12px 8px}
+      .siren-precision-body {padding:12px}
+    }
     .siren-groups button {min-width:100px;width:100px;flex:0 0 100px;border:1px solid var(--line);background:var(--panel);border-radius:0;margin-left:-1px;padding:8px;color:var(--ink)}
     .siren-groups button:first-child {margin-left:0;border-radius:0}
     .siren-groups button:last-child {border-radius:0}
@@ -54,10 +73,11 @@
     .siren-groups button:hover:not(:disabled),.siren-items button:hover:not(:disabled),.siren-keyboard button:hover:not(:disabled),.siren-match-candidate:hover:not(:disabled) {background:var(--accent-soft);color:var(--accent-strong)}
     .siren-items button.siren-manual-item:hover:not(:disabled) {color:#8b229f}
     .siren-keyboard img {width:100%;max-width:55px;height:auto;aspect-ratio:1;object-fit:contain;transform-origin:center}
-    #siren-match-review {max-width:760px;margin:12px auto 0;border-top:1px solid var(--line);padding-top:10px}
+    #siren-match-review {margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:14px}
+    .siren-precision #siren-match-candidates {flex-direction:row;gap:8px;margin:0;max-width:100%}
     .siren-match-candidate {display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;min-width:112px}
-    .siren-match-row {display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-    .siren-match-tools {display:flex;flex-direction:column;gap:8px;margin-left:auto}
+    .siren-match-row {display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+    .siren-match-tools {display:flex;flex-direction:row;flex-wrap:wrap;gap:8px}
     #siren-open-add {white-space:nowrap}
     #siren-stage,#siren-match-review,#siren-keyboard-panel {overflow-anchor:none}
     #siren-status:empty,#siren-format-status:empty,#siren-reading-groups:empty {display:none}

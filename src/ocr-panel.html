@@ -5,54 +5,39 @@
         <fieldset id="ocr-controls">
           <legend class="ocr-sr">图片与识别设置</legend>
           <div class="ocr-toolbar"><button id="ocr-upload" type="button" class="primary">选择截图</button><input id="ocr-file" type="file" accept="image/png,image/jpeg,image/webp" hidden><span id="ocr-file-info">尚未选择图片</span></div>
-          <p class="ocr-help">支持 PNG / JPG / WebP，最多16MB；也可拖入图片或在此页粘贴。仅本机处理；刷新前请单独保存识别工作。</p>
+          <p class="ocr-help">支持 PNG / JPG / WebP，最多16MB；也可拖入图片或在此页粘贴。仅本机处理；刷新或关闭前请复制所需结果。</p>
           <div id="ocr-image-area" hidden>
             <div id="ocr-rebox-bar" class="ocr-rebox-bar" hidden>
               <p id="ocr-rebox-status" role="status" aria-live="polite"></p>
               <div class="ocr-toolbar"><button id="ocr-rebox-apply" type="button" class="primary" disabled>应用新框</button><button id="ocr-rebox-cancel" type="button" class="secondary">取消重新框选</button></div>
               <p class="ocr-help">在金色识别区域内拖出完整字形，蓝色虚线为新框。旧框移出的笔画自动交给本行邻近区域重新识别；新框覆盖前后原框超过20%时也会局部重匹配。新框保持固定，其余区域不动。Esc 可取消。</p>
             </div>
-            <div class="ocr-canvas-wrap"><canvas id="ocr-preview" width="1" height="1" aria-label="截图预览；拖动框选密码区域，或使用下方坐标框选。点击识别框可复核。"></canvas></div>
-            <div class="ocr-toolbar"><button id="ocr-full" type="button" class="secondary">选中全图</button><button id="ocr-rotate" type="button" class="secondary">顺时针旋转90°</button><button id="ocr-forget" type="button" class="text-button">清除本次截图</button></div>
-            <details class="ocr-crop-details"><summary>精确设置框选区域（当前图像像素）</summary><div class="ocr-toolbar ocr-coordinates"><label>X <input id="ocr-crop-x" type="number" min="0" step="1"></label><label>Y <input id="ocr-crop-y" type="number" min="0" step="1"></label><label>宽 <input id="ocr-crop-width" type="number" min="1" step="1"></label><label>高 <input id="ocr-crop-height" type="number" min="1" step="1"></label><button id="ocr-crop-apply" type="button" class="secondary">应用框选</button></div></details>
-          </div>
-          <div class="ocr-settings">
-            <label>字色 <select id="ocr-polarity"><option value="auto">自动判断</option><option value="dark">深字浅底</option><option value="light">浅字深底</option></select></label>
-            <label><input id="ocr-single" type="checkbox"> 框选内容仅一行</label>
-            <label title="融合粗细两种字形细节；自动阈值时额外比较浅色笔尖，模糊图可取消后重新识别对照"><input id="ocr-detail" type="checkbox" checked> 多尺度精细比对</label>
-            <label><input id="ocr-auto" type="checkbox" checked> 自动阈值</label>
-            <label>阈值 <input id="ocr-threshold" type="range" min="0" max="254" value="150" disabled><output id="ocr-threshold-value">150</output></label>
+            <div class="ocr-canvas-wrap"><canvas id="ocr-preview" width="1" height="1" aria-label="截图预览；拖动框选密码区域。点击识别框可复核。"></canvas></div>
           </div>
         </fieldset>
         <div class="ocr-toolbar"><button id="ocr-run" class="primary" type="button" disabled>识别所选区域</button><button id="ocr-cancel" class="secondary" type="button" hidden>取消识别</button><span id="ocr-status" role="status" aria-live="polite">优先使用清晰、端正的截图，并排除英文、插图和边框。</span></div>
-        <div class="ocr-toolbar"><button id="ocr-work-save" type="button" class="secondary" disabled>保存识别工作</button><button id="ocr-work-load" type="button" class="secondary">载入识别工作</button><input id="ocr-work-file" type="file" accept=".json,application/json" hidden></div>
-        <p id="ocr-work-status" class="ocr-help" role="status" aria-live="polite">单独保存截图、框选、识别及校正、整理草稿；不包含映射配置、书写区、样本库或机翻，最多7MB。刷新不会自动保留，载入不覆盖现有映射。</p>
       </div>
       <div id="ocr-inspection" class="ocr-card" hidden>
         <h2>逐字复核</h2>
-        <p id="ocr-summary" class="ocr-help"></p>
-        <div class="ocr-toolbar" aria-label="字形校正历史"><button id="ocr-undo" type="button" class="secondary" disabled>撤销校正</button><button id="ocr-redo" type="button" class="secondary" disabled>重做校正</button><span id="ocr-history-status" class="ocr-help" role="status" aria-live="polite">尚无校正记录</span></div>
         <p class="ocr-help">橙色项尚待确认，结果先采用候选字形；[?] 表示无候选，[未映射] 表示尚无对应文字。需要时展开复核。</p>
         <div id="ocr-token-details" class="ocr-token-details">
           <button id="ocr-review-toggle" type="button" class="secondary ocr-disclosure-button" aria-controls="ocr-tokens" aria-expanded="false">展开逐字复核</button>
-          <div class="ocr-toolbar ocr-pending-toolbar" aria-label="待确认项导航">
-            <button id="ocr-pending-prev" type="button" class="secondary" disabled>上一待确认项</button><button id="ocr-pending-next" type="button" class="secondary" disabled>下一待确认项</button>
+          <div class="ocr-toolbar ocr-pending-toolbar" aria-label="待确认项筛选">
             <label><input id="ocr-pending-only" type="checkbox"> 只看待确认项</label><span id="ocr-pending-status" class="ocr-help" role="status" aria-live="polite"></span>
           </div>
-          <p id="ocr-review-keyboard-help" class="ocr-help">点击字形查看原图与候选；选中后可用 ← → 切换前后项，↑ ↓ 切换上下相邻项。</p>
-          <div id="ocr-tokens" aria-describedby="ocr-review-keyboard-help" hidden></div>
+          <div id="ocr-tokens" hidden></div>
           <p id="ocr-filter-empty" class="ocr-help" hidden>没有待确认项。取消“只看待确认项”可查看所有字形。</p>
         </div>
         <section id="ocr-review" class="ocr-review" aria-labelledby="ocr-review-title" hidden>
           <div class="ocr-review-header">
             <div class="ocr-review-heading"><h3 id="ocr-review-title">复核字形</h3><button id="ocr-review-close" type="button" class="secondary" aria-label="关闭单字复核">关闭</button></div>
-            <div class="ocr-toolbar ocr-pending-toolbar"><button id="ocr-review-prev" type="button" class="secondary" disabled>上一待确认项</button><button id="ocr-review-next" type="button" class="secondary" disabled>下一待确认项</button><span id="ocr-review-position" class="ocr-help" role="status" aria-live="polite"></span></div>
+            <div class="ocr-toolbar ocr-pending-toolbar"><span id="ocr-review-position" class="ocr-help" role="status" aria-live="polite"></span></div>
           </div>
           <div class="ocr-review-body">
           <div class="ocr-review-images"><figure><canvas id="ocr-piece" aria-label="选中字形的原图裁片"></canvas><figcaption id="ocr-piece-caption">原图裁片</figcaption></figure><figure><img id="ocr-choice-image" alt="选中的候选字形"><figcaption>候选模板</figcaption></figure></div>
           <figure class="ocr-context"><canvas id="ocr-context" width="1" height="1" aria-label="选中字形与同一原图行前后相邻字形；蓝框为当前字形"></canvas><figcaption id="ocr-context-caption">原图上下文 · 蓝框为当前字形，不隐去相邻笔画</figcaption></figure>
           <div id="ocr-candidates" class="ocr-candidates" aria-label="图形匹配候选"></div>
-          <div class="ocr-toolbar"><button id="ocr-deep" type="button" class="secondary">疑难字形深度识别</button><button id="ocr-add-sample" type="button" class="secondary">已核实，加入样本库</button></div>
+          <div class="ocr-toolbar"><button id="ocr-deep" type="button" class="secondary">疑难字形深度识别</button></div>
           <p id="ocr-deep-status" class="ocr-help" role="status"></p><div id="ocr-deep-candidates" class="ocr-candidates" aria-label="深度识别候选"></div>
           <div class="ocr-toolbar"><label>全部字形 <select id="ocr-choice" aria-label="手动选择字形"></select></label><button id="ocr-unknown" type="button" class="secondary">标为待确认</button><button id="ocr-edit-map" type="button" class="text-button">编辑此字形的映射</button></div>
           <button id="ocr-segmentation-toggle" type="button" class="secondary ocr-disclosure-button" aria-controls="ocr-segmentation" aria-expanded="false">分割不正确？</button>
@@ -65,10 +50,9 @@
             <p class="ocr-help">重新框选会回收移出旧框的笔画，与邻近项一起重识别；新框重叠其他框超过20%也会触发。映射不变，请复核新候选。</p>
           </div>
           </div>
-          <div class="ocr-review-actions"><div class="ocr-review-history"><button id="ocr-review-undo" type="button" class="secondary" disabled>撤销校正</button><button id="ocr-review-redo" type="button" class="secondary" disabled>重做校正</button></div><button id="ocr-confirm" type="button" class="primary">确认使用此字形</button><button id="ocr-confirm-next" type="button" class="secondary">确认并下一项</button></div>
+          <div class="ocr-review-actions"><button id="ocr-confirm" type="button" class="primary">确认使用此字形</button><button id="ocr-confirm-next" type="button" class="secondary">确认并下一项</button></div>
         </section>
       </div>
-      <div id="ocr-samples" class="ocr-card"></div>
       <div id="ocr-results" class="ocr-card" hidden>
         <h2>识别结果</h2>
         <p id="ocr-output-note" class="ocr-help" role="status"></p>

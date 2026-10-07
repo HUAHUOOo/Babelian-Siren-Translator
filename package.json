@@ -1,11 +1,11 @@
 {
   "name": "babelian-siren-translator",
-  "version": "1.11.0",
+  "version": "1.11.3",
   "private": true,
   "description": "Babelian & Siren Translator: offline glyph generation, screenshot recognition and manual review for Aeon Trespass: Odyssey",
   "scripts": {
     "build": "node scripts/build.cjs",
-    "test": "node tests/platform.cjs && node tests/ocr.cjs && node tests/ocr-candidate-output.cjs && node tests/ocr-rows.cjs && node tests/text-format.cjs && node tests/text-possessives.cjs && node tests/domain-terms.cjs && node tests/ocr-correction.cjs && node tests/ocr-work.cjs && node tests/translation.cjs && node tests/ocr-layout.cjs && node tests/ocr-navigation.cjs && node tests/ato-package.cjs && node tests/siren.cjs && node tests/siren-boundary.cjs && node tests/siren-ui.cjs && node tests/siren-crop.cjs && node tests/language-navigation.cjs && node tests/siren-strip.cjs && node tests/siren-photometric.cjs && node tests/siren-strip-recognition.cjs && node tests/siren-recognition.cjs && node tests/siren-format.cjs && node tests/siren-deep.cjs && node tests/babelian-deep.cjs && node tests/glyph-samples.cjs && node tests/ocr-subpixel.cjs && node tests/ocr-small-cuts.cjs && node tests/ocr-touching.cjs && node tests/ocr-dense.cjs && node tests/ocr-thresholds.cjs && node tests/ocr-repeated.cjs && node tests/ocr-consensus.cjs && node tests/official-terminology.cjs && node tests/ocr-split.cjs && node tests/ocr-small-repeated.cjs && node tests/text-feedback-patterns.cjs && node tests/siren-base-recall.cjs && node tests/siren-order-stability.cjs && node tests/siren-review-candidates.cjs && node tests/siren-review-certainty.cjs && node tests/siren-source-coverage.cjs && node tests/public-release-scope.cjs && node tests/siren-review-shortcuts.cjs && node tests/siren-review-audit.cjs",
+    "test": "node tests/platform.cjs && node tests/ocr.cjs && node tests/ocr-candidate-output.cjs && node tests/ocr-rows.cjs && node tests/text-format.cjs && node tests/text-possessives.cjs && node tests/domain-terms.cjs && node tests/ocr-correction.cjs && node tests/ocr-work.cjs && node tests/translation.cjs && node tests/ocr-simplified-controls.cjs && node tests/ocr-layout.cjs && node tests/ocr-navigation.cjs && node tests/ato-package.cjs && node tests/siren.cjs && node tests/siren-boundary.cjs && node tests/siren-ui.cjs && node tests/siren-crop.cjs && node tests/language-navigation.cjs && node tests/siren-strip.cjs && node tests/siren-photometric.cjs && node tests/siren-strip-recognition.cjs && node tests/siren-recognition.cjs && node tests/siren-format.cjs && node tests/siren-deep.cjs && node tests/babelian-deep.cjs && node tests/glyph-samples.cjs && node tests/ocr-subpixel.cjs && node tests/ocr-small-cuts.cjs && node tests/ocr-touching.cjs && node tests/ocr-dense.cjs && node tests/ocr-thresholds.cjs && node tests/ocr-repeated.cjs && node tests/ocr-consensus.cjs && node tests/official-terminology.cjs && node tests/ocr-split.cjs && node tests/ocr-small-repeated.cjs && node tests/text-feedback-patterns.cjs && node tests/siren-base-recall.cjs && node tests/siren-order-stability.cjs && node tests/siren-review-candidates.cjs && node tests/siren-review-certainty.cjs && node tests/siren-source-coverage.cjs && node tests/public-release-scope.cjs && node tests/siren-review-shortcuts.cjs && node tests/siren-review-audit.cjs && node tests/siren-precision-window.cjs",
     "check:ato": "node scripts/check-ato.cjs",
     "test:siren-sample": "node tests/siren-user-sample.cjs",
     "test:siren-inverse": "node tests/siren-inverse-sample.cjs",
@@ -28,7 +28,8 @@
     "test:navigation-browser": "node tests/navigation-browser.cjs",
     "test:theme-browser": "node tests/ui-theme-browser.cjs",
     "test:ocr-split-browser": "node tests/ocr-split-browser.cjs",
-    "test:siren-review-browser": "node tests/siren-review-shortcuts-browser.cjs"
+    "test:siren-review-browser": "node tests/siren-review-shortcuts-browser.cjs",
+    "test:siren-precision-browser": "node tests/siren-precision-window-browser.cjs"
   },
   "engines": {
     "node": ">=20"

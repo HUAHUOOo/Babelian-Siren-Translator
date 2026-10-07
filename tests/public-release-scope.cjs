@@ -36,10 +36,11 @@ assert.equal(assets.length,91);
 assert.equal(hash(JSON.stringify(imageHashes)),'5d1a37431015e76aff327138d046db4a0059ad0f631ec5e1620f9ccee267227e','The public 91 PNG payloads must remain unchanged');
 const embedded=(read('index.html').match(/data:image\/png;base64,[A-Za-z0-9+/=]+/g)||[]).map(src=>hash(Buffer.from(src.split(',')[1],'base64'))).sort();
 assert.deepEqual(embedded,imageHashes,'Standalone must contain exactly the same 91 public PNGs, with no input screenshots');
-// Keep Translator's original single-image manual review, save/load and sample library.
+// Keep original recognition/correction engines and Siren save/load; removed controls stay absent.
 for(const file of ['src/ocr-work.js','src/glyph-samples.js','src/siren-core.js'])assert(fs.existsSync(path.join(root,file)),`Missing established Translator feature: ${file}`);
-for(const id of ['ocr-work-save','ocr-work-load','ocr-review'])assert(read('src/ocr-panel.html').includes(`id="${id}"`),`Missing existing public control ${id}`);
-for(const id of ['siren-save','siren-load','siren-samples','siren-contact'])assert(read('src/siren-panel.html').includes(`id="${id}"`),`Missing existing public control ${id}`);
+for(const id of ['ocr-review','ocr-confirm-next','ocr-pending-only','ocr-split','ocr-merge','ocr-rebox'])assert(read('src/ocr-panel.html').includes(`id="${id}"`),`Missing existing public control ${id}`);
+for(const id of ['siren-save','siren-load','siren-contact'])assert(read('src/siren-panel.html').includes(`id="${id}"`),`Missing existing public control ${id}`);
+for(const [file,ids] of [['src/ocr-panel.html',['ocr-work-save','ocr-work-load','ocr-undo','ocr-redo','ocr-add-sample','ocr-samples']],['src/siren-panel.html',['siren-add-sample','siren-samples']]])for(const id of ids)assert(!read(file).includes(`id="${id}"`),`Removed control remains: ${id}`);
 assert(!/number[s]?-(?:toggle|display)|numeric-(?:toggle|display)/i.test(read('src/siren-panel.html')),'No unrequested numeric-display toggle');
 const dist='dist/ato/babelian';
 if(fs.existsSync(path.join(root,dist))){
@@ -52,4 +53,4 @@ if(fs.existsSync(path.join(root,dist))){
  assert(!excluded.test(read(path.join(dist,'index.html'))),'Private feature code in ATO build');
  for(const [file,entry] of Object.entries(manifest.files))assert.equal(hash(fs.readFileSync(path.join(root,dist,file))),entry.sha256,`ATO manifest mismatch: ${file}`);
 }
-console.log('PASS public release scope: no private workbench/hooks/storage/payloads/tests; original manual review/save/samples preserved; 91 public PNGs and existing fixtures unchanged; standalone and available ATO package audited.');
+console.log('PASS public release scope: no private workbench/hooks/storage/payloads/tests; manual review and Siren save/load preserved; removed controls absent; 91 public PNGs and existing fixtures unchanged; standalone and available ATO package audited.');

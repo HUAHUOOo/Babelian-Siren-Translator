@@ -31,7 +31,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
   await page.locator('#ocr-candidates button').nth(1).click();assert(await editor.isVisible());assert.equal(await raw(),'hTHE[?]r','Preview is not confirmation');
   await page.locator('#ocr-choice').selectOption('h');await page.locator('#ocr-confirm').click();assert(!(await editor.isVisible()));assert.equal(await raw(),'hTHE[?]r');
   assert.equal(await page.locator('#ocr-formatted').inputValue(),'h THE [?] r!');assert(!(await page.locator('#ocr-formatted-copy').isDisabled()));
-  const first=page.locator('.ocr-token').first();await first.click();assert(await editor.isVisible());assert(!(await page.locator('#ocr-add-sample').isDisabled()));
+  const first=page.locator('.ocr-token').first();await first.click();assert(await editor.isVisible());assert.equal(await page.locator('#ocr-add-sample').count(),0);
   await page.locator('#ocr-unknown').click();assert(await editor.isVisible());assert.equal(await raw(),'hTHE[?]r');
   await page.mouse.click(3,3);assert(!(await editor.isVisible()),'Page blank dismisses detail');assert(await list.isVisible());
   await first.click();await page.locator('#ocr-preview').scrollIntoViewIfNeeded();b=await page.locator('#ocr-preview').boundingBox();await page.locator('#ocr-preview').click({position:{x:b.width*255/260,y:b.height*75/80}});assert(!(await editor.isVisible()),'Image blank dismisses detail');
@@ -49,6 +49,6 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
   // Starting another recognition resets the review fold/selection state.
   await page.locator('#ocr-run').click();await page.waitForFunction(()=>!document.querySelector('#ocr-run').disabled);assert(!(await list.isVisible()));assert.equal(await toggle.getAttribute('aria-expanded'),'false');assert(!(await editor.isVisible()));
   await page.close();
- }console.log('PASS pasted-image result-first UI on desktop/mobile: collapsed review, candidate output, no-candidate placeholder, blank/confirm dismissal, preview controls, rebox, sample eligibility, stale formatting, writer append, no network.');
+ }console.log('PASS pasted-image result-first UI on desktop/mobile: collapsed review, candidate output, no-candidate placeholder, blank/confirm dismissal, preview controls, rebox, removed sample controls, stale formatting, writer append, no network.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

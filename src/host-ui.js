@@ -32,7 +32,7 @@
     $('runtime-mode').textContent=runtime.integrated?'ATO 接入版':'离线可用';
     runtime.subscribe(status=>{
       const identity=status.owner?' · '+status.owner+' / '+status.profileId:'';
-      $('host-status').textContent=status.message+identity;
+      $('host-status').textContent=!runtime.integrated&&status.kind==='local'&&status.message==='独立版 · 本机保存'?'':status.message+identity;
       $('host-bar').dataset.status=status.kind;
       $('host-retry').disabled=['saving','loading','conflict','blocked'].includes(status.kind);
       $('host-reload').disabled=status.kind==='saving';

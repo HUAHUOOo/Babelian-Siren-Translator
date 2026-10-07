@@ -22,12 +22,13 @@ assert.equal(get('ocr-review-toggle').tag,'button');assert(/type="button"/.test(
 assert(/aria-expanded="false"/.test(get('ocr-review-toggle').attrs));assert(/aria-controls="ocr-tokens"/.test(get('ocr-review-toggle').attrs));
 assert(/\bhidden\b/.test(get('ocr-tokens').attrs));assert(inside(get('ocr-review-toggle'),get('ocr-token-details')));
 assert(/\bhidden\b/.test(get('ocr-review').attrs));assert(inside(get('ocr-output-note'),results));
-for(const id of ['ocr-pending-prev','ocr-pending-next','ocr-review-prev','ocr-review-next','ocr-confirm-next','ocr-review-close'])assert.equal(get(id).tag,'button');
+for(const id of ['ocr-confirm-next','ocr-review-close'])assert.equal(get(id).tag,'button');
 assert(inside(get('ocr-pending-only'),inspection));assert(inside(get('ocr-filter-empty'),inspection));
 assert(inside(get('ocr-review-close'),get('ocr-review')));assert(inside(get('ocr-review-position'),get('ocr-review')));
 assert.equal(get('ocr-confirm').parent,get('ocr-confirm-next').parent,'both confirmation actions stay in the fixed footer');
-for(const id of ['ocr-work-save','ocr-work-load','ocr-undo','ocr-redo','ocr-review-undo','ocr-review-redo'])assert.equal(get(id).tag,'button');
-assert(inside(get('ocr-context'),get('ocr-review')));assert(inside(get('ocr-review-undo'),get('ocr-confirm').parent));
+for(const id of ['ocr-summary','ocr-work-save','ocr-work-load','ocr-work-file','ocr-work-status','ocr-undo','ocr-redo','ocr-review-undo','ocr-review-redo','ocr-history-status','ocr-pending-prev','ocr-pending-next','ocr-review-prev','ocr-review-next','ocr-full','ocr-rotate','ocr-forget','ocr-crop-x','ocr-crop-y','ocr-crop-width','ocr-crop-height','ocr-crop-apply','ocr-polarity','ocr-single','ocr-detail','ocr-auto','ocr-threshold','ocr-threshold-value','ocr-review-keyboard-help','ocr-add-sample','ocr-samples'])assert(!ids.has(id),'removed control remains: '+id);
+assert(inside(get('ocr-context'),get('ocr-review')));
+assert(!/aria-describedby="ocr-review-keyboard-help"/.test(html),'removed keyboard hint must not leave a dangling accessible description');
 assert(inspection.index<results.index);assert(inside(get('ocr-output'),results));
 const toolbar=get('ocr-formatted-copy').parent;
 assert.equal(get('ocr-formatted-append').parent,toolbar);assert.equal(get('ocr-translate-toggle').parent,toolbar);

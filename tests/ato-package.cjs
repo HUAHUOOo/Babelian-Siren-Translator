@@ -16,7 +16,8 @@ for(const [file,record] of Object.entries(manifest.files)){
   assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(out,file))).digest('hex'),record.sha256);
 }
 const html=fs.readFileSync(path.join(out,'index.html'),'utf8');
-for(const id of ['ocr-preview','ocr-rebox','ocr-inspection','ocr-results','ocr-translate-toggle','ocr-translate-panel','ocr-work-save','ocr-work-load','ocr-context','ocr-undo','ocr-redo','panel-siren','siren-stage','siren-keyboard','siren-raw'])assert(html.includes('id="'+id+'"'));
+for(const id of ['ocr-preview','ocr-rebox','ocr-inspection','ocr-results','ocr-translate-toggle','ocr-translate-panel','ocr-context','panel-siren','siren-stage','siren-keyboard','siren-raw'])assert(html.includes('id="'+id+'"'));
+for(const id of ['ocr-work-save','ocr-work-load','ocr-work-file','ocr-undo','ocr-redo','ocr-add-sample','ocr-samples','siren-add-sample','siren-samples'])assert(!html.includes('id="'+id+'"'),'removed control '+id);
 assert(!html.includes('data:image/png;base64,'));assert(html.includes('Copyright (c) 2017 Derek Anderson'));
 assert(html.indexOf('id="ocr-inspection"')<html.indexOf('id="ocr-results"'));
 assert(html.includes('"mode":"ato"'));assert(html.includes('credentials:\'omit\''));

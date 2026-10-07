@@ -39,7 +39,42 @@ function environment(s,local=memory(),url='https://ato.test/babelian/index.html'
   setTimeout(fn,ms){const id=++serial;timers.set(id,{fn,ms});return id;},clearTimeout(id){timers.delete(id);},timers};
 }
 function app(s,env){return create({mode:s?'ato':'standalone',ids},env||environment(s));}
+async function checkHostStatus(){
+ const source=fs.readFileSync(path.join(root,'src/host-ui.js'),'utf8');
+ function mount(integrated){
+  const nodes=new Map();let emit;
+  const get=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',hidden:false,disabled:false,dataset:{},events:{},addEventListener(type,fn){this.events[type]=fn;}});return nodes.get(id);};
+  const runtime={integrated,subscribe(fn){emit=fn;fn({kind:'loading',message:'正在载入…'});},storyUrl:()=>null,hasPending:()=>false,backup(){throw Error('导出失败');}};
+  const scope={window:{addEventListener(){}},document:{getElementById:get},location:{href:'https://ato.test/babelian/index.html'},URL,Blob,setTimeout,clearTimeout};
+  vm.createContext(scope);vm.runInContext(source,scope);
+  const host=scope.window.BabelianHost.connect(runtime);
+  return {get,host,emit};
+ }
+ const local=mount(false);
+ assert.equal(local.get('host-status').textContent,'正在载入…');
+ local.emit({kind:'local',message:'独立版 · 本机保存'});
+ assert.equal(local.get('host-status').textContent,'','Hide only the default standalone status');
+ assert.equal(local.get('host-bar').dataset.status,'local');
+ for(const kind of ['local-error','blocked','conflict','error']){
+  local.emit({kind,message:'保存需要处理'});assert.equal(local.get('host-status').textContent,'保存需要处理');
+ }
+ local.emit({kind:'local',message:'其他本机提示'});assert.equal(local.get('host-status').textContent,'其他本机提示');
+ local.emit({kind:'local',message:'独立版 · 本机保存'});
+ await local.get('workspace-export').events.click();assert.equal(local.get('host-status').textContent,'导出失败');
+ local.emit({kind:'local',message:'独立版 · 本机保存'});
+ local.host.fail(Error('工具载入失败'));assert.equal(local.get('host-status').textContent,'工具载入失败');assert.equal(local.get('host-reload').hidden,false);
+ const ato=mount(true);
+ assert.equal(ato.get('host-home').hidden,false);assert.equal(ato.get('host-retry').hidden,false);
+ for(const kind of ['loading','saving','conflict','blocked','error']){
+  ato.emit({kind,message:'ATO 同步状态',owner:'alice',profileId:'campaign-1'});
+  assert.equal(ato.get('host-status').textContent,'ATO 同步状态 · alice / campaign-1');
+  assert.equal(ato.get('host-retry').disabled,['loading','saving','conflict','blocked'].includes(kind));
+ }
+ ato.emit({kind:'local',message:'独立版 · 本机保存'});assert.equal(ato.get('host-status').textContent,'独立版 · 本机保存','Integrated status is never suppressed');
+ console.log('PASS host status: only the default standalone text is removed; startup, local-save, export and ATO status/errors remain.');
+}
 async function run(){
+ await checkHostStatus();
  const local=memory(),offline=app(null,environment(null,local,'file:///offline/index.html'));
  await offline.initialize();offline.storage.setItem(MAP,JSON.stringify(mapping()));offline.storage.setItem(WRITER,JSON.stringify(writer('old text')));
  assert.equal(JSON.parse(local.getItem(WRITER)).text,'old text');assert.equal(offline.hasPending(),false);

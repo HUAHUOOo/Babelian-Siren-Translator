@@ -72,7 +72,8 @@ async function run(){
  for(const match of ui.matchAll(/\$\('(ocr-[^']+)'\)/g))assert(htmlIDs.includes(match[1]),'Missing control '+match[1]);
  assert(!/\b(fetch|XMLHttpRequest|localStorage|sessionStorage)\b/.test(ui),'OCR UI must not upload or persist source screenshots');
  assert(!/\bfetch\b/.test(fs.readFileSync(path.join(__dirname,'../src/ocr-engine.js'),'utf8')));
- assert(htmlIDs.includes('ocr-detail'),'Enhanced matching must remain optional');
+ assert(!htmlIDs.includes('ocr-detail'),'Removed precision control must stay absent');
+ assert.match(ui,/const options=\(\)=>\(\{polarity:'auto',threshold:null,oneLine:false,detail:true\}\)/,'Recognition retains the original automatic defaults');
  console.log('PASS OCR integration: worker messages, cancellation, controls, span-safe append, no screenshot upload/storage.');
  console.log(`PASS OCR: ${correct}/${total} generated-sample glyph IDs; mixed case/word/current mapping; unknown markers; blank/invalid image; no language inference.`);
  // Optional local real-world fixtures, deliberately not bundled or uploaded.

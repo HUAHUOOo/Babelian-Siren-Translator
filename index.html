@@ -110,6 +110,9 @@
     .host-actions .text-button { font-size:14px; }
     .host-bar[data-status="conflict"],.host-bar[data-status="blocked"],.host-bar[data-status="error"] { border-color:#ae672e; background:#fff5e6; }
     #host-status { margin:0; overflow-wrap:anywhere; line-height:1.6; }
+    #host-status:empty { display:none; }
+    #host-status:empty + .host-actions { margin-top:0; }
+    #host-bar:has(#host-status:empty):not(:has(.host-actions > :not([hidden]))) { display:none; }
     #tool-surface[inert] { opacity:.5; }
     @media(max-width:1160px) { .host-bar { margin-inline:14px; } }
     .workspace-tabs { display:flex; align-items:center; gap:7px; border-bottom:1px solid #d5dccc; margin-top:27px; padding-bottom:9px; flex-wrap:wrap; }
@@ -236,11 +239,9 @@
     .ocr-canvas-wrap { overflow:auto; border:1px solid var(--line); background:var(--bg); border-radius:0; }
     #ocr-preview { display:block; width:100%; height:auto; touch-action:none; cursor:crosshair; }
     .ocr-crop-details { margin:15px 0; max-width:none; }
-    .ocr-card input[type=number] { width:80px; padding:8px; }
-    .ocr-card input[type=number],.ocr-card select { border:1px solid var(--line); border-radius:0; background:var(--panel); color:var(--ink); }
+    .ocr-card select { border:1px solid var(--line); border-radius:0; background:var(--panel); color:var(--ink); }
     .ocr-card select { max-width:100%; padding:8px; }
-    .ocr-settings { display:flex; align-items:center; flex-wrap:wrap; gap:14px 22px; border-top:1px solid var(--line); padding-top:16px; }
-    .ocr-settings label,.ocr-toolbar label { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+    .ocr-toolbar label { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
     #ocr-status { font-size:14px; line-height:1.8; flex:1; min-width:200px; }
     .ocr-output-label { display:block; margin:12px 0 8px; }
     #ocr-output { width:100%; min-height:125px; padding:14px; border:1px solid var(--line); border-radius:0; resize:vertical; background:var(--bg); color:var(--ink); font:16px/1.7 Consolas,monospace; overflow-wrap:anywhere; }
@@ -257,7 +258,6 @@
     #ocr-preview.reboxing { outline:2px solid var(--accent); outline-offset:-2px; }
     .ocr-token-details { max-width:none; margin-top:22px; }
     .ocr-pending-toolbar .ocr-help { margin:0; font-size:13px; }
-    .ocr-pending-toolbar button { padding:8px 12px; min-height:40px; }
     .ocr-disclosure-button { min-height:42px; padding:10px 18px; }
     .ocr-disclosure-button::after { content:" +"; padding-left:8px; }
     .ocr-disclosure-button[aria-expanded=true]::after { content:" −"; }
@@ -285,8 +285,6 @@
     .ocr-review-body { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; padding:16px; }
     .ocr-review-actions { flex:none; display:flex; flex-wrap:wrap; gap:8px; padding:12px 16px; border-top:1px solid var(--line); background:var(--panel); }
     .ocr-review-actions button { flex:1; padding:12px 8px; min-height:44px; }
-    .ocr-review-history { display:flex; gap:8px; width:100%; }
-    .ocr-review-history button { padding:6px 8px; min-height:34px; font-size:12px; }
     .ocr-context { margin:12px 0; padding:8px; border:1px solid var(--line); background:var(--bg); }
     .ocr-context canvas { display:block; width:100%; height:80px; object-fit:contain; }
     .ocr-context figcaption { margin-top:6px; color:var(--muted); font-size:12px; line-height:1.6; }
@@ -317,7 +315,7 @@
       .ocr-review-body { padding:12px; }
       .ocr-review-actions { padding:10px 12px; }
     }
-    @media(max-width:600px) { .ocr-card { padding:16px; } .ocr-toolbar { gap:10px; } .ocr-card .primary { font-size:14px; } .ocr-review-images canvas,.ocr-review-images img { height:80px; } .ocr-coordinates { gap:10px; } #ocr-status { min-width:100%; } }
+    @media(max-width:600px) { .ocr-card { padding:16px; } .ocr-toolbar { gap:10px; } .ocr-card .primary { font-size:14px; } .ocr-review-images canvas,.ocr-review-images img { height:80px; } #ocr-status { min-width:100%; } }
 
         #panel-siren {margin-top:24px;font-size:16px;line-height:1.6}
     #panel-siren [hidden] {display:none!important}
@@ -344,7 +342,26 @@
     .siren-group-actions button {white-space:nowrap}
 
 
-    #siren-precision-panel {max-width:760px;margin:12px auto 0}
+    /* Match Babelian's non-modal review window: keep the canvas accessible. */
+    #panel-siren.siren-precision-active {padding-right:max(0px,calc(432px - max(40px,calc((100vw - 1200px)/2 + 40px))))}
+    .siren-precision {position:fixed;z-index:4;top:16px;right:16px;bottom:16px;width:400px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;margin:0;padding:0;border:2px solid var(--accent);background:var(--panel);box-shadow:0 8px 28px #15100a26;overflow:hidden}
+    .siren-precision-header {flex:none;padding:14px 16px 8px;border-bottom:1px solid var(--line);background:var(--panel)}
+    .siren-precision-heading {display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .siren-precision-heading h3 {margin:0;font-size:16px}
+    .siren-precision-heading button {padding:8px 12px;min-height:40px}
+    .siren-precision-header .siren-note {margin-bottom:0}
+    .siren-precision-body {flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px}
+    .siren-precision .siren-fields {grid-template-columns:1fr;gap:12px}
+    .siren-precision .siren-actions {align-items:flex-start;flex-direction:column;gap:10px}
+    .siren-precision .siren-actions label {display:flex;align-items:center;gap:6px;min-height:32px}
+    .siren-precision .siren-actions button {max-width:100%;min-height:44px}
+    #siren-stage {scroll-margin-top:16px}
+    @media(max-width:1000px){
+      #panel-siren.siren-precision-active {padding-right:0;padding-bottom:54vh;padding-bottom:54dvh}
+      .siren-precision {top:auto;right:0;bottom:0;width:100%;max-width:none;max-height:52vh;max-height:52dvh;padding-bottom:env(safe-area-inset-bottom)}
+      .siren-precision-header {padding:10px 12px 8px}
+      .siren-precision-body {padding:12px}
+    }
     .siren-groups button {min-width:100px;width:100px;flex:0 0 100px;border:1px solid var(--line);background:var(--panel);border-radius:0;margin-left:-1px;padding:8px;color:var(--ink)}
     .siren-groups button:first-child {margin-left:0;border-radius:0}
     .siren-groups button:last-child {border-radius:0}
@@ -375,10 +392,11 @@
     .siren-groups button:hover:not(:disabled),.siren-items button:hover:not(:disabled),.siren-keyboard button:hover:not(:disabled),.siren-match-candidate:hover:not(:disabled) {background:var(--accent-soft);color:var(--accent-strong)}
     .siren-items button.siren-manual-item:hover:not(:disabled) {color:#8b229f}
     .siren-keyboard img {width:100%;max-width:55px;height:auto;aspect-ratio:1;object-fit:contain;transform-origin:center}
-    #siren-match-review {max-width:760px;margin:12px auto 0;border-top:1px solid var(--line);padding-top:10px}
+    #siren-match-review {margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:14px}
+    .siren-precision #siren-match-candidates {flex-direction:row;gap:8px;margin:0;max-width:100%}
     .siren-match-candidate {display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;min-width:112px}
-    .siren-match-row {display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-    .siren-match-tools {display:flex;flex-direction:column;gap:8px;margin-left:auto}
+    .siren-match-row {display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+    .siren-match-tools {display:flex;flex-direction:row;flex-wrap:wrap;gap:8px}
     #siren-open-add {white-space:nowrap}
     #siren-stage,#siren-match-review,#siren-keyboard-panel {overflow-anchor:none}
     #siren-status:empty,#siren-format-status:empty,#siren-reading-groups:empty {display:none}
@@ -657,54 +675,39 @@ summary { color:var(--muted); }
         <fieldset id="ocr-controls">
           <legend class="ocr-sr">图片与识别设置</legend>
           <div class="ocr-toolbar"><button id="ocr-upload" type="button" class="primary">选择截图</button><input id="ocr-file" type="file" accept="image/png,image/jpeg,image/webp" hidden><span id="ocr-file-info">尚未选择图片</span></div>
-          <p class="ocr-help">支持 PNG / JPG / WebP，最多16MB；也可拖入图片或在此页粘贴。仅本机处理；刷新前请单独保存识别工作。</p>
+          <p class="ocr-help">支持 PNG / JPG / WebP，最多16MB；也可拖入图片或在此页粘贴。仅本机处理；刷新或关闭前请复制所需结果。</p>
           <div id="ocr-image-area" hidden>
             <div id="ocr-rebox-bar" class="ocr-rebox-bar" hidden>
               <p id="ocr-rebox-status" role="status" aria-live="polite"></p>
               <div class="ocr-toolbar"><button id="ocr-rebox-apply" type="button" class="primary" disabled>应用新框</button><button id="ocr-rebox-cancel" type="button" class="secondary">取消重新框选</button></div>
               <p class="ocr-help">在金色识别区域内拖出完整字形，蓝色虚线为新框。旧框移出的笔画自动交给本行邻近区域重新识别；新框覆盖前后原框超过20%时也会局部重匹配。新框保持固定，其余区域不动。Esc 可取消。</p>
             </div>
-            <div class="ocr-canvas-wrap"><canvas id="ocr-preview" width="1" height="1" aria-label="截图预览；拖动框选密码区域，或使用下方坐标框选。点击识别框可复核。"></canvas></div>
-            <div class="ocr-toolbar"><button id="ocr-full" type="button" class="secondary">选中全图</button><button id="ocr-rotate" type="button" class="secondary">顺时针旋转90°</button><button id="ocr-forget" type="button" class="text-button">清除本次截图</button></div>
-            <details class="ocr-crop-details"><summary>精确设置框选区域（当前图像像素）</summary><div class="ocr-toolbar ocr-coordinates"><label>X <input id="ocr-crop-x" type="number" min="0" step="1"></label><label>Y <input id="ocr-crop-y" type="number" min="0" step="1"></label><label>宽 <input id="ocr-crop-width" type="number" min="1" step="1"></label><label>高 <input id="ocr-crop-height" type="number" min="1" step="1"></label><button id="ocr-crop-apply" type="button" class="secondary">应用框选</button></div></details>
-          </div>
-          <div class="ocr-settings">
-            <label>字色 <select id="ocr-polarity"><option value="auto">自动判断</option><option value="dark">深字浅底</option><option value="light">浅字深底</option></select></label>
-            <label><input id="ocr-single" type="checkbox"> 框选内容仅一行</label>
-            <label title="融合粗细两种字形细节；自动阈值时额外比较浅色笔尖，模糊图可取消后重新识别对照"><input id="ocr-detail" type="checkbox" checked> 多尺度精细比对</label>
-            <label><input id="ocr-auto" type="checkbox" checked> 自动阈值</label>
-            <label>阈值 <input id="ocr-threshold" type="range" min="0" max="254" value="150" disabled><output id="ocr-threshold-value">150</output></label>
+            <div class="ocr-canvas-wrap"><canvas id="ocr-preview" width="1" height="1" aria-label="截图预览；拖动框选密码区域。点击识别框可复核。"></canvas></div>
           </div>
         </fieldset>
         <div class="ocr-toolbar"><button id="ocr-run" class="primary" type="button" disabled>识别所选区域</button><button id="ocr-cancel" class="secondary" type="button" hidden>取消识别</button><span id="ocr-status" role="status" aria-live="polite">优先使用清晰、端正的截图，并排除英文、插图和边框。</span></div>
-        <div class="ocr-toolbar"><button id="ocr-work-save" type="button" class="secondary" disabled>保存识别工作</button><button id="ocr-work-load" type="button" class="secondary">载入识别工作</button><input id="ocr-work-file" type="file" accept=".json,application/json" hidden></div>
-        <p id="ocr-work-status" class="ocr-help" role="status" aria-live="polite">单独保存截图、框选、识别及校正、整理草稿；不包含映射配置、书写区、样本库或机翻，最多7MB。刷新不会自动保留，载入不覆盖现有映射。</p>
       </div>
       <div id="ocr-inspection" class="ocr-card" hidden>
         <h2>逐字复核</h2>
-        <p id="ocr-summary" class="ocr-help"></p>
-        <div class="ocr-toolbar" aria-label="字形校正历史"><button id="ocr-undo" type="button" class="secondary" disabled>撤销校正</button><button id="ocr-redo" type="button" class="secondary" disabled>重做校正</button><span id="ocr-history-status" class="ocr-help" role="status" aria-live="polite">尚无校正记录</span></div>
         <p class="ocr-help">橙色项尚待确认，结果先采用候选字形；[?] 表示无候选，[未映射] 表示尚无对应文字。需要时展开复核。</p>
         <div id="ocr-token-details" class="ocr-token-details">
           <button id="ocr-review-toggle" type="button" class="secondary ocr-disclosure-button" aria-controls="ocr-tokens" aria-expanded="false">展开逐字复核</button>
-          <div class="ocr-toolbar ocr-pending-toolbar" aria-label="待确认项导航">
-            <button id="ocr-pending-prev" type="button" class="secondary" disabled>上一待确认项</button><button id="ocr-pending-next" type="button" class="secondary" disabled>下一待确认项</button>
+          <div class="ocr-toolbar ocr-pending-toolbar" aria-label="待确认项筛选">
             <label><input id="ocr-pending-only" type="checkbox"> 只看待确认项</label><span id="ocr-pending-status" class="ocr-help" role="status" aria-live="polite"></span>
           </div>
-          <p id="ocr-review-keyboard-help" class="ocr-help">点击字形查看原图与候选；选中后可用 ← → 切换前后项，↑ ↓ 切换上下相邻项。</p>
-          <div id="ocr-tokens" aria-describedby="ocr-review-keyboard-help" hidden></div>
+          <div id="ocr-tokens" hidden></div>
           <p id="ocr-filter-empty" class="ocr-help" hidden>没有待确认项。取消“只看待确认项”可查看所有字形。</p>
         </div>
         <section id="ocr-review" class="ocr-review" aria-labelledby="ocr-review-title" hidden>
           <div class="ocr-review-header">
             <div class="ocr-review-heading"><h3 id="ocr-review-title">复核字形</h3><button id="ocr-review-close" type="button" class="secondary" aria-label="关闭单字复核">关闭</button></div>
-            <div class="ocr-toolbar ocr-pending-toolbar"><button id="ocr-review-prev" type="button" class="secondary" disabled>上一待确认项</button><button id="ocr-review-next" type="button" class="secondary" disabled>下一待确认项</button><span id="ocr-review-position" class="ocr-help" role="status" aria-live="polite"></span></div>
+            <div class="ocr-toolbar ocr-pending-toolbar"><span id="ocr-review-position" class="ocr-help" role="status" aria-live="polite"></span></div>
           </div>
           <div class="ocr-review-body">
           <div class="ocr-review-images"><figure><canvas id="ocr-piece" aria-label="选中字形的原图裁片"></canvas><figcaption id="ocr-piece-caption">原图裁片</figcaption></figure><figure><img id="ocr-choice-image" alt="选中的候选字形"><figcaption>候选模板</figcaption></figure></div>
           <figure class="ocr-context"><canvas id="ocr-context" width="1" height="1" aria-label="选中字形与同一原图行前后相邻字形；蓝框为当前字形"></canvas><figcaption id="ocr-context-caption">原图上下文 · 蓝框为当前字形，不隐去相邻笔画</figcaption></figure>
           <div id="ocr-candidates" class="ocr-candidates" aria-label="图形匹配候选"></div>
-          <div class="ocr-toolbar"><button id="ocr-deep" type="button" class="secondary">疑难字形深度识别</button><button id="ocr-add-sample" type="button" class="secondary">已核实，加入样本库</button></div>
+          <div class="ocr-toolbar"><button id="ocr-deep" type="button" class="secondary">疑难字形深度识别</button></div>
           <p id="ocr-deep-status" class="ocr-help" role="status"></p><div id="ocr-deep-candidates" class="ocr-candidates" aria-label="深度识别候选"></div>
           <div class="ocr-toolbar"><label>全部字形 <select id="ocr-choice" aria-label="手动选择字形"></select></label><button id="ocr-unknown" type="button" class="secondary">标为待确认</button><button id="ocr-edit-map" type="button" class="text-button">编辑此字形的映射</button></div>
           <button id="ocr-segmentation-toggle" type="button" class="secondary ocr-disclosure-button" aria-controls="ocr-segmentation" aria-expanded="false">分割不正确？</button>
@@ -717,10 +720,9 @@ summary { color:var(--muted); }
             <p class="ocr-help">重新框选会回收移出旧框的笔画，与邻近项一起重识别；新框重叠其他框超过20%也会触发。映射不变，请复核新候选。</p>
           </div>
           </div>
-          <div class="ocr-review-actions"><div class="ocr-review-history"><button id="ocr-review-undo" type="button" class="secondary" disabled>撤销校正</button><button id="ocr-review-redo" type="button" class="secondary" disabled>重做校正</button></div><button id="ocr-confirm" type="button" class="primary">确认使用此字形</button><button id="ocr-confirm-next" type="button" class="secondary">确认并下一项</button></div>
+          <div class="ocr-review-actions"><button id="ocr-confirm" type="button" class="primary">确认使用此字形</button><button id="ocr-confirm-next" type="button" class="secondary">确认并下一项</button></div>
         </section>
       </div>
-      <div id="ocr-samples" class="ocr-card"></div>
       <div id="ocr-results" class="ocr-card" hidden>
         <h2>识别结果</h2>
         <p id="ocr-output-note" class="ocr-help" role="status"></p>
@@ -784,27 +786,28 @@ summary { color:var(--muted); }
         <div class="siren-layout">
           <div class="siren-card siren-editor-card">
             <div class="siren-actions"><strong id="siren-group-label">第1组</strong><button type="button" id="siren-group-prev" class="text-button">组前移</button><button type="button" id="siren-group-next" class="text-button">组后移</button><button type="button" id="siren-delete-group" class="text-button">删除此组</button><button type="button" id="siren-undo" class="text-button">撤销</button><button type="button" id="siren-fit-group" class="secondary" hidden>重新匹配本组</button></div>
-            <div class="siren-actions"><button type="button" id="siren-deep-toggle" class="secondary" hidden aria-expanded="false">疑难区域深度识别</button><button type="button" id="siren-add-sample" class="secondary" hidden disabled>已核实，加入样本库</button></div>
-            <canvas id="siren-stage" width="900" height="900" tabindex="0" aria-label="塞壬语螺旋编辑画布；下方可选择小螺旋或展开精确调节"></canvas>
+            <div class="siren-actions"><button type="button" id="siren-deep-toggle" class="secondary" hidden aria-expanded="false">疑难区域深度识别</button></div>
+            <canvas id="siren-stage" width="900" height="900" tabindex="0" aria-label="塞壬语螺旋编辑画布；下方可选择小螺旋或打开精确调节窗口"></canvas>
             <div id="siren-deep-panel" hidden><p class="siren-note">在画布拖框圈住一个小螺旋的中心；笔画可超出框外。点击候选预览叠加，再确认采用。</p><div class="siren-actions"><button type="button" id="siren-deep-run" class="secondary" disabled>开始深度识别</button><button type="button" id="siren-deep-apply" class="secondary" disabled>采用所选候选</button><button type="button" id="siren-deep-close" class="text-button">关闭 / 取消</button></div><p id="siren-deep-status" class="siren-note" role="status"></p><div id="siren-deep-candidates" class="siren-actions"></div></div>
             <div id="siren-selection-bar" class="siren-selection-bar"><div id="siren-items" class="siren-items" aria-label="小螺旋，按首交点排序"></div><button type="button" id="siren-precision-toggle" class="secondary" aria-expanded="false" aria-controls="siren-precision-panel">精确调节</button><button type="button" id="siren-delete-recognized" class="secondary" hidden disabled>删除所选小螺旋</button><button type="button" id="siren-open-add" class="secondary" aria-controls="siren-keyboard-panel" aria-expanded="false">新增其他小螺旋</button></div>
             <p id="siren-manual-overlap" class="siren-note" role="status" hidden></p>
-            <div id="siren-match-review" class="siren-note" hidden><p id="siren-match-status"></p><div class="siren-match-row"><div id="siren-match-candidates" class="siren-actions"></div><div class="siren-match-tools"><button type="button" id="siren-position-lock" class="secondary" aria-pressed="false">锁定位置</button><button type="button" id="siren-reset-position" class="secondary" hidden>复位</button><button type="button" id="siren-open-replace" class="secondary" aria-controls="siren-keyboard-panel" aria-expanded="false">选择其他小螺旋</button></div></div></div>
-            <div id="siren-precision-panel" hidden>
-              <p id="siren-selection" class="siren-note">先添加或选择一个小螺旋。</p>
+            <div id="siren-precision-panel" class="siren-precision" role="dialog" aria-modal="false" aria-labelledby="siren-precision-heading" aria-describedby="siren-selection" hidden>
+              <div class="siren-precision-header"><div class="siren-precision-heading"><h3 id="siren-precision-heading">精确调节</h3><button type="button" id="siren-precision-close" class="text-button" aria-label="关闭精确调节窗口">关闭</button></div><p id="siren-selection" class="siren-note">先添加或选择一个小螺旋。</p></div>
+              <div class="siren-precision-body">
+              <div id="siren-match-review" class="siren-note" hidden><p id="siren-match-status"></p><div class="siren-match-row"><div id="siren-match-candidates" class="siren-actions"></div><div class="siren-match-tools"><button type="button" id="siren-position-lock" class="secondary" aria-pressed="false">锁定位置</button><button type="button" id="siren-reset-position" class="secondary" hidden>复位</button></div></div></div>
               <div class="siren-fields">
                 <div><label for="siren-radius">位置半径（不用于排序）</label><input type="number" id="siren-radius" min="0" max="850" step="0.1"><input type="range" id="siren-radius-slider" min="0" max="850" step="0.1" aria-label="位置半径滑块"></div>
                 <div><label for="siren-angle">环绕角度 °</label><input type="number" id="siren-angle" min="-180" max="180" step="1"><input type="range" id="siren-angle-slider" min="-180" max="180" step="1" aria-label="环绕角度滑块"></div>
                 <div><div class="siren-field-heading"><label for="siren-rotation">字形朝向 °</label><button id="siren-rotation-mode" type="button" class="secondary" aria-pressed="false" title="切换自动或可调朝向">自动</button></div><input type="number" id="siren-rotation" min="-180" max="180" step="1" readonly><input type="range" id="siren-rotation-slider" min="-180" max="180" step="1" aria-label="字形朝向滑块" disabled></div>
                 <div><label for="siren-base-size">大螺旋大小（同步缩放小螺旋）</label><input id="siren-base-size" type="number" min="100" max="900" value="500" step="1"><input id="siren-base-size-slider" type="range" min="100" max="900" value="500" step="1" aria-label="大螺旋大小滑块"></div>
               </div>
-              <div class="siren-actions"><label><input id="siren-guides" type="checkbox" checked> 显示序号和交点</label><label><input id="siren-path" type="checkbox"> 显示大螺旋参考路径</label><label id="siren-overlay-label" hidden><input id="siren-overlay" type="checkbox"> 叠加所选模板</label><button type="button" id="siren-center" class="secondary" hidden>设置大螺旋中心</button><button type="button" id="siren-contact" class="secondary" hidden>标记最内侧交点</button></div>
+              <div class="siren-actions"><label><input id="siren-guides" type="checkbox" checked> 显示序号和交点</label><label><input id="siren-path" type="checkbox"> 显示大螺旋参考路径</label><label id="siren-overlay-label" hidden><input id="siren-overlay" type="checkbox"> 叠加所选模板</label><button type="button" id="siren-contact" class="secondary" hidden>标记最内侧交点</button></div>
               <p id="siren-stage-hint" class="siren-note">自由拖动小螺旋，松手后按首交点重排；点击空白处恢复添加。</p>
+              </div>
             </div>
           </div>
         </div>
         <div id="siren-keyboard-panel" class="siren-card" hidden><div class="siren-actions"><h3>字形键盘 A→M / Z→N</h3><label><input type="radio" name="siren-key-action" id="siren-key-add" value="add" checked> 点击添加</label><label><input type="radio" name="siren-key-action" id="siren-key-replace" value="replace"> 替换所选项</label><span id="siren-key-angle" class="siren-note">对照朝向：0°</span><button id="siren-keyboard-close" type="button" class="text-button">收起</button></div><div class="siren-keyboard-scroll"><div id="siren-keyboard" class="siren-keyboard" aria-label="上排A到M，下排Z到N，反向字形同列"></div></div></div>
-        <div id="siren-samples" class="siren-card"></div>
         <div class="siren-card">
           <h3>解读结果</h3><div id="siren-reading-groups" class="siren-note" role="status" aria-live="polite"></div><label for="siren-raw" title="空格分隔大螺旋，不代表单词边界">逐字英文</label><textarea id="siren-raw" rows="2" readonly></textarea>
           <div class="siren-actions"><button type="button" id="siren-copy-raw" class="text-button">复制逐字英文</button><button type="button" id="siren-format" class="secondary">生成分词断句建议</button></div>
@@ -1040,7 +1043,7 @@ summary { color:var(--muted); }
     $('runtime-mode').textContent=runtime.integrated?'ATO 接入版':'离线可用';
     runtime.subscribe(status=>{
       const identity=status.owner?' · '+status.owner+' / '+status.profileId:'';
-      $('host-status').textContent=status.message+identity;
+      $('host-status').textContent=!runtime.integrated&&status.kind==='local'&&status.message==='独立版 · 本机保存'?'':status.message+identity;
       $('host-bar').dataset.status=status.kind;
       $('host-retry').disabled=['saving','loading','conflict','blocked'].includes(status.kind);
       $('host-reload').disabled=status.kind==='saving';
@@ -2710,32 +2713,20 @@ globalThis.BabelianOCRUI={
     const distance=item=>Math.abs((item.rect.left+item.rect.right)/2-center);
     return location(candidates.filter(item=>gap(item)<=nearest+1).reduce((best,item)=>distance(item)<distance(best)?item:best));
   },
-  mount({glyphs,wordData,getMapping,editMapping,append,notify,samples}){
-  const $=id=>document.getElementById(id),OCR=BabelianOCR,Work=BabelianOCRWork,ids=Object.keys(glyphs),history=Work.history();
+  mount({glyphs,wordData,getMapping,editMapping,append,notify}){
+  const $=id=>document.getElementById(id),OCR=BabelianOCR,Work=BabelianOCRWork,ids=Object.keys(glyphs);
   const panel=$('panel-decode'),preview=$('ocr-preview'),ctx=preview.getContext('2d');
   let source=null,crop=null,result=null,resultImage=null,selected=null,drag=null,rebox=null;
   let templatesPromise=null,templates=null,prepared=null,worker=null,job=0,loading=0,busy=false;
   let deepSuggestion=null,splitToken=null,reviewContext=null;
-  let sourceName='截图.png',workRevision=0;
   const formatter=BabelianTextFormat.create(wordData),formattedDraft=BabelianTextFormat.createDraft(formatter);
   const translation=BabelianTranslation.createSession(BabelianTranslation.createClient(),renderTranslation);
   const label=id=>'G'+String(ids.indexOf(id)+1).padStart(2,'0');
   const mapping=()=>getMapping();
-  const options=()=>({polarity:$('ocr-polarity').value,threshold:$('ocr-auto').checked?null:Number($('ocr-threshold').value),oneLine:$('ocr-single').checked,detail:$('ocr-detail').checked});
+  // Preserve the previous automatic defaults without exposing tuning controls.
+  const options=()=>({polarity:'auto',threshold:null,oneLine:false,detail:true});
   const outputOptions=()=>({joinLines:$('ocr-join').checked});
   function message(text){$('ocr-status').textContent=text;}
-  function touchWork(){workRevision++;$('ocr-work-status').textContent='识别工作有更新，仅保存在当前页面。刷新或关闭前请点击“保存识别工作”；映射配置需另行备份。';}
-  const historySnapshot=()=>({result,selected});
-  function recordCorrection(before,label){history.record(before,historySnapshot(),label);touchWork();syncReviewControls();}
-  // Capture before an action, not before navigation. History never includes the
-  // writer, mapping, sample library, or user-edited formatting.
-  const beforeCorrection=()=>JSON.parse(JSON.stringify(historySnapshot()));
-  function restoreCorrection(direction){
-    if(busy||rebox)return;const step=direction<0?history.undo():history.redo();if(!step)return;
-    endRebox();resetSplitPreview();deepSuggestion=null;result=step.state.result;selected=step.state.selected;
-    if(selected){const t=active();if(t.id&&(t.manual||t.certain))$('ocr-pending-only').checked=false;setReviewOpen(true);}
-    renderResults();draw();focusSelected();revealSelected();touchWork();message((direction<0?'已撤销：':'已重做：')+step.label+'。映射、书写区及样本库未改变。');
-  }
   function imageElement(id){const img=document.createElement('img');img.src=glyphs[id].src;img.alt=label(id);return img;}
   function setBusy(value){busy=value;$('ocr-run').disabled=value||!source;$('ocr-cancel').hidden=!value;$('ocr-controls').disabled=value;$('ocr-deep').disabled=value;panel.setAttribute('aria-busy',String(value));syncReviewControls();}
   function cancel(){job++;if(worker){worker.terminate();worker=null;}setBusy(false);}
@@ -2745,19 +2736,17 @@ globalThis.BabelianOCRUI={
     result=null;resultImage=null;selected=null;deepSuggestion=null;$('ocr-deep-candidates').replaceChildren();$('ocr-deep-status').textContent='';$('ocr-results').hidden=true;$('ocr-review').hidden=true;$('ocr-inspection').hidden=true;
     setReviewOpen(false);setSegmentationOpen(false);$('ocr-output-note').textContent='';
     $('ocr-pending-only').checked=false;$('ocr-filter-empty').hidden=true;syncReviewControls();
-    history.clear();syncReviewControls();
     setTranslationOpen(false);
     $('ocr-output').value='';$('ocr-tokens').replaceChildren();$('ocr-candidates').replaceChildren();
     $('ocr-piece').width=1;$('ocr-piece').height=1;$('ocr-choice-image').removeAttribute('src');
     reviewContext=null;$('ocr-context').width=1;$('ocr-context').height=1;
     $('ocr-split-preview').width=1;$('ocr-split-preview').height=1;
   }
-  function updateCropFields(){if(!crop)return;for(const key of ['x','y','width','height'])$('ocr-crop-'+key).value=crop[key];}
   function changeCrop(next){
     if(!source||busy)return;
     const x=Math.max(0,Math.min(source.width-1,Math.round(next.x))),y=Math.max(0,Math.min(source.height-1,Math.round(next.y)));
     crop={x,y,width:Math.max(1,Math.min(source.width-x,Math.round(next.width))),height:Math.max(1,Math.min(source.height-y,Math.round(next.height)))};
-    clearResult();touchWork();updateCropFields();draw();message('框选区域已更新。点击“识别所选区域”。');
+    clearResult();draw();message('框选区域已更新。点击“识别所选区域”。');
   }
   function draw(){
     if(!source)return;
@@ -2807,13 +2796,11 @@ globalThis.BabelianOCRUI={
   preview.addEventListener('pointercancel',()=>{drag=null;draw();});
   function endRebox(){
     rebox=null;drag=null;$('ocr-rebox-bar').hidden=true;preview.classList.remove('reboxing');
-    for(const id of ['ocr-full','ocr-rotate','ocr-crop-apply'])$(id).disabled=false;
   }
   $('ocr-rebox').addEventListener('click',()=>{
     if(!active()||busy)return;
     resetSplitPreview();rebox={position:{...selected},box:null};drag=null;
     $('ocr-rebox-bar').hidden=false;$('ocr-rebox-apply').disabled=true;preview.classList.add('reboxing');
-    for(const id of ['ocr-full','ocr-rotate','ocr-crop-apply'])$(id).disabled=true;
     $('ocr-rebox-status').textContent=`正在重新框选第 ${selected.line+1} 行第 ${selected.token+1} 项：请在截图上拖动。`;
     setEditorVisible(false);syncReviewControls();
     $('ocr-rebox-bar').scrollIntoView({block:'start'});$('ocr-rebox-cancel').focus({preventScroll:true});draw();
@@ -2825,7 +2812,6 @@ globalThis.BabelianOCRUI={
     if(!rebox?.box||busy)return;
     try{
       const position={...rebox.position};
-      const before=beforeCorrection();
       const update=BabelianOCRCorrection.replace(OCR,result,position,rebox.box,resultImage,prepared);
       endRebox();selected=update.position;renderResults();draw();
       const warning=update.overlap.length?'部分框仍有几何交叠，请核对裁片（已分配给新框的像素不会重复识别）。':'';
@@ -2833,7 +2819,6 @@ globalThis.BabelianOCRUI={
       message(detail+warning);notify(detail+warning);
       $('ocr-review').querySelector('.ocr-review-body').scrollTop=0;revealSelected();
       $('ocr-choice').focus({preventScroll:true});
-      recordCorrection(before,'重新框选字形');
     }catch(error){$('ocr-rebox-status').textContent=error.message;}
   });
   async function loadFile(file){
@@ -2850,7 +2835,7 @@ globalThis.BabelianOCRUI={
       const scale=Math.min(1,2200/img.naturalWidth,Math.sqrt(6000000/(img.naturalWidth*img.naturalHeight)));
       source=document.createElement('canvas');source.width=Math.max(1,Math.round(img.naturalWidth*scale));source.height=Math.max(1,Math.round(img.naturalHeight*scale));
       source.getContext('2d').drawImage(img,0,0,source.width,source.height);
-      sourceName=file.name.slice(0,200);crop={x:0,y:0,width:source.width,height:source.height};clearResult();touchWork();updateCropFields();$('ocr-image-area').hidden=false;
+      crop={x:0,y:0,width:source.width,height:source.height};clearResult();$('ocr-image-area').hidden=false;
       $('ocr-file-info').textContent=`${file.name} · ${source.width} × ${source.height}${scale<1?'（已缩小，请优先上传裁剪后的原尺寸密码图）':''}`;
       $('ocr-run').disabled=false;draw();message('请拖动框选纯巴别语区域，排除英文、标题、插图和边框。');
     }catch(e){if(version===loading)message(e.message);}
@@ -2861,65 +2846,6 @@ globalThis.BabelianOCRUI={
   panel.addEventListener('dragover',e=>{e.preventDefault();});
   panel.addEventListener('drop',e=>{e.preventDefault();if(!busy)loadFile(e.dataTransfer.files[0]);});
   document.addEventListener('paste',e=>{if(panel.hidden||busy)return;const file=[...e.clipboardData.items].find(i=>i.kind==='file'&&i.type.startsWith('image/'))?.getAsFile();if(file){e.preventDefault();loadFile(file);}});
-  function workSettings(){return {polarity:$('ocr-polarity').value,threshold:Number($('ocr-threshold').value),single:$('ocr-single').checked,detail:$('ocr-detail').checked,auto:$('ocr-auto').checked,join:$('ocr-join').checked,formatEnabled:$('ocr-format-enabled').checked,punctuate:$('ocr-punctuate').checked,extraWords:$('ocr-extra-words').value};}
-  function applyWorkSettings(s){
-    $('ocr-polarity').value=s.polarity;$('ocr-threshold').value=s.threshold;$('ocr-threshold-value').textContent=s.threshold;
-    for(const [key,id] of Object.entries({single:'ocr-single',detail:'ocr-detail',auto:'ocr-auto',join:'ocr-join',formatEnabled:'ocr-format-enabled',punctuate:'ocr-punctuate'}))$(id).checked=s[key];
-    $('ocr-threshold').disabled=s.auto;$('ocr-extra-words').value=s.extraWords;
-  }
-  $('ocr-work-save').addEventListener('click',async()=>{
-    if(!source||busy||rebox)return;const revision=workRevision;
-    try{
-      const text=Work.encode({source:{width:source.width,height:source.height,name:sourceName,png:source.toDataURL('image/png')},crop,result,settings:workSettings(),draft:formattedDraft.snapshot(),view:{selected,reviewOpen:!$('ocr-tokens').hidden,pendingOnly:$('ocr-pending-only').checked,segmentationOpen:!$('ocr-segmentation').hidden}},ids);
-      await BabelianHost.download(new Blob([text],{type:'application/json'}),'巴别语识别工作.json');
-      $('ocr-work-status').textContent=revision===workRevision?'已下载识别工作。包含截图、识别与校正及整理草稿；不含映射、书写区、样本库、机翻或撤销历史。': '已下载点击保存时的识别工作；之后仍有更新，请再次保存。';
-    }catch(e){$('ocr-work-status').textContent='保存失败：'+e.message;}
-  });
-  $('ocr-work-load').addEventListener('click',()=>{if(!busy&&!rebox)$('ocr-work-file').click();});
-  $('ocr-work-file').addEventListener('change',async()=>{
-    const file=$('ocr-work-file').files[0];if(!file||busy||rebox)return;
-    const version=++loading;setBusy(true);
-    try{
-      if(file.size>Work.MAX_BYTES)throw Error('识别工作文件超过7MB。');
-      const work=Work.parse(await file.text(),ids);if(version!==loading)return;
-      if(source&&!confirm('载入将替换当前截图、识别、校正和整理草稿，并清空撤销历史。现有映射、书写区和样本库不会改变。请先保存当前识别工作，是否继续？'))return;
-      // Validate and decode into temporary objects before changing live state.
-      const img=new Image();img.src=work.source.png;await img.decode();if(version!==loading)return;
-      if(img.naturalWidth!==work.source.width||img.naturalHeight!==work.source.height)throw Error('解码后的截图尺寸不一致。');
-      const nextSource=document.createElement('canvas');nextSource.width=work.source.width;nextSource.height=work.source.height;nextSource.getContext('2d').drawImage(img,0,0);
-      const nextImage=work.result?nextSource.getContext('2d').getImageData(work.crop.x,work.crop.y,work.crop.width,work.crop.height):null;
-      const nextDraft=BabelianTextFormat.createDraft(formatter);nextDraft.restore(work.draft);
-      if(work.result)await loadTemplates(false);if(version!==loading)return;
-      const nextPrepared=work.result?OCR.prepareTemplates(templates,{detail:work.settings.detail}):null;
-      clearResult();source=nextSource;sourceName=work.source.name;crop=work.crop;result=work.result;resultImage=nextImage;prepared=nextPrepared;
-      applyWorkSettings(work.settings);formattedDraft.restore(nextDraft.snapshot());
-      let different=false;
-      if(result&&work.draft){const current=formattingInput();different=JSON.stringify([current.payload,current.options])!==JSON.stringify([work.draft.payload,work.draft.options]);if(different)formattedDraft.edit(work.draft.value);}
-      selected=work.view.selected;$('ocr-pending-only').checked=work.view.pendingOnly;
-      if(active()?.id&&(active().manual||active().certain))$('ocr-pending-only').checked=false;
-      setReviewOpen(work.view.reviewOpen);setSegmentationOpen(work.view.segmentationOpen);updateCropFields();$('ocr-image-area').hidden=false;
-      $('ocr-file-info').textContent=`${sourceName} · ${source.width} × ${source.height}（识别工作）`;
-      renderResults();draw();focusSelected();revealSelected();workRevision++;
-      // Never restore online consent, translations, mapping, samples or writer.
-      $('ocr-translate-consent').checked=false;renderTranslation(translation.state());
-      $('ocr-work-status').textContent='已载入识别工作，未覆盖现有映射、书写区或样本库。'+(different?'当前字形、映射或整理设置与草稿生成时不同，草稿已保留；重新生成建议后才能复制或追加。':'撤销历史从这里重新开始。');
-      message('识别工作已恢复，不需要重新识别。');
-      if(!selected&&result)$('ocr-results').scrollIntoView({block:'start'});
-    }catch(e){if(version===loading)$('ocr-work-status').textContent='载入失败，当前工作未替换：'+e.message;}
-    finally{if(version===loading)setBusy(false);$('ocr-work-file').value='';}
-  });
-  $('ocr-full').addEventListener('click',()=>{if(source)changeCrop({x:0,y:0,width:source.width,height:source.height});});
-  $('ocr-crop-apply').addEventListener('click',()=>{
-    const next=Object.fromEntries(['x','y','width','height'].map(k=>[k,Number($('ocr-crop-'+k).value)]));
-    if(Object.values(next).some(v=>!Number.isFinite(v))||next.width<1||next.height<1){message('请输入有效的框选坐标和尺寸。');return;}changeCrop(next);
-  });
-  $('ocr-auto').addEventListener('change',()=>{$('ocr-threshold').disabled=$('ocr-auto').checked;});
-  $('ocr-threshold').addEventListener('input',()=>{$('ocr-threshold-value').textContent=$('ocr-threshold').value;});
-  $('ocr-rotate').addEventListener('click',()=>{
-    if(!source||busy)return;
-    const canvas=document.createElement('canvas');canvas.width=source.height;canvas.height=source.width;const c=canvas.getContext('2d');c.translate(canvas.width,0);c.rotate(Math.PI/2);c.drawImage(source,0,0);source=canvas;
-    changeCrop({x:0,y:0,width:source.width,height:source.height});
-  });
   async function loadTemplates(prepare=true){
     if(!templatesPromise)templatesPromise=Promise.all(ids.map(id=>new Promise((resolve,reject)=>{
       const img=new Image();img.onload=()=>{
@@ -2959,8 +2885,7 @@ globalThis.BabelianOCRUI={
         }
       }else answer=await OCR.recognize(resultImage,templates,{...options(),cancelled:()=>version!==job},p=>{if(version===job)progress(p);});
       if(version!==job)return;result=answer;selected=null;renderResults();draw();
-      touchWork();
-      if(!result.lines.length)message('未找到有效字形行。请检查框选范围、黑白方向或阈值。');
+      if(!result.lines.length)message('未找到有效字形行。请检查框选范围及图片清晰度。');
       else message(`识别完成，共 ${result.lines.length} 行。${result.polarity==='dark'?'深字浅底':'浅字深底'}，阈值 ${result.threshold}。请复核橙色项目及分割边界。`);
     }catch(e){if(version===job){message('识别失败：'+e.message);clearResult();}}
     finally{if(version===job){worker?.terminate();worker=null;setBusy(false);if(result?.lines.length)$('ocr-results').scrollIntoView({block:'start'});}}
@@ -2969,11 +2894,11 @@ globalThis.BabelianOCRUI={
   $('ocr-cancel').addEventListener('click',()=>{loading++;cancel();message('已取消。可以调整框选后重新识别。');});
   function renderResults(){
     if(!result)return;
-    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,unmapped=0,total=0,noCandidate=0;
+    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,total=0,noCandidate=0;
     result.lines.forEach((line,li)=>{
       const row=document.createElement('div');row.className='ocr-token-line';const title=document.createElement('span');title.className='ocr-row-label';title.textContent=`第 ${li+1} 行`;row.append(title);
       line.tokens.forEach((token,ti)=>{
-        total++;const id=OCR.tokenGlyph(token),accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;if(!id)noCandidate++;else if(!map[id])unmapped++;
+        total++;const id=OCR.tokenGlyph(token),accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;if(!id)noCandidate++;
         if($('ocr-pending-only').checked&&accepted)return;
         const b=document.createElement('button');b.type='button';b.className='ocr-token';b.dataset.line=li;b.dataset.token=ti;b.classList.toggle('uncertain',!accepted);b.classList.toggle('unmapped',!!accepted&&!map[id]);b.setAttribute('aria-pressed',String(selected?.line===li&&selected?.token===ti));
         const top=document.createElement('span');top.textContent=`${ti+1} · ${id?label(id):'未知'}`;
@@ -2983,7 +2908,7 @@ globalThis.BabelianOCRUI={
         b.addEventListener('click',()=>select(li,ti));row.append(b);
       });if(row.children.length>1)list.append(row);
     });
-    $('ocr-results').hidden=!total;$('ocr-inspection').hidden=!total;$('ocr-summary').textContent=`${total} 个分割项 · ${unknown} 个待确认 · ${unmapped} 个未映射。相似度仅为图形评分，不是正确率。`;
+    $('ocr-results').hidden=!total;$('ocr-inspection').hidden=!total;
     $('ocr-output').value=OCR.transcribe(result,map,outputOptions());
     $('ocr-output-note').textContent=unknown?`${unknown} 项尚待确认，已有候选先按当前映射输出${noCandidate?`；${noCandidate} 项无候选，显示 [?]`:''}。需要时展开逐字复核。`:'已按当前映射输出。需要校正时，可展开逐字复核。';
     refreshFormatted();
@@ -3026,27 +2951,10 @@ globalThis.BabelianOCRUI={
     const items=BabelianOCRUI.pending(result),at=selected?items.findIndex(p=>p.line===selected.line&&p.token===selected.token):-1;
     const text=!items.length?'无待确认项':at>=0?`待确认 ${at+1} / ${items.length}`:`剩余 ${items.length} 项待确认`;
     $('ocr-pending-status').textContent=text;$('ocr-review-position').textContent=text;
-    for(const [direction,buttons] of [[-1,['ocr-pending-prev','ocr-review-prev']],[1,['ocr-pending-next','ocr-review-next']]]){
-      const disabled=busy||!!rebox||!BabelianOCRUI.pendingNeighbor(result,selected,direction);
-      for(const id of buttons){$(id).disabled=disabled;$(id).title='按原图读序查找待确认项，到末尾后从头查找；不自动确认。';}
-    }
     for(const id of ['ocr-confirm','ocr-confirm-next','ocr-choice','ocr-unknown','ocr-rebox'])$(id).disabled=busy||!!rebox||!active();
     syncSplitControls();
     $('ocr-merge').disabled=busy||!!rebox||!active()||selected.token>=result.lines[selected.line].tokens.length-1;
     $('ocr-pending-only').disabled=busy||!!rebox;
-    $('ocr-work-save').disabled=busy||!!rebox||!source;$('ocr-work-load').disabled=busy||!!rebox;
-    const h=history.state();
-    for(const id of ['ocr-undo','ocr-review-undo']){$(id).disabled=busy||!!rebox||!h.undo;$(id).title=h.undoLabel?`撤销：${h.undoLabel}（Ctrl / ⌘ + Z）`:'尚无校正可撤销';}
-    for(const id of ['ocr-redo','ocr-review-redo']){$(id).disabled=busy||!!rebox||!h.redo;$(id).title=h.redoLabel?`重做：${h.redoLabel}（Ctrl / ⌘ + Shift + Z）`:'尚无校正可重做';}
-    $('ocr-history-status').textContent=h.undo||h.redo?`${h.undo} 步可撤销 · ${h.redo} 步可重做`:'尚无校正记录';
-  }
-  function movePending(direction){
-    if(busy||rebox)return;
-    const next=BabelianOCRUI.pendingNeighbor(result,selected,direction);if(!next)return;
-    select(next.line,next.token);
-    const outer=$('ocr-tokens').getBoundingClientRect();
-    if(outer.bottom<0||outer.top>=innerHeight)$('ocr-tokens').scrollIntoView({block:'start'});
-    revealSelected();
   }
   function setReviewOpen(open){
     $('ocr-tokens').hidden=!open;$('ocr-review-toggle').setAttribute('aria-expanded',String(open));
@@ -3064,10 +2972,6 @@ globalThis.BabelianOCRUI={
     $('ocr-tokens').querySelectorAll('[aria-pressed="true"]').forEach(b=>b.setAttribute('aria-pressed','false'));syncReviewControls();draw();
   }
   $('ocr-review-toggle').addEventListener('click',()=>setReviewOpen($('ocr-tokens').hidden));
-  for(const id of ['ocr-undo','ocr-review-undo'])$(id).addEventListener('click',()=>restoreCorrection(-1));
-  for(const id of ['ocr-redo','ocr-review-redo'])$(id).addEventListener('click',()=>restoreCorrection(1));
-  for(const id of ['ocr-pending-prev','ocr-review-prev'])$(id).addEventListener('click',()=>movePending(-1));
-  for(const id of ['ocr-pending-next','ocr-review-next'])$(id).addEventListener('click',()=>movePending(1));
   $('ocr-pending-only').addEventListener('change',()=>{
     setReviewOpen(true);
     if($('ocr-pending-only').checked&&active()?.id&&(active().manual||active().certain))closeReview();
@@ -3076,11 +2980,6 @@ globalThis.BabelianOCRUI={
   $('ocr-review-close').addEventListener('click',()=>{const position=selected&&{...selected};closeReview();if(position)$('ocr-tokens').querySelector(`[data-line="${position.line}"][data-token="${position.token}"]`)?.focus({preventScroll:true});});
   $('ocr-segmentation-toggle').addEventListener('click',()=>setSegmentationOpen($('ocr-segmentation').hidden));
   document.addEventListener('keydown',e=>{
-    const editing=e.target.isContentEditable||e.target.closest?.('input,textarea,select,[role="textbox"]');
-    if(!e.defaultPrevented&&!e.isComposing&&!e.altKey&&(e.ctrlKey||e.metaKey)&&!busy&&!rebox&&!panel.closest('[hidden]')&&!editing&&(e.target===document.body||panel.contains(e.target))){
-      const key=e.key.toLowerCase(),direction=key==='z'?(e.shiftKey?1:-1):key==='y'&&!e.shiftKey?1:0;
-      if(direction){e.preventDefault();restoreCorrection(direction);return;}
-    }
     if(e.key==='Escape'&&!e.defaultPrevented&&!busy&&!rebox&&!panel.closest('[hidden]')&&selected){e.preventDefault();$('ocr-review-close').click();return;}
     if(!/^Arrow(Left|Right|Up|Down)$/.test(e.key)||e.defaultPrevented||e.isComposing||e.altKey||e.ctrlKey||e.metaKey||e.shiftKey||
       panel.closest('[hidden]')||busy||rebox||drag||!active()||$('ocr-tokens').hidden||$('ocr-review').hidden)return;
@@ -3177,7 +3076,7 @@ globalThis.BabelianOCRUI={
     $('ocr-choice').value=OCR.tokenGlyph(token)||ids[0];showChoice();
     syncReviewControls();
   }
-  function showChoice(){const id=$('ocr-choice').value;$('ocr-choice-image').src=glyphs[id].src;$('ocr-choice-image').alt=label(id);$('ocr-add-sample').disabled=!samples||!active()?.manual||active().id!==id;}
+  function showChoice(){const id=$('ocr-choice').value;$('ocr-choice-image').src=glyphs[id].src;$('ocr-choice-image').alt=label(id);}
   $('ocr-deep').addEventListener('click',async()=>{
     const token=active();if(!token||busy||rebox)return;const signature=JSON.stringify(token),version=++job;setBusy(true);message('正在对当前字形深度比对…');
     try{await loadTemplates();await new Promise(resolve=>setTimeout(resolve,0));if(version!==job)return;
@@ -3186,31 +3085,19 @@ globalThis.BabelianOCRUI={
       deepSuggestion={token,signature,answer};renderReview();message('深度候选已列出；选择后点击“确认使用此字形”。原结果未改变。');
     }catch(e){if(version===job)message('深度识别未应用：'+e.message);}finally{if(version===job)setBusy(false);}
   });
-  if(samples)GlyphSamplesUI.mount({library:samples,container:$('ocr-samples'),language:'babelian',labels:()=>Object.fromEntries(ids.map(id=>[id,label(id)+' · '+(mapping()[id]||'未映射')])),download:(blob,name)=>BabelianHost.download(blob,name)});
-  $('ocr-add-sample').addEventListener('click',()=>{
-    const token=active();if(!samples||!token?.manual||token.id!==$('ocr-choice').value||busy)return;
-    try{
-      const b=token.box;if(b.width>1200||b.height>1200)throw Error('请先框选单个字形，裁片最长边不超过1200像素。');
-      const whole=document.createElement('canvas');whole.width=resultImage.width;whole.height=resultImage.height;whole.getContext('2d').putImageData(resultImage,0,0);
-      const crop=document.createElement('canvas');crop.width=b.width;crop.height=b.height;crop.getContext('2d').drawImage(whole,b.x,b.y,b.width,b.height,0,0,b.width,b.height);
-      const excludedBoxes=(token.excludedBoxes||[]).map(p=>{const x=Math.max(0,p.x-b.x),y=Math.max(0,p.y-b.y);return {x,y,width:Math.max(0,Math.min(b.width,p.x+p.width-b.x)-x),height:Math.max(0,Math.min(b.height,p.y+p.height-b.y)-y)};}).filter(p=>p.width&&p.height);
-      samples.add({language:'babelian',glyphId:token.id,image:crop.toDataURL('image/png'),annotation:{box:{x:0,y:0,width:b.width,height:b.height},excludedBoxes}});message('已加入确认样本；请在样本库中导出保存。不会自动训练。');
-    }catch(e){message(e.message);}
-  });
   $('ocr-choice').addEventListener('change',showChoice);
   function confirmChoice(advance=false){
-    const t=active();if(!t||busy||rebox)return;const before=beforeCorrection(),position={...selected};t.id=$('ocr-choice').value;t.manual=true;t.certain=false;
+    const t=active();if(!t||busy||rebox)return;const position={...selected};t.id=$('ocr-choice').value;t.manual=true;t.certain=false;
     const next=advance?BabelianOCRUI.pendingNeighbor(result,position,1):null;
-    if(next){select(next.line,next.token);recordCorrection(before,'确认字形并继续');return;}
+    if(next){select(next.line,next.token);return;}
     closeReview();renderResults();draw();
     const target=$('ocr-tokens').querySelector(`[data-line="${position.line}"][data-token="${position.token}"]`)||$('ocr-tokens').querySelector('.ocr-token')||$('ocr-review-toggle');
     target.focus({preventScroll:true});
-    recordCorrection(before,'确认字形');
     if(advance)message('待确认项已全部处理。绿色自动匹配项仍可按需复核。');
   }
   $('ocr-confirm').addEventListener('click',()=>confirmChoice());
   $('ocr-confirm-next').addEventListener('click',()=>confirmChoice(true));
-  $('ocr-unknown').addEventListener('click',()=>{const t=active();if(!t||busy||rebox)return;const before=beforeCorrection();endRebox();t.manual=false;t.certain=false;renderResults();draw();recordCorrection(before,'标为待确认');});
+  $('ocr-unknown').addEventListener('click',()=>{const t=active();if(!t||busy||rebox)return;endRebox();t.manual=false;t.certain=false;renderResults();draw();});
   $('ocr-edit-map').addEventListener('click',()=>{endRebox();if(active())editMapping($('ocr-choice').value);});
   function imageMask(excludedBoxes=[]){return BabelianOCRCorrection.exclude(OCR.binarize(resultImage,{threshold:result.threshold,polarity:result.polarity}),excludedBoxes);}
   function classify(box,excludedBoxes=BabelianOCRCorrection.exclusionsFor([active()]),preserveBox=false){
@@ -3223,21 +3110,18 @@ globalThis.BabelianOCRUI={
     const t=active();if(!t||busy||rebox||t.box.width<4)return;
     if(result.lines.reduce((n,row)=>n+row.tokens.length,0)>=1500){message('分割项已达1500项，请分段识别。');return;}
     try{
-      const before=beforeCorrection(),boxes=BabelianOCRCorrection.splitBoxes(t.box,Number($('ocr-split-at').value));
+      const boxes=BabelianOCRCorrection.splitBoxes(t.box,Number($('ocr-split-at').value));
       // Classify both sides before mutating. Failed matching must leave the
-      // original result, selection and undo history intact.
+      // original result and selection intact.
       const parts=boxes.map(box=>classify(box,BabelianOCRCorrection.exclusionsFor([t]),true));
       result.lines[selected.line].tokens.splice(selected.token,1,...parts);resetSplitPreview();renderResults();draw();message('已拆成两个分割项，请分别确认候选。');
-      recordCorrection(before,'拆分字形');
     }catch(error){message('未应用拆分：'+error.message);}
   });
   $('ocr-merge').addEventListener('click',()=>{
     const a=active(),list=result?.lines[selected?.line]?.tokens,b=list?.[selected.token+1];if(!a||!b||busy||rebox)return;
-    const before=beforeCorrection();
     endRebox();
     const x=Math.min(a.box.x,b.box.x),y=Math.min(a.box.y,b.box.y),right=Math.max(a.box.x+a.box.width,b.box.x+b.box.width),bottom=Math.max(a.box.y+a.box.height,b.box.y+b.box.height);
     list.splice(selected.token,2,classify({x,y,width:right-x,height:bottom-y},BabelianOCRCorrection.exclusionsFor([a,b])));renderResults();draw();message('已合并，请确认新候选。');
-    recordCorrection(before,'合并字形');
   });
   $('ocr-join').addEventListener('change',renderResults);
   function formattingInput(){
@@ -3273,8 +3157,6 @@ globalThis.BabelianOCRUI={
     refreshFormatted(true);
   });
   $('ocr-formatted').addEventListener('input',()=>renderFormattedState(formattedDraft.edit($('ocr-formatted').value)));
-  for(const id of ['ocr-polarity','ocr-single','ocr-detail','ocr-auto','ocr-threshold','ocr-join','ocr-format-enabled','ocr-punctuate','ocr-extra-words','ocr-formatted'])$(id).addEventListener(id==='ocr-formatted'||id==='ocr-threshold'?'input':'change',()=>{if(source)touchWork();});
-  $('ocr-format-run').addEventListener('click',()=>{if(source)touchWork();});
   $('ocr-formatted-copy').addEventListener('click',async()=>{
     try{
       const payload=formattedDraft.payload();
@@ -3323,10 +3205,6 @@ globalThis.BabelianOCRUI={
     catch(_){field.focus();field.select();notify(document.execCommand('copy')?'已复制识别英文。':'请在结果框中全选并复制。');}
   });
   $('ocr-append').addEventListener('click',()=>{if(result)append(OCR.toWriter(result,mapping(),outputOptions()));});
-  $('ocr-forget').addEventListener('click',()=>{
-    if(result&&!confirm('清除本次截图与识别结果？映射及书写区保持不变。'))return;
-    loading++;cancel();source=null;crop=null;clearResult();workRevision++;preview.width=1;preview.height=1;$('ocr-image-area').hidden=true;$('ocr-run').disabled=true;$('ocr-file-info').textContent='尚未选择图片';$('ocr-work-status').textContent='当前截图已清除。可载入之前单独保存的识别工作；映射和书写区保持不变。';message('截图已从本页面清除。');
-  });
   window.addEventListener('babelian-mapping-change',renderResults);
   window.addEventListener('resize',()=>{draw();drawReviewContext();});
   return {refresh:()=>{renderResults();draw();},pause:()=>{loading++;cancel();translation.cancel();},snapshot:()=>JSON.parse(JSON.stringify({crop,result,selected}))};
@@ -4280,11 +4158,11 @@ globalThis.BabelianOCRUI={
 });
 
   /* Local pixel matching with manual review; no semantic glyph inference. */
-globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
+globalThis.SirenUI={mount({assets,path,wordData,notify}){
   const $=id=>document.getElementById(id),C=SirenCore,stage=$('siren-stage'),context=stage.getContext('2d');
   const containsLocator=SirenRecognition.createRecognitionBoundary(assets.base,path);
   const docs={generate:C.create(),review:C.create('review')},history={generate:[],review:[]},selections={generate:0,review:0};
-  let mode='generate',groupIndex=0,itemId=null,images=null,geometry=null,ready=false,drag=null,centerMode=false,contactMode=false,pendingPoint=null,precisionEdit=null;
+  let mode='generate',groupIndex=0,itemId=null,images=null,geometry=null,ready=false,drag=null,contactMode=false,pendingPoint=null,precisionEdit=null;
   const stripBounds=new WeakMap(),tile=document.createElement('canvas');tile.width=600;tile.height=600;
   let source=null,sourceTicket=0,sourceLoading=false,importTicket=0,loadingImport=false,keyboardPoint=null,templates=null,scanBusy=false,scanTicket=0;
   let deep=null,missing=null,reviewFocus=null;
@@ -4308,7 +4186,23 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   const payload=()=>({text:reading().groups.join(''),spans:[]});
   const incomplete=()=>mode==='review'&&reading().unplaced>0;
   const formatOptions=()=>({punctuate:true});
-  function showKeyboard(open){$('siren-keyboard-panel').hidden=!open;$('siren-open-add').setAttribute('aria-expanded',String(open&&!itemId));$('siren-open-replace').setAttribute('aria-expanded',String(open&&!!itemId));}
+  function showKeyboard(open){$('siren-keyboard-panel').hidden=!open;$('siren-open-add').setAttribute('aria-expanded',String(open&&!itemId));}
+  function setPrecisionOpen(open,{focus=false}={}){
+    const popup=$('siren-precision-panel'),trigger=$('siren-precision-toggle');
+    if(open&&(!ready||loadingImport||scanBusy||sourceLoading||drag))return;
+    const restoreFocus=!open&&(focus||popup.contains(document.activeElement));
+    popup.hidden=!open;trigger.setAttribute('aria-expanded',String(open));$('panel-siren').classList.toggle('siren-precision-active',open);
+    if(!open){precisionEdit=null;contactMode=false;}
+    if(ready)render();
+    if(open&&focus){
+      $('siren-precision-close').focus({preventScroll:true});
+      if(window.matchMedia?.('(max-width:1000px)').matches)stage.scrollIntoView?.({block:'start'});
+    }else if(restoreFocus)trigger.focus({preventScroll:true});
+  }
+  function closePrecisionKey(event){
+    if(event.key!=='Escape'||event.defaultPrevented||$('panel-siren').hidden||$('siren-precision-panel').hidden)return false;
+    event.preventDefault();setPrecisionOpen(false,{focus:true});return true;
+  }
   function selectItem(id=null,keepKeyboard=false){reviewFocus=null;clearDeep();precisionEdit=null;itemId=id;pendingPoint=null;keyboardPoint=id?{x:item().x,y:item().y}:null;contactMode=false;$('siren-key-add').checked=!id;$('siren-key-replace').checked=!!id;if(!keepKeyboard)showKeyboard(false);}
   function renderKeyboardAngle(){
     const point=keyboardPoint||item(),angle=point&&g()?C.rotationFor(g(),point):0;
@@ -4316,6 +4210,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     $('siren-key-angle').textContent='对照朝向：'+Math.round(angle)+'°';
   }
   function scanControls(){
+    $('siren-precision-toggle').disabled=!ready||loadingImport||scanBusy||sourceLoading;
     $('siren-auto-scan').disabled=!source||!ready||scanBusy||sourceLoading;
     $('siren-missing-toggle').disabled=!source||!ready||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
     $('siren-missing-run').disabled=!missing?.region||!!missing?.drag||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
@@ -4325,7 +4220,6 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     $('siren-deep-toggle').hidden=mode!=='review';$('siren-deep-toggle').disabled=!g()?.image||scanBusy;
     $('siren-deep-run').disabled=!deep?.region||!!deep?.drag||scanBusy;
     $('siren-deep-apply').disabled=!deep?.preview||scanBusy||!!item()?.positionLocked;
-    $('siren-add-sample').hidden=mode!=='review'||!samples;$('siren-add-sample').disabled=!g()?.image||!item()?.letter||scanBusy||!!drag;
   }
   function cancelScan(){scanTicket++;scan.cancel();scanBusy=false;if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
   function remember(){history[mode].push(JSON.stringify(doc()));if(history[mode].length>30)history[mode].shift();revisions[mode]++;}
@@ -4418,7 +4312,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   function renderGroups(){
     $('siren-groups').replaceChildren();const result=reading();
     doc().groups.forEach((group,index)=>{
-      const b=button('',()=>{groupIndex=index;selectItem();centerMode=false;render();},index===groupIndex);
+      const b=button('',()=>{groupIndex=index;selectItem();render();},index===groupIndex);
       const mini=document.createElement('canvas');mini.width=160;mini.height=160;const c=mini.getContext('2d');c.scale(160/600,160/600);paint(c,group);
       const caption=document.createElement('span');caption.textContent=(index+1)+' · '+(result.groups[index]||'空');b.append(mini,caption);b.title='第'+(index+1)+'组：'+(result.groups[index]||'空');$('siren-groups').append(b);
     });
@@ -4442,7 +4336,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     const sizeField=$('siren-base-size');sizeField.disabled=!group||groupLocked;if(document.activeElement!==sizeField)sizeField.value=group?(group.baseSize??500):'';
     $('siren-base-size-slider').disabled=!group||groupLocked;$('siren-base-size-slider').value=group?.baseSize??500;
     $('siren-group-prev').disabled=!group||groupIndex===0;$('siren-group-next').disabled=!group||groupIndex===doc().groups.length-1;
-    $('siren-delete-group').disabled=!group;$('siren-center').disabled=!group||groupLocked;
+    $('siren-delete-group').disabled=!group;
     $('siren-undo').disabled=!history[mode].length;
     $('siren-group-label').textContent=group?'第'+(groupIndex+1)+'组 · '+group.items.length+'/6':'请先载入图片并自动匹配';
     $('siren-items').replaceChildren();
@@ -4454,7 +4348,6 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     $('siren-match-candidates').replaceChildren();if(!token)return;
     const metric=row(g()).find(e=>e.item.id===token.id),reset=$('siren-reset-position');
     $('siren-position-lock').textContent=token.positionLocked?'解锁位置':'锁定位置';$('siren-position-lock').setAttribute('aria-pressed',String(!!token.positionLocked));
-    $('siren-open-replace').disabled=!!token.positionLocked;
     reset.hidden=mode!=='review'||metric?.at!==null&&!!token.fit;reset.disabled=!!token.positionLocked||!C.canReset(g(),token);reset.title=token.positionLocked?'请先解锁':!token.resetPose?'旧记录无原位，请重新匹配本组':!C.canReset(g(),token)?'大螺旋校准已改变，请重新匹配本组':'恢复最近一次识别或候选位置';
     $('siren-match-status').textContent=token.fit?(token.letter||'待确认')+' · 笔画匹配 '+(token.fit.score*100).toFixed(1)+'（非正确率）'+(token.fit.method==='joint-pixel'?' · 候选按整组核验排序':''):(token.letter||'待确认')+(metric?.at===null?' · 未定位':'');
     if(!token.fit)return;
@@ -4492,16 +4385,15 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     $('siren-generate-tools').hidden=mode!=='generate';$('siren-review-tools').hidden=mode!=='review';
     if(mode!=='generate'){$('siren-batch-panel').hidden=true;$('siren-batch-toggle').setAttribute('aria-expanded','false');}
     $('siren-export-png').disabled=!!drag;
-    $('siren-center').hidden=mode!=='review';$('siren-overlay-label').hidden=mode!=='review';
+    $('siren-overlay-label').hidden=mode!=='review';
     $('siren-mode-generate').setAttribute('aria-pressed',String(mode==='generate'));$('siren-mode-review').setAttribute('aria-pressed',String(mode==='review'));
-    $('siren-center').textContent=centerMode?'请点击画布中的大螺旋中心（再点按钮可取消）':'设置大螺旋中心';
     $('siren-stage-hint').textContent='拖动调整位置；红圈为首交点。';
     renderGroups();renderFields();renderReading();draw();scanControls();renderSource();
   }
-  function switchMode(next){if(!['generate','review'].includes(next))throw Error('未知塞壬语功能。');if(loadingImport||!ready)return;if(next===mode){render();return;}cancelScan();clearMissing();sourceTicket++;sourceLoading=false;selections[mode]=groupIndex;mode=next;groupIndex=selections[mode];selectItem();centerMode=false;drag=null;translation.invalidate();$('siren-path').checked=mode==='review';render();}
-  function pick(letter){
+  function switchMode(next){if(!['generate','review'].includes(next))throw Error('未知塞壬语功能。');if(loadingImport||!ready)return;if(next===mode){render();return;}setPrecisionOpen(false);cancelScan();clearMissing();sourceTicket++;sourceLoading=false;selections[mode]=groupIndex;mode=next;groupIndex=selections[mode];selectItem();drag=null;translation.invalidate();$('siren-path').checked=mode==='review';render();}
+  function pick(letter,fromKeyboard=false){
     try{
-      if($('siren-keyboard-panel').hidden)return;
+      if($('siren-keyboard-panel').hidden&&!(fromKeyboard&&item()))return;
       if(!g())throw Error(mode==='review'?'先载入图片并点击自动分割并匹配。':'请先添加大螺旋。');
       if($('siren-key-replace').checked){
         if(!item())throw Error('先选择要替换的小螺旋。');if(item().positionLocked)return;remember();C.invalidateFit(item());item().letter=letter;item().rotationMode??='auto';
@@ -4523,7 +4415,6 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
       if(item().positionLocked)return;const match=geometry.project(geometry.basePoints(g()),p);if(!match||match.distance>12){note('标记离参考路径过远，请先对齐路径。');return;}
       remember();item().contact={x:p.x,y:p.y};contactMode=false;changed();note('已记录人工首交点，并重新计算语序。');return;
     }
-    if(centerMode){if(g().items.some(i=>i.positionLocked))return;remember();g().cx=p.x;g().cy=p.y;C.reorient(g());centerMode=false;changed();note('中心已更新。');return;}
     const hit=nearest(p);
     if(!hit){selectItem(null,!$('siren-keyboard-panel').hidden);pendingPoint=p;keyboardPoint=p;renderFields();draw();note('');return;}
     selectItem(hit.id);keyboardPoint=p;
@@ -4548,17 +4439,25 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   }}
   stage.addEventListener('pointerup',finishDrag);stage.addEventListener('pointercancel',finishDrag);stage.addEventListener('lostpointercapture',finishDrag);
   stage.addEventListener('keydown',event=>{
+    if(closePrecisionKey(event))return;
     if(!ready||loadingImport||event.ctrlKey||event.metaKey||event.altKey||event.isComposing)return;
-    if(/^[A-Za-z]$/.test(event.key)){event.preventDefault();pick(event.key.toUpperCase());}
-    else if(event.key==='Escape'){centerMode=false;selectItem();drag=null;changed();}
+    if(/^[A-Za-z]$/.test(event.key)){event.preventDefault();pick(event.key.toUpperCase(),true);}
+    else if(event.key==='Escape'){selectItem();drag=null;changed();}
   });
   $('siren-key-add').addEventListener('change',()=>{if($('siren-key-add').checked){selectItem(null,true);renderFields();draw();}});
   $('siren-open-add').addEventListener('click',()=>{if(!g()||g().items.length>=6)return;const p=pendingPoint;selectItem();pendingPoint=p;keyboardPoint=p;showKeyboard(true);renderFields();draw();});
-  $('siren-open-replace').addEventListener('click',()=>{if(!item()||item().positionLocked)return;showKeyboard(true);renderFields();});
   $('siren-keyboard-close').addEventListener('click',()=>showKeyboard(false));
-  $('siren-position-lock').addEventListener('click',()=>{if(!item()||drag)return;remember();item().positionLocked=!item().positionLocked;precisionEdit=null;centerMode=false;contactMode=false;showKeyboard(false);changed();});
+  $('siren-position-lock').addEventListener('click',()=>{if(!item()||drag)return;remember();item().positionLocked=!item().positionLocked;precisionEdit=null;contactMode=false;showKeyboard(false);changed();});
   $('siren-reset-position').addEventListener('click',()=>{if(!item()||item().positionLocked||!C.canReset(g(),item())||drag)return;remember();C.resetPosition(g(),item());keyboardPoint={x:item().x,y:item().y};showKeyboard(false);changed();note('已恢复识别位置。');});
-  for(const [buttonId,panelId] of [['siren-precision-toggle','siren-precision-panel'],['siren-batch-toggle','siren-batch-panel']])$(buttonId).addEventListener('click',()=>{const open=$(panelId).hidden;$(panelId).hidden=!open;$(buttonId).setAttribute('aria-expanded',String(open));if(open&&panelId==='siren-batch-panel')$('siren-source-text').focus();});
+  $('siren-precision-toggle').addEventListener('click',()=>setPrecisionOpen($('siren-precision-panel').hidden,{focus:true}));
+  $('siren-precision-close').addEventListener('click',()=>setPrecisionOpen(false,{focus:true}));
+  document.addEventListener('click',event=>{
+    if($('panel-siren').hidden||$('siren-precision-panel').hidden||drag)return;
+    // Keep canvas gestures, glyph selection and all controls interactive.
+    if(event.target.closest?.('#siren-precision-panel,button,a,input,select,textarea,summary,label,canvas'))return;
+    setPrecisionOpen(false);
+  });
+  $('siren-batch-toggle').addEventListener('click',()=>{const open=$('siren-batch-panel').hidden;$('siren-batch-panel').hidden=!open;$('siren-batch-toggle').setAttribute('aria-expanded',String(open));if(open)$('siren-source-text').focus();});
   function maxRadius(group,deg){const rad=deg*Math.PI/180,dx=Math.cos(rad),dy=Math.sin(rad);return Math.max(0,Math.min(Math.abs(dx)<1e-9?850:(dx>0?600-group.cx:group.cx)/Math.abs(dx),Math.abs(dy)<1e-9?850:(dy>0?600-group.cy:group.cy)/Math.abs(dy)));}
   function adjust(name,el,sliding=false){
     if(!g()||name!=='base-size'&&(!item()||item().positionLocked)||name==='base-size'&&g().items.some(i=>i.positionLocked)||name==='rotation'&&item().rotationMode!=='manual')return;
@@ -4579,8 +4478,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   }
   $('siren-rotation-mode').addEventListener('click',()=>{if(!item()||item().positionLocked)return;remember();C.setRotationMode(g(),item(),item().rotationMode!=='manual');changed();});
   for(const id of ['siren-guides','siren-overlay','siren-path'])$(id).addEventListener('change',draw);
-  $('siren-center').addEventListener('click',()=>{if(g()?.items.some(i=>i.positionLocked))return;centerMode=!centerMode;contactMode=false;pendingPoint=null;render();});
-  $('siren-contact').addEventListener('click',()=>{if(!item()||item().positionLocked)return;contactMode=!contactMode;centerMode=false;pendingPoint=null;$('siren-guides').checked=true;$('siren-path').checked=true;render();});
+  $('siren-contact').addEventListener('click',()=>{if(!item()||item().positionLocked)return;contactMode=!contactMode;pendingPoint=null;$('siren-guides').checked=true;$('siren-path').checked=true;render();});
   $('siren-add-group').addEventListener('click',()=>{try{if(doc().groups.length>=50)throw Error('最多50组，请分段保存。');remember();C.addGroup(doc());groupIndex=doc().groups.length-1;selectItem();changed();$('siren-groups').scrollLeft=$('siren-groups').scrollWidth;}catch(e){note(e.message);}});
   $('siren-delete-group').addEventListener('click',()=>{if(g()&&confirm('删除当前大螺旋及其全部小螺旋？可以撤销。')){remember();doc().groups.splice(groupIndex,1);selectItem();changed();}});
   $('siren-delete-recognized').addEventListener('click',()=>{if(mode!=='review'||!item()||drag)return;remember();g().items=g().items.filter(i=>i.id!==itemId);selectItem();changed();note('已移除所选小螺旋识别项；原始截图未改变，可撤销。');});
@@ -4616,7 +4514,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     const all=reviewEntries(),pending=all.filter(e=>e.reasons.length);if(!pending.length){renderPending();return;}
     const current=all.findIndex(e=>e.group.id===g()?.id&&e.item.id===itemId);
     const next=pending.find(e=>all.indexOf(e)>current)||pending[0];
-    clearMissing();groupIndex=next.index;selectItem(next.item.id);reviewFocus={groupId:g().id,itemId};centerMode=false;render();
+    clearMissing();groupIndex=next.index;selectItem(next.item.id);reviewFocus={groupId:g().id,itemId};render();
     $('siren-groups').children[groupIndex]?.scrollIntoView?.({block:'nearest',inline:'nearest'});
     stage.focus({preventScroll:true});stage.scrollIntoView?.({block:'nearest'});
     const p=sourcePoint(g(),item()),canvas=$('siren-source-canvas'),wrap=$('siren-source-wrap');
@@ -4644,7 +4542,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     $('siren-source-coverage').textContent=marked.length?'原图中已加入 '+marked.length+' 组，蓝框编号对应下方组序。请对照原图检查有无漏组；蓝框是检测范围，不是准确率。':'识别后会在原图标出本次加入的大螺旋范围；请核对数量与原图一致。';
   }
   async function loadSourceFile(file,{strict=false}={}){
-    if(!file||!ready||loadingImport)return;cancelScan();clearMissing();reviewFocus=null;const ticket=++sourceTicket;sourceLoading=true;scanControls();let url;
+    if(!file||!ready||loadingImport)return;setPrecisionOpen(false);cancelScan();clearMissing();reviewFocus=null;const ticket=++sourceTicket;sourceLoading=true;scanControls();let url;
     try{
       if(file.size>16*1024*1024||!/^image\/(png|jpeg|webp)$/.test(file.type))throw Error('请选择16MB以内的 PNG / JPG / WebP 图片。');
       url=URL.createObjectURL(file);const img=await image(url);if(ticket!==sourceTicket)return;
@@ -4699,7 +4597,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     if(missing){clearMissing();scanControls();renderSource();return;}
     if(!ready||!source||scanBusy||sourceLoading||loadingImport||mode!=='review'||drag)return;
     if(doc().groups.length>=50){note('已达到50组，请分段保存。');return;}
-    clearDeep();reviewFocus=null;centerMode=false;contactMode=false;showKeyboard(false);
+    setPrecisionOpen(false);clearDeep();reviewFocus=null;contactMode=false;showKeyboard(false);
     missing={source,sourceTicket,target:doc(),revision:revisions.review,region:null,preview:null,drag:null,running:false};
     $('siren-missing-panel').hidden=false;$('siren-missing-toggle').setAttribute('aria-expanded','true');
     $('siren-missing-status').textContent='请在原图拖框，圈住一个漏掉的大螺旋及完整笔画。';scanControls();renderSource();
@@ -4725,7 +4623,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   for(const type of ['pointerup','pointercancel','lostpointercapture'])sourceCanvas.addEventListener(type,finishMissingRegion);
   function cancelMissingKey(event){if(event.key==='Escape'&&missing){event.preventDefault();clearMissing();scanControls();renderSource();}}
   sourceCanvas.addEventListener('keydown',cancelMissingKey);
-  document.addEventListener('keydown',cancelMissingKey);
+  document.addEventListener('keydown',event=>{if(!closePrecisionKey(event))cancelMissingKey(event);});
   $('siren-missing-close').addEventListener('click',()=>{clearMissing();scanControls();renderSource();});
   $('siren-missing-run').addEventListener('click',async()=>{
     if(!missing?.region||missing.drag||scanBusy||sourceLoading||loadingImport||mode!=='review'||drag)return;
@@ -4754,7 +4652,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
     const unmapped=doc().groups.some(group=>!sourceRegions.has(group.id));
     if(unmapped&&!confirm('部分已有组没有当前原图定位，无法自动排除它们是否重复。请对照已有组与候选：确认这是缺失的一组，再追加？'))return;
     if(!missingCurrent(job))return;
-    const {group,region}=job.preview;remember();groupIndex=doc().groups.length;doc().groups.push(group);sourceRegions.set(group.id,region);selectItem();centerMode=false;changed();
+    const {group,region}=job.preview;remember();groupIndex=doc().groups.length;doc().groups.push(group);sourceRegions.set(group.id,region);selectItem();changed();
     $('siren-scan-status').textContent='已补入第 '+(groupIndex+1)+' 组，原有各组、人工修改和顺序保持不变；可一次撤销。';note('');
   });
   function scanImage(operation,region=null){
@@ -4809,7 +4707,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   $('siren-deep-toggle').addEventListener('click',()=>{
     if(!ready||scanBusy||loadingImport||mode!=='review'||!g()?.image)return;
     if(deep){clearDeep();draw();return;}
-    centerMode=false;contactMode=false;showKeyboard(false);const t=item();
+    setPrecisionOpen(false);contactMode=false;showKeyboard(false);const t=item();
     const region=t?{x:Math.max(0,t.x-24),y:Math.max(0,t.y-24),width:Math.min(600,t.x+24)-Math.max(0,t.x-24),height:Math.min(600,t.y+24)-Math.max(0,t.y-24)}:null;
     deep={group:g(),itemId,revision:revisions.review,region,candidates:[],preview:null,running:false,drag:null};
     $('siren-deep-panel').hidden=false;$('siren-deep-toggle').setAttribute('aria-expanded','true');
@@ -4850,18 +4748,10 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
       remember();doc().groups[groupIndex]=validated;selectItem(selectedId);changed();note('已采用 '+p.letter+'；可撤销。');
     }catch(e){note(e.message);}
   });
-  if(samples){
-    GlyphSamplesUI.mount({library:samples,container:$('siren-samples'),language:'siren',labels:()=>Object.fromEntries(Object.keys(assets.letters).map(id=>[id,id])),download:(blob,name)=>BabelianHost.download(blob,name)});
-    $('siren-add-sample').addEventListener('click',()=>{
-      const token=item(),group=g();if(scanBusy||drag||mode!=='review'||!group?.image||!token?.letter)return;
-      try{const bg=backgrounds.get(group.image);if(!bg)throw Error('原图尚未就绪。');samples.add({language:'siren',glyphId:token.letter,image:group.image,width:bg.width,height:bg.height,annotation:{frame:600,base:{x:group.cx,y:group.cy,size:group.baseSize,rotation:group.baseRotation||0},glyph:{x:token.x,y:token.y,size:token.size,rotation:C.displayRotation(group,token)},contact:token.contact||null},include:true,note:''});note('已加入校正样本库；朝向异常样本可取消“纳入后续训练”。离开前请导出样本库。');}
-      catch(e){note(e.message);}
-    });
-  }else $('siren-samples').hidden=true;
   async function runScan(operation,{strict=false}={}){
     if(!ready||loadingImport||scanBusy||sourceLoading||mode!=='review')return;
     if(operation==='fit'&&g()?.items.length&&!confirm('重新匹配会替换本组全部识别项（包括已锁定项）。原图保留，可撤销。继续？'))return;
-    clearDeep();clearMissing();
+    setPrecisionOpen(false);clearDeep();clearMissing();
     const target=doc(),targetGroup=g(),revision=revisions.review,imageTicket=sourceTicket,ticket=++scanTicket;
     scanBusy=true;scanControls();$('siren-scan-status').textContent='正在本机匹配图形，可随时取消；尚未修改原有工作。';
     try{
@@ -4881,7 +4771,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
       sourcePaintKey=null;remember();
       if(operation==='fit'){const index=target.groups.indexOf(targetGroup);if(index<0)throw Error('原组已变化，请重新识别。');target.groups[index]=added[0];groupIndex=index;}
       else{groupIndex=target.groups.length;target.groups.push(...added);}
-      selectItem();centerMode=false;$('siren-path').checked=true;$('siren-guides').checked=true;changed();
+      selectItem();$('siren-path').checked=true;$('siren-guides').checked=true;changed();
       const total=added.reduce((n,g)=>n+g.items.length,0),unknown=added.reduce((n,g)=>n+g.items.filter(i=>!i.letter).length,0);
       $('siren-scan-status').textContent=added.length+' 组 · '+total+' 个小螺旋 · '+unknown+' 个待确认。请核对原图蓝框，确认大螺旋数量没有遗漏。';note('');
     }catch(e){if(ticket===scanTicket){$('siren-scan-status').textContent=e.message;note(e.message);}if(strict)throw e;}
@@ -4920,13 +4810,13 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   });
   $('siren-load').addEventListener('click',()=>{if(ready&&!loadingImport)$('siren-work-file').click();});
   $('siren-work-file').addEventListener('change',async e=>{
-    const file=e.target.files[0];if(!file)return;cancelScan();clearMissing();const ticket=++importTicket;loadingImport=true;$('siren-tools').disabled=true;
+    const file=e.target.files[0];if(!file)return;setPrecisionOpen(false);cancelScan();clearMissing();const ticket=++importTicket;loadingImport=true;$('siren-tools').disabled=true;
     try{
       if(file.size>8*1024*1024)throw Error('工作文件超过8MB。');const next=C.decode(JSON.parse(await file.text()));
       await Promise.all(next.groups.filter(g=>g.image).map(g=>cropImage(g.image)));
       if(ticket!==importTicket)return;
       if(!confirm('载入将替换“'+(next.mode==='generate'?'生成':'解读')+'”模式的当前工作，可撤销。继续？'))return;
-      mode=next.mode;remember();docs[mode]=next;groupIndex=0;selectItem();centerMode=false;draft().clear();translation.invalidate();$('siren-path').checked=mode==='review';render();note('已载入：保留截图匹配参数及自动/可调朝向。旧版默认大小按原规则迁移，v1截图工作需补标首交点。巴别语存档不变。');
+      mode=next.mode;remember();docs[mode]=next;groupIndex=0;selectItem();draft().clear();translation.invalidate();$('siren-path').checked=mode==='review';render();note('已载入：保留截图匹配参数及自动/可调朝向。旧版默认大小按原规则迁移，v1截图工作需补标首交点。巴别语存档不变。');
     }catch(error){note('载入失败：'+error.message);}finally{loadingImport=false;$('siren-tools').disabled=!ready;e.target.value='';scanControls();renderPending();}
   });
   window.addEventListener('beforeunload',event=>{if(Object.keys(revisions).some(key=>revisions[key]!==savedRevisions[key])){event.preventDefault();event.returnValue='';}});
@@ -4939,7 +4829,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
         const b=button('',()=>pick(letter)),img=document.createElement('img');img.src=assets.letters[letter].src;img.alt='';keyboardImages.push(img);const label=document.createElement('span');label.textContent=letter;b.append(img,label);b.title='塞壬字母 '+letter;b.setAttribute('aria-label','塞壬字母 '+letter);$('siren-keyboard').append(b);
       }render();note('');
     }).catch(e=>note('塞壬语素材加载失败：'+e.message+' 请检查模块素材是否完整。'));
-  return {setMode:switchMode,refresh:()=>{if(ready)render();},pause:()=>{cancelScan();clearMissing();sourceTicket++;sourceLoading=false;translation.cancel();drag=null;centerMode=false;contactMode=false;showKeyboard(false);if(ready)changed();},ready:loaded,snapshot:()=>JSON.parse(JSON.stringify(doc()))};
+  return {setMode:switchMode,refresh:()=>{if(ready)render();},pause:()=>{setPrecisionOpen(false);cancelScan();clearMissing();sourceTicket++;sourceLoading=false;translation.cancel();drag=null;contactMode=false;showKeyboard(false);if(ready)changed();},ready:loaded,snapshot:()=>JSON.parse(JSON.stringify(doc()))};
 }};
 
   (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.LanguageNavigation=api;})(globalThis,function(){
@@ -5696,10 +5586,8 @@ globalThis.SirenUI={mount({assets,path,wordData,notify,samples}){
   };
   buildPartControls();renderFinder();renderProfiles(true);updateMappingBadge();makeKeyboard();render();persistMappings();
 
-  const sampleLibrary=GlyphSamples.create({babelianIds:Object.keys(GLYPHS)});
-  window.addEventListener('beforeunload',event=>{if(sampleLibrary.dirty()){event.preventDefault();event.returnValue='';}});
-  window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,samples:sampleLibrary,notify});
-  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,samples:sampleLibrary,getMapping:()=>mappingApi.snapshot().workingMap,
+  window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,notify});
+  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,getMapping:()=>mappingApi.snapshot().workingMap,
     editMapping:glyph=>{switchTool('mapping');selectGlyph(glyph);$('mapping-value').focus();},
     append:payload=>{
       if(!payload.text)return;

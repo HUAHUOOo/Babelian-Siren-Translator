@@ -40,27 +40,26 @@ const fixture={width:500,height:160,threshold:127,polarity:'dark',lines:[{box:{x
 const context={console,Map,Set,Uint8Array,Blob,Error,Number,Math,JSON,BabelianOCRCorrection:correction,Work,$,seed:copy(fixture)};
 vm.createContext(context);
 vm.runInContext(`
- let source={width:1000,height:400},crop={x:73,y:41,width:500,height:160},result=seed,selected={line:0,token:1},rebox=null,drag=null,busy=false,deepSuggestion=null,splitToken=null,reviewContext=null,revision=0;
- const preview=$('ocr-preview'),ctx=preview.getContext('2d'),panel=$('panel-decode'),history=Work.history(),prepared=[];
+ let source={width:1000,height:400},crop={x:73,y:41,width:500,height:160},result=seed,selected={line:0,token:1},rebox=null,drag=null,busy=false,deepSuggestion=null,splitToken=null,reviewContext=null;
+ const preview=$('ocr-preview'),ctx=preview.getContext('2d'),panel=$('panel-decode'),prepared=[];
  preview.clientWidth=500;const resultImage={width:500,height:160};let matches=0,failMatch=0;
  const OCR={binarize:()=>({width:500,height:160,data:new Uint8Array(500*160)}),bounds:(_mask,x,y,right,bottom)=>({x:x+1,y:y+1,width:Math.max(1,right-x-2),height:bottom-y-2}),describe:()=>({}),matchDescriptor:()=>{if(++matches===failMatch)throw Error('synthetic matching failure');return [{id:'h',score:.8}];}};
- function touchWork(){revision++;}function message(text){$('ocr-status').textContent=text;}
+ function message(text){$('ocr-status').textContent=text;}
  function syncReviewControls(){syncSplitControls();}function endRebox(){rebox=null;}function focusSelected(){}function revealSelected(){}
  function setEditorVisible(open){$('ocr-review').hidden=!open;}function setReviewOpen(open){$('ocr-tokens').hidden=!open;}
  function renderResults(){setEditorVisible(!!selected);const token=active();reviewContext=token?{...Work.context(result,selected),token,image:{}}:null;syncSplitControls();drawReviewContext();}
- ${slice('  const historySnapshot=', '  function imageElement(')}
  ${slice('  function draw(){','  function point(')}
  ${slice('  function select(line,token){','  function revealSelected(')}
  ${slice('  function setSegmentationOpen(open){',"  $('ocr-review-toggle').addEventListener")}
  ${slice('  function active(){','  function renderReview(){')}
  ${slice('  function imageMask(',"  $('ocr-merge').addEventListener")}
  $('ocr-segmentation').hidden=true;renderResults();draw();
- globalThis.h={snapshot:()=>JSON.parse(JSON.stringify({result,selected,revision,history:history.state()})),select,closeReview,open:setSegmentationOpen,restore:restoreCorrection,refresh:renderResults,resize:()=>{draw();drawReviewContext();},failAfter:n=>{failMatch=matches+n;},rebox:v=>{rebox=v;syncReviewControls();},resetSplitPreview};
+ globalThis.h={snapshot:()=>JSON.parse(JSON.stringify({result,selected})),select,closeReview,open:setSegmentationOpen,refresh:renderResults,resize:()=>{draw();drawReviewContext();},failAfter:n=>{failMatch=matches+n;},rebox:v=>{rebox=v;syncReviewControls();},resetSplitPreview};
 `,context);
 const h=context.h,fire=(id,type='click')=>$(id).events[type](),set=percent=>{$('ocr-split-at').value=String(percent);fire('ocr-split-at','input');};
 const unchanged=h.snapshot();h.open(true);assert.equal($('ocr-split-at').value,'50');
 for(const percent of [10,30,70,90]){
- set(percent);assert.deepEqual(h.snapshot(),unchanged,'live preview must not change result, selection, revision or history');
+ set(percent);assert.deepEqual(h.snapshot(),unchanged,'live preview must not change result or selection');
  const [left,right]=correction.splitBoxes(fixture.lines[0].tokens[1].box,percent);
  const area=Work.context(fixture,{line:0,token:1}).box;
  for(const id of ['ocr-context','ocr-split-preview']){
@@ -77,10 +76,9 @@ h.select(0,2);assert($('ocr-split-at').disabled&&$('ocr-split').disabled);assert
 set(70);h.failAfter(2);const atomic=h.snapshot();fire('ocr-split');assert.deepEqual(h.snapshot(),atomic);assert.match($('ocr-status').textContent,/未应用拆分/);
 fire('ocr-split');const split=h.snapshot(),boxes=correction.splitBoxes(fixture.lines[0].tokens[1].box,70);
 assert.equal(split.result.lines[0].tokens.length,5);assert.deepEqual(split.result.lines[0].tokens.slice(1,3).map(t=>t.box),boxes,'applied boxes match preview even when ink is narrower');
-assert.equal(split.history.undo,1);assert.equal(split.revision,1);assert.equal($('ocr-split-at').value,'50');
+assert.equal($('ocr-split-at').value,'50');
 for(const t of split.result.lines[0].tokens.slice(1,3))assert(!t.manual&&!t.certain);
 assert.deepEqual(split.result.lines[0].tokens[0],fixture.lines[0].tokens[0]);assert.deepEqual(split.result.lines[0].tokens[3],fixture.lines[0].tokens[2]);
-h.restore(-1);assert.deepEqual(h.snapshot().result,fixture);assert.equal($('ocr-split-at').value,'50');h.restore(1);assert.deepEqual(h.snapshot().result,split.result);
-fire('ocr-split');assert.equal(h.snapshot().result.lines[0].tokens.length,6);assert.equal(h.snapshot().history.undo,2);h.restore(-1);assert.deepEqual(h.snapshot().result,split.result);
+fire('ocr-split');assert.equal(h.snapshot().result.lines[0].tokens.length,6);
 h.rebox({});assert($('ocr-split-at').disabled&&$('ocr-split').disabled);const locked=h.snapshot();fire('ocr-split');assert.deepEqual(h.snapshot(),locked);h.rebox(null);
-console.log('PASS split slider: source-pixel geometry, min widths, range markup, live blue canvas overlays, crop/zoom offsets, preview immutability, cancellation/selection reset, atomic failure, exact applied bounds, repeated split, undo/redo and rebox lock (DOM/canvas spies; not browser rendering).');
+console.log('PASS split slider: source-pixel geometry, min widths, range markup, live blue canvas overlays, crop/zoom offsets, preview immutability, cancellation/selection reset, atomic failure, exact applied bounds, repeated split and rebox lock (DOM/canvas spies; not browser rendering).');

@@ -110,6 +110,9 @@
     .host-actions .text-button { font-size:14px; }
     .host-bar[data-status="conflict"],.host-bar[data-status="blocked"],.host-bar[data-status="error"] { border-color:#ae672e; background:#fff5e6; }
     #host-status { margin:0; overflow-wrap:anywhere; line-height:1.6; }
+    #host-status:empty { display:none; }
+    #host-status:empty + .host-actions { margin-top:0; }
+    #host-bar:has(#host-status:empty):not(:has(.host-actions > :not([hidden]))) { display:none; }
     #tool-surface[inert] { opacity:.5; }
     @media(max-width:1160px) { .host-bar { margin-inline:14px; } }
     .workspace-tabs { display:flex; align-items:center; gap:7px; border-bottom:1px solid #d5dccc; margin-top:27px; padding-bottom:9px; flex-wrap:wrap; }
@@ -757,10 +760,8 @@
   input.setSelectionRange(selection.start,selection.end);
   makeKeyboard(); render();
   __MAPPING_EDITOR_JS__
-  const sampleLibrary=GlyphSamples.create({babelianIds:Object.keys(GLYPHS)});
-  window.addEventListener('beforeunload',event=>{if(sampleLibrary.dirty()){event.preventDefault();event.returnValue='';}});
-  window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,samples:sampleLibrary,notify});
-  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,samples:sampleLibrary,getMapping:()=>mappingApi.snapshot().workingMap,
+  window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,notify});
+  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,getMapping:()=>mappingApi.snapshot().workingMap,
     editMapping:glyph=>{switchTool('mapping');selectGlyph(glyph);$('mapping-value').focus();},
     append:payload=>{
       if(!payload.text)return;

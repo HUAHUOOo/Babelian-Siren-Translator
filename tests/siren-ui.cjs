@@ -10,11 +10,12 @@ const tileData={width:600,height:600,data:new Uint8Array(600*600*4)};tileData.da
 let drawn;const ctx=new Proxy({drawImage:img=>{drawn=img;},getImageData:(x,y,w,h)=>w===600&&h===600?tileData:readPNG(Buffer.from(drawn.value.split(',')[1],'base64')),measureText:s=>({width:s.length*10}),clip:()=>clips++},{get:(o,k)=>o[k]||(()=>{})});
 let document;
 class Element{
- constructor(tag='div'){this.tagName=tag.toUpperCase();this.listeners=new Map();this.children=[];this.value='';this.hidden=false;this.disabled=false;this.width=900;this.height=900;this.attributes={};this.style={};this._checked=false;}
+ constructor(tag='div'){this.tagName=tag.toUpperCase();this.listeners=new Map();this.children=[];this.value='';this.hidden=false;this.disabled=false;this.width=900;this.height=900;this.attributes={};this.style={};this.classes=new Set();this.classList={toggle:(name,on)=>on?this.classes.add(name):this.classes.delete(name),contains:name=>this.classes.has(name)};this._checked=false;}
  get checked(){return this._checked;}
  set checked(v){this._checked=v;if(v&&['siren-key-add','siren-key-replace'].includes(this.id)){const other=nodes.get(this.id==='siren-key-add'?'siren-key-replace':'siren-key-add');if(other)other._checked=false;}}
  setAttribute(k,v){this.attributes[k]=v;}getAttribute(k){return this.attributes[k];}
  addEventListener(k,fn){this.listeners.set(k,fn);}append(...c){this.children.push(...c);}replaceChildren(...c){this.children=[...c];}
+ contains(node){return node===this||this.children.some(child=>child.contains?.(node));}
  getContext(){return ctx;}getBoundingClientRect(){return {left:0,top:0,width:600,height:600};}
  setPointerCapture(){}focus(options){this.focusOptions=options;document.activeElement=this;}blur(){document.activeElement=null;}select(){}click(){return this.fire('click');}
  async fire(type,extra={}){return this.listeners.get(type)?.({type,target:this,button:0,pointerId:1,preventDefault(){},...extra});}
@@ -33,14 +34,14 @@ scope.SirenRecognition.createRecognitionBoundary=createLocatorBoundary;
 scope.SirenFormat=require('../src/siren-format.js');
 vm.createContext(scope);vm.runInContext(fs.readFileSync(require.resolve('../src/siren-ui.js'),'utf8'),scope);
 const el=id=>nodes.get('siren-'+id),click=id=>el(id).click();
-async function key(index){if(el('keyboard-panel').hidden)await click(el('key-replace').checked?'open-replace':'open-add');return el('keyboard').children[index].click();}
+async function key(index){if(el('key-replace').checked)return el('stage').fire('keydown',{key:index<13?String.fromCharCode(65+index):String.fromCharCode(90-(index-13))});if(el('keyboard-panel').hidden)await click('open-add');return el('keyboard').children[index].click();}
 const ui=scope.SirenUI.mount({assets,path:real.path,wordData:'hello world a b c',notify:()=>{}});
 function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDefault(){prevented=true;}});return prevented;}
 (async()=>{
  await ui.ready;assert.equal(el('tools').disabled,false);assert.equal(el('keyboard').children.length,26);assert(!el('gear'));assert(!el('size'));assert(!el('base-rotation'));assert(el('rotation').readOnly);assert(el('rotation-slider').disabled);
  assert.equal(el('title').textContent,'塞壬语生成');
  assert(el('keyboard-panel').hidden);await el('keyboard').children[0].click();assert.equal(ui.snapshot().groups[0].items.length,0,'Hidden keyboard cannot add glyphs');await click('open-add');assert(!el('keyboard-panel').hidden);await click('keyboard-close');assert(el('keyboard-panel').hidden);
- for(const id of ['new-item','delete-item','unknown','strip-panel','strip','use-crop','crop-x','crop-y','crop-width','crop-height'])assert(!el(id),'Removed UI '+id);
+ for(const id of ['add-sample','samples','new-item','delete-item','unknown','strip-panel','strip','use-crop','crop-x','crop-y','crop-width','crop-height'])assert(!el(id),'Removed UI '+id);
  assert(el('source-canvas').listeners.has('pointerdown'),'Narrow missing-group rescan accepts an explicit source ROI');assert(el('missing-panel').hidden);assert(el('missing-run').disabled);
  assert(el('batch-panel').hidden);assert(el('precision-panel').hidden);assert(el('key-add').checked);assert(el('key-replace').disabled);
  await click('precision-toggle');assert(!el('precision-panel').hidden);await click('precision-toggle');assert(el('precision-panel').hidden);
@@ -79,13 +80,12 @@ function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDe
  // Existing manual work is still editable even though the manual crop UI is gone.
  const savedManual=C.create('review');C.addGroup(savedManual).image=png;
  el('work-file').files=[{size:200,text:async()=>JSON.stringify(savedManual)}];await el('work-file').fire('change');
- assert.equal(ui.snapshot().groups.length,1);assert.equal(el('center').hidden,false);await click('center');
- await el('stage').fire('pointerdown',{clientX:300,clientY:300}); // center
+ assert.equal(ui.snapshot().groups.length,1);assert(!nodes.has('siren-center'));assert.equal(ui.snapshot().groups[0].cx,300);assert.equal(ui.snapshot().groups[0].cy,300);
  await el('stage').fire('pointerdown',{clientX:400,clientY:300}); // inner small center
  assert.equal(el('raw').value,'');assert(el('key-add').checked);await key(0);assert.equal(el('raw').value,'A');assert(ui.snapshot().groups[0].items[0].manualAdded);assert(el('manual-overlap').textContent.includes('80.0%'));assert(overlapCalls>0);await el('stage').fire('pointerdown',{clientX:400,clientY:300});await el('stage').fire('pointerup');assert(el('key-replace').checked);
  const points=real.geometry.basePoints(ui.snapshot().groups[0]);if(el('precision-panel').hidden)await click('precision-toggle');await click('contact');await el('stage').fire('pointerdown',{clientX:points[1000].x,clientY:points[1000].y});assert.equal(el('raw').value,'A');
  await el('stage').fire('pointerdown',{clientX:300,clientY:450});assert(el('key-add').checked);await key(2);await el('stage').fire('pointerdown',{clientX:300,clientY:450});await el('stage').fire('pointerup');assert(el('key-replace').checked);await click('contact');await el('stage').fire('pointerdown',{clientX:points[2000].x,clientY:points[2000].y});assert.equal(el('raw').value,'AC');
- await click('center');await el('stage').fire('pointerdown',{clientX:310,clientY:320});group=ui.snapshot().groups[0];group.items.forEach(i=>assert.equal(i.rotation,C.rotationFor(group,i)));await click('undo');assert.equal(el('raw').value,'AC');
+ const beforeCenterClick=JSON.stringify(ui.snapshot());await el('stage').fire('pointerdown',{clientX:310,clientY:320});await el('stage').fire('pointerup');assert.equal(JSON.stringify(ui.snapshot()),beforeCenterClick,'Plain canvas clicks cannot change the large spiral center');assert.equal(el('raw').value,'AC');
  await click('save');assert(warns(),'Saving review must not mark generate revision saved');
  const reviewFile=downloads.at(-1);assert.equal(JSON.parse(await reviewFile.blob.text()).mode,'review');
  el('work-file').files=[{size:10,text:async()=>'{"format":"bad"}'}];const old=C.read(ui.snapshot()).text;await el('work-file').fire('change');assert.equal(C.read(ui.snapshot()).text,old);assert.equal(el('tools').disabled,false);
@@ -121,7 +121,7 @@ function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDe
  const restoredItem=ui.snapshot().groups.at(-1).items[0];await el('stage').fire('pointerdown',{clientX:restoredItem.x,clientY:restoredItem.y});await el('stage').fire('pointerup');
  await click('position-lock');const lockedSnapshot=JSON.stringify(ui.snapshot());assert(el('radius-slider').disabled);assert(el('base-size').disabled);
  await el('stage').fire('pointerdown',{clientX:restoredItem.x,clientY:restoredItem.y});await el('stage').fire('pointermove',{clientX:10,clientY:10});await el('stage').fire('pointerup',{clientX:10,clientY:10});
- el('angle-slider').value='10';await el('angle-slider').fire('input');await el('match-candidates').children[0].click();await click('open-replace');assert(el('keyboard-panel').hidden);assert.equal(JSON.stringify(ui.snapshot()),lockedSnapshot);
+ el('angle-slider').value='10';await el('angle-slider').fire('input');await el('match-candidates').children[0].click();await el('stage').fire('keydown',{key:'Z'});assert(el('keyboard-panel').hidden);assert.equal(JSON.stringify(ui.snapshot()),lockedSnapshot);
  await click('position-lock');const originalPose=JSON.stringify(ui.snapshot().groups.at(-1).items[0].fit);
  await el('stage').fire('pointerdown',{clientX:restoredItem.x,clientY:restoredItem.y});await el('stage').fire('pointermove',{clientX:10,clientY:10});await el('stage').fire('pointerup');assert(!ui.snapshot().groups.at(-1).items[0].fit);assert(!el('reset-position').hidden);assert(!el('reset-position').disabled);
  await click('reset-position');assert.equal(JSON.stringify(ui.snapshot().groups.at(-1).items[0].fit),originalPose);assert.equal(ui.snapshot().groups.at(-1).items[0].x,restoredItem.x);
