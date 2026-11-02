@@ -30,6 +30,7 @@
     .primary { padding:12px 20px; background:var(--green); border:1px solid var(--green); color:#fffdf4; border-radius:7px; display:flex; align-items:center; gap:9px; white-space:nowrap; }
     .primary:hover:not(:disabled) { background:#385547; }
     .download-mark { font-size:19px; line-height:1; }
+    .export-actions {display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .sheet { background:var(--paper); border:1px solid #dadbd0; border-radius:12px; box-shadow:0 7px 24px #243d3505; overflow:hidden; }
     .sheet-head { padding:20px 26px 0; display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .section-label { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:600; }
@@ -238,7 +239,7 @@
       <span id="runtime-mode" class="offline">离线可用</span>
     </div>
   </header>
-  <section id="host-bar" class="host-bar" aria-label="运行模式与工作备份"><p id="host-status" role="status" aria-live="polite">正在载入…</p><div class="host-actions"><a id="host-home" hidden>返回主控台</a><a id="host-story" hidden>返回来源段落</a><button id="host-retry" type="button" class="text-button" hidden>重试同步</button><button id="host-reload" type="button" class="text-button" hidden>重新读取存档</button><span id="babelian-backups" hidden><button id="workspace-export" type="button" class="text-button" disabled>下载巴别语工作备份</button><button id="workspace-import" type="button" class="text-button" disabled>导入巴别语工作备份</button><input id="workspace-file" type="file" accept=".json,application/json" hidden></span></div></section>
+  <section id="host-bar" class="host-bar" aria-label="运行模式与工作备份" hidden><p id="host-status" role="status" aria-live="polite">正在载入…</p><div class="host-actions"><a id="host-home" hidden>返回主控台</a><a id="host-story" hidden>返回来源段落</a><button id="host-retry" type="button" class="text-button" hidden>重试同步</button><button id="host-reload" type="button" class="text-button" hidden>重新读取存档</button><span id="babelian-backups" hidden><button id="workspace-export" type="button" class="text-button" disabled>下载巴别语工作备份</button><button id="workspace-import" type="button" class="text-button" disabled>导入巴别语工作备份</button><input id="workspace-file" type="file" accept=".json,application/json" hidden></span></div></section>
   <main id="tool-surface" inert>
     <section id="language-home" aria-labelledby="language-title">
       <div class="eyebrow">BABELIAN &amp; SIREN TRANSLATOR</div><h1 id="language-title">巴别语与塞壬语翻译器</h1>
@@ -254,7 +255,7 @@
     <section id="language-babelian" aria-labelledby="babelian-title" hidden>
     <div class="intro">
       <div><div class="eyebrow">CRYPTIC LANGUAGES / BABELIAN</div><h1 id="babelian-title" tabindex="-1">巴别语生成</h1><p id="babelian-description">用楔形逐字书写，让英文与密文同步呈现。</p></div>
-      <button id="download" class="primary" type="button" disabled><span class="download-mark" aria-hidden="true">↓</span>下载图片</button>
+      <div class="export-actions"><button id="download" class="primary" type="button" disabled><span class="download-mark" aria-hidden="true">↓</span>下载 PNG</button><button id="download-svg" class="secondary" type="button" hidden disabled>下载 SVG</button></div>
     </div>
 
     <section id="babelian-writer" class="sheet" aria-label="巴别语与英文编辑区">
@@ -323,9 +324,12 @@
   __SIREN_SCAN_JS__
   __SIREN_UI_JS__
   __LANGUAGE_NAVIGATION_JS__
+  __BABELIAN_VISUALS_JS__
   (async function(){
   "use strict";
   const GLYPHS = __BABELIAN_GLYPHS__;
+  const visuals=BabelianVisuals.create(GLYPHS,globalThis.BabelianVectorArtwork);
+  const DISPLAY_GLYPHS=visuals.assets;
   const SPECIALS = {and:'AND', the:'THE', a_word:'A', OF:'OF', OR:'OR', '!/?':'!/?'};
   const PARTS = __BABELIAN_PARTS__;
   const SIREN_ASSETS = __SIREN_ASSETS__;
@@ -333,7 +337,7 @@
   const BUILD = __BUILD_CONFIG__;
   const runtime = BabelianPlatform.create({...BUILD,ids:Object.keys(GLYPHS)});
   const host = BabelianHost.connect(runtime);
-  window.BABELIAN_APP = {runtime,assets:{glyphs:GLYPHS,parts:PARTS}};
+  window.BABELIAN_APP = {runtime,assets:{glyphs:GLYPHS,displayGlyphs:DISPLAY_GLYPHS,parts:PARTS},visuals};
   try{
     await runtime.initialize();
     if(runtime.integrated)await Promise.all([...Object.values(GLYPHS),...PARTS.components].map(asset=>new Promise((resolve,reject)=>{
@@ -370,7 +374,7 @@
     statusTimer = setTimeout(() => $('status').classList.remove('show'), 2600);
   }
   function imageFor(letter, className) {
-    const glyph = GLYPHS[letter];
+    const glyph = DISPLAY_GLYPHS[letter];
     const img = document.createElement('img');
     img.src = glyph.src;
     img.className = className;
@@ -479,6 +483,7 @@
     $('copy').disabled = !currentText;
     $('clear').disabled = !currentText;
     $('download').disabled = count === 0;
+    $('download-svg').disabled = count === 0||!visuals.canExport(glyphLines());
     resizeEnglish();
     save();
   }
@@ -682,50 +687,27 @@
   });
 
   function loadImages() {
-    if (!imagesPromise) imagesPromise = Promise.all(Object.entries(GLYPHS).map(([letter,glyph]) => new Promise((resolve,reject) => {
+    if (!imagesPromise) imagesPromise = Promise.all(Object.entries(DISPLAY_GLYPHS).map(([letter,glyph]) => new Promise((resolve,reject) => {
       const img = new Image(); img.onload = () => resolve([letter,img]); img.onerror = reject; img.src = glyph.src;
     }))).then(entries => Object.fromEntries(entries));
     return imagesPromise;
   }
   function downloadBlob(blob, filename) { return BabelianHost.download(blob,filename); }
+  function exportLayout(){
+    const ctx=document.createElement('canvas').getContext('2d');if(!ctx)throw Error('Canvas unavailable');
+    ctx.font='27px Consolas, monospace';return visuals.layout(glyphLines(),currentText,text=>ctx.measureText(text).width);
+  }
   async function exportPNG() {
-    const text = currentText;
-    const cipherLines = glyphLines();
     const button = $('download');
     button.disabled = true;
     try {
+      const page=exportLayout();
       const images = await loadImages();
-      const width = 1600, margin = 78, right = width - margin, glyphHeight = 64;
+      const {width,height,margin,right,glyphHeight,placements,separatorY,englishY,englishRows}=page;
       const canvas = document.createElement('canvas');
       canvas.width = width;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas unavailable');
-      const placements = [];
-      let x = margin, y = 146;
-      for (const line of cipherLines) {
-        for (const token of line) {
-          const letter=token.glyph;
-          const glyph = GLYPHS[letter];
-          const w = glyph.width / glyph.height * glyphHeight;
-          if (x + w > right) { x = margin; y += 86; }
-          placements.push({letter,x,y,width:w}); x += w + 5;
-        }
-        x = margin; y += 86;
-      }
-      const separatorY = y + 17;
-      ctx.font = '27px Consolas, monospace';
-      const englishRows = [];
-      for (const line of text.split('\n')) {
-        let row = '';
-        for (const letter of line.replace(/\t/g,'    ')) {
-          if (row && ctx.measureText(row + letter).width > width - 2 * margin) { englishRows.push(row); row = ''; }
-          row += letter;
-        }
-        englishRows.push(row);
-      }
-      const englishY = separatorY + 86;
-      const height = englishY + englishRows.length * 42 + 68;
-      if (height > 30000) { notify('文字较长，请分段下载图片。'); return; }
       canvas.height = height;
       ctx.fillStyle = '#fffdf7'; ctx.fillRect(0,0,width,height);
       ctx.fillStyle = '#243d35'; ctx.font = '20px sans-serif'; ctx.fillText('ATO  /  BABELIAN',margin,64);
@@ -743,10 +725,20 @@
     finally { button.disabled = !glyphLines().some(line=>line.length); }
   }
   $('download').addEventListener('click',exportPNG);
+  $('download-svg').addEventListener('click',async()=>{
+    const button=$('download-svg');button.disabled=true;
+    try{
+      if(window.ATOAndroid)throw Error('SVG导出目前仅支持浏览器版；APK请继续使用PNG。');
+      const svg=visuals.toSVG(exportLayout());
+      await downloadBlob(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),'巴别语-'+new Date().toISOString().replace(/[:.]/g,'-')+'.svg');
+      notify('SVG已生成：字形为矢量路径，英文为可编辑文本。');
+    }catch(error){notify('SVG导出失败：'+error.message);}
+    finally{button.disabled=!visuals.canExport(glyphLines())||!glyphLines().some(line=>line.length);}
+  });
   window.addEventListener('resize',resizeEnglish);
-  $('brand-glyph').src = GLYPHS.B.src;
-  $('language-babelian-icon').src=GLYPHS.B.src;$('language-siren-icon').src=SIREN_ASSETS.base.src;
-  $('language-babelian-translate-icon').src=GLYPHS.B.src;$('language-siren-translate-icon').src=SIREN_ASSETS.base.src;
+  $('brand-glyph').src = DISPLAY_GLYPHS.B.src;
+  $('language-babelian-icon').src=DISPLAY_GLYPHS.B.src;$('language-siren-icon').src=SIREN_ASSETS.base.src;
+  $('language-babelian-translate-icon').src=DISPLAY_GLYPHS.B.src;$('language-siren-translate-icon').src=SIREN_ASSETS.base.src;
   try {
     const saved = JSON.parse(STORAGE.getItem(STORE_KEY));
     if (saved && typeof saved.text === 'string') {
@@ -761,7 +753,7 @@
   makeKeyboard(); render();
   __MAPPING_EDITOR_JS__
   window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,notify});
-  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,getMapping:()=>mappingApi.snapshot().workingMap,
+  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,displayGlyphs:DISPLAY_GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,getMapping:()=>mappingApi.snapshot().workingMap,
     editMapping:glyph=>{switchTool('mapping');selectGlyph(glyph);$('mapping-value').focus();},
     append:payload=>{
       if(!payload.text)return;
@@ -777,6 +769,7 @@
       $('babelian-title').textContent=translating?'巴别语翻译':'巴别语生成';
       $('babelian-description').textContent=translating?'识别截图，按当前映射转成英文；复核后可整理与机翻。':'用楔形逐字书写，让英文与密文同步呈现。';
       $('babelian-writer').hidden=translating;$('download').hidden=translating;
+      $('download-svg').hidden=translating||!visuals.vectorReady||!!window.ATOAndroid;
       $('tab-write').hidden=translating;$('tab-decode').hidden=!translating;
       $('mapping-insert').hidden=translating;
       switchTool(translating?'decode':'write');resizeEnglish();
@@ -797,12 +790,13 @@
   }
   window.BABELIAN_APP.restoreWorkspace=restoreWorkspace;
   host.ready({restore:restoreWorkspace});
+  if(visuals.error)notify(visuals.error+' 已使用原显示素材。');
   if(runtime.integrated){
     $('profile-status').textContent='工作及五个栏位随当前 ATO 账号与战役保存；同步结果以上方状态为准。';
     const notes=document.querySelectorAll('#language-babelian .footer details p');
     notes[2].textContent='工作及五个栏位随当前 ATO 账号与战役保存，同步状态显示在页面上方；不同账号不会自动读取独立版配置。可通过 JSON 导入旧映射，或用完整工作备份迁移五个栏位及书写草稿。字形素材从本地 assets 目录载入。';
   }
-  })().catch(error=>{document.getElementById('host-status').textContent='工具载入失败：'+error.message;});
+  })().catch(error=>{document.getElementById('host-bar').hidden=false;document.getElementById('host-status').textContent='工具载入失败：'+error.message;});
   </script>
 __ATO_ROUTER__
 </body>

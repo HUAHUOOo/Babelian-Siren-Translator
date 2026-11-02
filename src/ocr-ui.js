@@ -36,7 +36,7 @@ globalThis.BabelianOCRUI={
     const distance=item=>Math.abs((item.rect.left+item.rect.right)/2-center);
     return location(candidates.filter(item=>gap(item)<=nearest+1).reduce((best,item)=>distance(item)<distance(best)?item:best));
   },
-  mount({glyphs,wordData,getMapping,editMapping,append,notify}){
+  mount({glyphs,displayGlyphs=glyphs,wordData,getMapping,editMapping,append,notify}){
   const $=id=>document.getElementById(id),OCR=BabelianOCR,Work=BabelianOCRWork,ids=Object.keys(glyphs);
   const panel=$('panel-decode'),preview=$('ocr-preview'),ctx=preview.getContext('2d');
   let source=null,crop=null,result=null,resultImage=null,selected=null,drag=null,rebox=null;
@@ -48,9 +48,10 @@ globalThis.BabelianOCRUI={
   const mapping=()=>getMapping();
   // Preserve the previous automatic defaults without exposing tuning controls.
   const options=()=>({polarity:'auto',threshold:null,oneLine:false,detail:true});
+  const recognitionOptions=()=>({...options(),...(globalThis.BabelianVectorTemplateProfile?{vectorProfile:globalThis.BabelianVectorTemplateProfile}:{})});
   const outputOptions=()=>({joinLines:$('ocr-join').checked});
   function message(text){$('ocr-status').textContent=text;}
-  function imageElement(id){const img=document.createElement('img');img.src=glyphs[id].src;img.alt=label(id);return img;}
+  function imageElement(id){const img=document.createElement('img');img.src=displayGlyphs[id].src;img.alt=label(id);return img;}
   function setBusy(value){busy=value;$('ocr-run').disabled=value||!source;$('ocr-cancel').hidden=!value;$('ocr-controls').disabled=value;$('ocr-deep').disabled=value;panel.setAttribute('aria-busy',String(value));syncReviewControls();}
   function cancel(){job++;if(worker){worker.terminate();worker=null;}setBusy(false);}
   function clearResult(){
@@ -201,12 +202,12 @@ globalThis.BabelianOCRUI={
         try{answer=await new Promise((resolve,reject)=>{
           worker.onmessage=e=>{if(version!==job)return;if(e.data.progress)progress(e.data.progress);else if(e.data.error)reject(Error(e.data.error));else resolve(e.data.result);};
           worker.onerror=()=>reject(Error('本地识别进程无法启动。'));
-          worker.postMessage({image:resultImage,templates,options:options()});
+          worker.postMessage({image:resultImage,templates,options:recognitionOptions()});
         });}catch(e){
           if(version!==job)return;worker?.terminate();worker=null;message('正在使用兼容模式识别…');
-          answer=await OCR.recognize(resultImage,templates,{...options(),cancelled:()=>version!==job},p=>{if(version===job)progress(p);});
+          answer=await OCR.recognize(resultImage,templates,{...recognitionOptions(),cancelled:()=>version!==job},p=>{if(version===job)progress(p);});
         }
-      }else answer=await OCR.recognize(resultImage,templates,{...options(),cancelled:()=>version!==job},p=>{if(version===job)progress(p);});
+      }else answer=await OCR.recognize(resultImage,templates,{...recognitionOptions(),cancelled:()=>version!==job},p=>{if(version===job)progress(p);});
       if(version!==job)return;result=answer;selected=null;renderResults();draw();
       if(!result.lines.length)message('未找到有效字形行。请检查框选范围及图片清晰度。');
       else message(`识别完成，共 ${result.lines.length} 行。${result.polarity==='dark'?'深字浅底':'浅字深底'}，阈值 ${result.threshold}。请复核橙色项目及分割边界。`);
@@ -399,7 +400,7 @@ globalThis.BabelianOCRUI={
     $('ocr-choice').value=OCR.tokenGlyph(token)||ids[0];showChoice();
     syncReviewControls();
   }
-  function showChoice(){const id=$('ocr-choice').value;$('ocr-choice-image').src=glyphs[id].src;$('ocr-choice-image').alt=label(id);}
+  function showChoice(){const id=$('ocr-choice').value;$('ocr-choice-image').src=displayGlyphs[id].src;$('ocr-choice-image').alt=label(id);}
   $('ocr-deep').addEventListener('click',async()=>{
     const token=active();if(!token||busy||rebox)return;const signature=JSON.stringify(token),version=++job;setBusy(true);message('正在对当前字形深度比对…');
     try{await loadTemplates();await new Promise(resolve=>setTimeout(resolve,0));if(version!==job)return;

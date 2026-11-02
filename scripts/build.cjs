@@ -37,6 +37,7 @@ function htmlFor(mode,glyphs,parts,siren){
   '__OCR_WORK_JS__':read('ocr-work.js'),
   '__TRANSLATION_JS__':read('translation.js'),
   '__OCR_UI_JS__':read('ocr-ui.js'),
+  '__BABELIAN_VISUALS_JS__':read('babelian-visuals.js'),
   '__TEXT_FORMAT_JS__':read('text-format.js'),
   '__DOMAIN_TERMS__':JSON.stringify({words:domainTerms.words,phrases:domainTerms.phrases}),
   '__ENGLISH_WORD_DATA__':JSON.stringify(wordData),

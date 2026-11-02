@@ -8,6 +8,7 @@
   "entry": "babelian/index.html",
   "assetCount": 91,
   "hashStage": "before-host-packaging",
+  "optionalVectorArtwork": {"version": 1, "includedInPublicPackage": false, "separateFromRecognition": true, "svgExport": "browser-only-with-complete-artwork", "androidExport": "existing-png-json-bridge"},
   "testedAssistantCommit": "10dbbf5",
   "storage": {
     "section": "babelian",

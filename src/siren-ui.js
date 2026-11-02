@@ -61,6 +61,13 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     $('siren-deep-toggle').hidden=mode!=='review';$('siren-deep-toggle').disabled=!g()?.image||scanBusy;
     $('siren-deep-run').disabled=!deep?.region||!!deep?.drag||scanBusy;
     $('siren-deep-apply').disabled=!deep?.preview||scanBusy||!!item()?.positionLocked;
+    renderEntry();
+  }
+  function renderEntry(){
+    const emptyReview=mode==='review'&&!doc().groups.length;
+    for(const id of ['siren-work-actions','siren-work-note','siren-heading-note','siren-group-toolbar','siren-results','siren-pending-tools'])$(id).hidden=emptyReview||id==='siren-pending-tools'&&mode!=='review';
+    $('siren-editor-area').hidden=emptyReview;
+    $('siren-source-area').hidden=!source;
   }
   function cancelScan(){scanTicket++;scan.cancel();scanBusy=false;if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
   function remember(){history[mode].push(JSON.stringify(doc()));if(history[mode].length>30)history[mode].shift();revisions[mode]++;}
@@ -391,6 +398,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
       source=img;sourceRegions.clear();sourcePaintKey=null;renderSource();scanControls();$('siren-scan-status').textContent='图片已载入，点击“自动分割并匹配”。已有解读组保留。';note('图片仅在本机处理。');return true;
     }catch(e){if(ticket===sourceTicket)note(e.message);if(strict)throw e;}finally{if(url)URL.revokeObjectURL(url);if(ticket===sourceTicket){sourceLoading=false;scanControls();}}
   }
+  $('siren-upload').addEventListener('click',()=>$('siren-image-file').click());
   $('siren-image-file').addEventListener('change',async event=>{await loadSourceFile(event.target.files[0]);event.target.value='';});
   const acceptsPaste=()=>!$('panel-siren').hidden&&mode==='review'&&ready&&!loadingImport;
   document.addEventListener('paste',event=>{

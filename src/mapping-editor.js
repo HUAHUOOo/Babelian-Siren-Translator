@@ -144,7 +144,7 @@
     $('mapping-value').disabled=!valid;
     for(const id of ['mapping-apply','mapping-insert','mapping-reset'])$(id).disabled=!valid;
     if(valid){
-      $('candidate-image').src=GLYPHS[chosenGlyph].src;
+      $('candidate-image').src=DISPLAY_GLYPHS[chosenGlyph].src;
       $('candidate-image').alt='候选'+glyphLabel(chosenGlyph);
       $('candidate-id').textContent=glyphLabel(chosenGlyph);
       $('candidate-meaning').textContent=workingMap[chosenGlyph]||'未设置';

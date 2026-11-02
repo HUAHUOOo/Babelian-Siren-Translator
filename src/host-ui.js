@@ -25,6 +25,7 @@
   function connect(runtime){
     const $=id=>document.getElementById(id);
     let app=null;
+    $('host-bar').hidden=!runtime.integrated;
     $('host-home').hidden=!runtime.integrated;
     $('host-home').href=new URL('../index.html',location.href).href;
     $('host-retry').hidden=!runtime.integrated;
@@ -32,6 +33,7 @@
     $('runtime-mode').textContent=runtime.integrated?'ATO 接入版':'离线可用';
     runtime.subscribe(status=>{
       const identity=status.owner?' · '+status.owner+' / '+status.profileId:'';
+      $('host-bar').hidden=!runtime.integrated&&(status.kind==='loading'||status.kind==='local'&&status.message==='独立版 · 本机保存');
       $('host-status').textContent=!runtime.integrated&&status.kind==='local'&&status.message==='独立版 · 本机保存'?'':status.message+identity;
       $('host-bar').dataset.status=status.kind;
       $('host-retry').disabled=['saving','loading','conflict','blocked'].includes(status.kind);
@@ -39,7 +41,7 @@
     });
     $('workspace-export').addEventListener('click',async()=>{
       try{await download(new Blob([JSON.stringify(runtime.backup(),null,2)],{type:'application/json'}),'巴别语完整工作备份.json');}
-      catch(error){$('host-status').textContent=error.message;}
+      catch(error){$('host-bar').hidden=false;$('host-status').textContent=error.message;}
     });
     $('workspace-import').addEventListener('click',()=>$('workspace-file').click());
     $('workspace-file').addEventListener('change',async event=>{
@@ -52,13 +54,13 @@
         if(!confirm('导入完整工作备份会替换当前五个栏位及书写草稿。建议先下载现有工作备份。是否继续？'))return;
         runtime.replaceProfile(value);app.restore(value);updateStory();
         $('host-status').textContent=runtime.integrated?'完整工作已导入，等待同步到 ATO。':'完整工作已导入本机。';
-      }catch(error){$('host-status').textContent='导入失败：'+error.message;}
+      }catch(error){$('host-bar').hidden=false;$('host-status').textContent='导入失败：'+error.message;}
       finally{event.target.value='';}
     });
     $('host-retry').addEventListener('click',()=>runtime.retry());
     $('host-reload').addEventListener('click',()=>{
       if(runtime.hasPending()&&!confirm('重新读取会放弃当前未同步的修改。请先下载完整工作备份。是否继续？'))return;
-      try{runtime.discardPending();location.reload();}catch(error){$('host-status').textContent=error.message;}
+      try{runtime.discardPending();location.reload();}catch(error){$('host-bar').hidden=false;$('host-status').textContent=error.message;}
     });
     window.addEventListener('beforeunload',event=>{if(runtime.hasPending()){event.preventDefault();event.returnValue='';}});
     for(const id of ['host-home','host-story'])$(id).addEventListener('click',async event=>{
@@ -71,7 +73,7 @@
     function updateStory(){const href=runtime.integrated&&runtime.storyUrl();$('host-story').hidden=!href;if(href)$('host-story').href=href;}
     return {
       ready(hooks){app=hooks;updateStory();$('tool-surface').inert=false;$('workspace-import').disabled=false;$('workspace-export').disabled=false;},
-      fail(error){$('host-status').textContent=error.message;$('host-reload').hidden=false;$('host-reload').disabled=false;},
+      fail(error){$('host-bar').hidden=false;$('host-status').textContent=error.message;$('host-reload').hidden=false;$('host-reload').disabled=false;},
     };
   }
   window.BabelianHost={connect,download};

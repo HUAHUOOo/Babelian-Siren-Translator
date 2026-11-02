@@ -11,14 +11,19 @@ const pinned={
  'tests/fixtures/babelian-350x.json':'38ee8433d52ac7602ccac3fc7a868ddeac03ccabc6cb3799ee194c1e542cd389',
  'tests/fixtures/siren-3491.json':'aea19d0d501c39fcb5873ff9a2b481a300979235d5cb79d0d0360b320cb868fb'
 };
-for(const [file,digest] of Object.entries(pinned))assert.equal(hash(fs.readFileSync(path.join(root,file))),digest,`Public baseline asset/fixture changed: ${file}`);
+// Git may use CRLF in Windows checkouts; pin the same normalized text while
+// checking every decoded PNG payload byte-for-byte below.
+for(const [file,digest] of Object.entries(pinned))assert.equal(hash(read(file).replace(/\r\n/g,'\n')),digest,`Public baseline asset/fixture changed: ${file}`);
 assert.deepEqual(fs.readdirSync(path.join(root,'tests/fixtures')).sort(),['babelian-350x.json','siren-3491.json'],'Only existing public fixtures belong in this release');
-function walk(dir){return fs.readdirSync(path.join(root,dir),{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(path.join(dir,entry.name)):[path.join(dir,entry.name)]);}
+function walk(dir){return fs.readdirSync(path.join(root,dir),{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(path.join(dir,entry.name)):[path.join(dir,entry.name).split(path.sep).join('/')]);}
 const rootEntries=fs.readdirSync(root,{withFileTypes:true});
 const publicRoots=new Set(['.gitignore','README.md','BABELIAN.md','SIREN.md','package.json','package-lock.json','index.html']);
 const allowedDirectories=new Set(['.git','src','scripts','integration','tests','dist','node_modules','test-results','playwright-report']);
-for(const entry of rootEntries)assert(entry.isDirectory()?allowedDirectories.has(entry.name):publicRoots.has(entry.name),`Unexpected release-root input or payload: ${entry.name}`);
-const published=[...walk('src'),...walk('scripts'),...walk('integration'),...rootEntries.filter(entry=>entry.isFile()).map(entry=>entry.name)];
+for(const entry of rootEntries){
+ if(entry.name==='.git'){assert(entry.isDirectory()||entry.isFile()&&/^gitdir: /.test(read('.git')),'Invalid worktree metadata');continue;}
+ assert(entry.isDirectory()?allowedDirectories.has(entry.name):publicRoots.has(entry.name),`Unexpected release-root input or payload: ${entry.name}`);
+}
+const published=[...walk('src'),...walk('scripts'),...walk('integration'),...rootEntries.filter(entry=>entry.isFile()&&entry.name!=='.git').map(entry=>entry.name)];
 const excluded=/CipherProofreading|\bproof-(?:open|home|queue|import|feedback)\b|__PROOFREADING_[A-Z_]+__|\bindexedDB\b|ato-cipher-(?:proofreading|collection)|\bproofreading\s*[:.]|proofreading[-.]|import-feedback-workbench/i;
 for(const file of published){
  assert(!excluded.test(file),`Private feature filename in public release: ${file}`);
@@ -44,7 +49,7 @@ for(const [file,ids] of [['src/ocr-panel.html',['ocr-work-save','ocr-work-load',
 assert(!/number[s]?-(?:toggle|display)|numeric-(?:toggle|display)/i.test(read('src/siren-panel.html')),'No unrequested numeric-display toggle');
 const dist='dist/ato/babelian';
 if(fs.existsSync(path.join(root,dist))){
- const files=walk(dist).map(file=>path.relative(dist,file)).sort(),manifest=JSON.parse(read(path.join(dist,'babelian-module.json')));
+ const files=walk(dist).map(file=>path.relative(dist,file).split(path.sep).join('/')).sort(),manifest=JSON.parse(read(path.join(dist,'babelian-module.json')));
  const expected=['babelian-module.json',...Object.keys(manifest.files)].sort();
  assert.deepEqual(files,expected,'ATO package must contain only its declared public module files');
  assert.equal(Object.keys(manifest.files).length,92,'ATO package is one page and 91 assets');

@@ -47,16 +47,24 @@
     if(count===data.length||count===0)return {width,height,data:new Uint8Array(data.length),threshold,polarity};
     return {width,height,data,threshold,polarity};
   }
-  function fineDescriptor(mask,box){
-    const size=64,rows=new Uint32Array(size*2),wide=new Uint32Array(size*2);let count=0;
-    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-      let ink=0;
-      for(const dy of [.25,.75])for(const dx of [.25,.75]){
-        const sx=Math.min(mask.width-1,Math.floor(box.x+(x+dx)*box.width/size));
-        const sy=Math.min(mask.height-1,Math.floor(box.y+(y+dy)*box.height/size));ink+=mask.data[sy*mask.width+sx];
-      }
-      if(ink>=2){rows[y*2+(x>>>5)]|=1<<(x&31);count++;}
+  // Precompute coordinates, not pixels. Keep the four subpixel samples and
+  // >=2 vote bit-for-bit identical at both descriptor resolutions. Avoid a
+  // global descriptor cache: correction masks may change in place.
+  function sampledRows(mask,box,size){
+    const stride=size>>>5,rows=new Uint32Array(size*stride),xs0=new Int32Array(size),xs1=new Int32Array(size);let count=0;
+    for(let x=0;x<size;x++){
+      xs0[x]=Math.min(mask.width-1,Math.floor(box.x+(x+.25)*box.width/size));
+      xs1[x]=Math.min(mask.width-1,Math.floor(box.x+(x+.75)*box.width/size));
     }
+    for(let y=0;y<size;y++){
+      const y0=Math.min(mask.height-1,Math.floor(box.y+(y+.25)*box.height/size))*mask.width;
+      const y1=Math.min(mask.height-1,Math.floor(box.y+(y+.75)*box.height/size))*mask.width;
+      for(let x=0;x<size;x++)if(mask.data[y0+xs0[x]]+mask.data[y0+xs1[x]]+mask.data[y1+xs0[x]]+mask.data[y1+xs1[x]]>=2){rows[y*stride+(x>>>5)]|=1<<(x&31);count++;}
+    }
+    return {rows,count};
+  }
+  function fineDescriptor(mask,box){
+    const size=64,{rows,count}=sampledRows(mask,box,size),wide=new Uint32Array(size*2);
     for(let y=0;y<size;y++){
       const left=rows[y*2]|(rows[(y-1)*2]||0)|(rows[(y+1)*2]||0),right=rows[y*2+1]|(rows[(y-1)*2+1]||0)|(rows[(y+1)*2+1]||0);
       wide[y*2]=left|(left<<1)|(left>>>1)|(right<<31);
@@ -72,16 +80,7 @@
   }
   function describe(mask,box=bounds(mask),detail=true){
     if(!box)return null;
-    const rows=new Uint32Array(SIZE),wide=new Uint32Array(SIZE);let count=0;
-    // Multiple samples retain thin wedges after normalizing the candidate rectangle.
-    for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){
-      let ink=0;
-      for(const dy of [.25,.75])for(const dx of [.25,.75]){
-        const sx=Math.min(mask.width-1,Math.floor(box.x+(x+dx)*box.width/SIZE));
-        const sy=Math.min(mask.height-1,Math.floor(box.y+(y+dy)*box.height/SIZE));ink+=mask.data[sy*mask.width+sx];
-      }
-      if(ink>=2){rows[y]|=(1<<x);count++;}
-    }
+    const {rows,count}=sampledRows(mask,box,SIZE),wide=new Uint32Array(SIZE);
     for(let y=0;y<SIZE;y++){
       let r=rows[y]|(rows[y-1]||0)|(rows[y+1]||0);wide[y]=r|(r<<1)|(r>>>1);
     }
@@ -243,8 +242,12 @@
         }
       }
     }
-    const suffix=new Float64Array(n+1).fill(Infinity);suffix[n]=0;
-    for(let i=n-1;i>=0;i--)for(const e of edges)if(e.from===i)suffix[i]=Math.min(suffix[i],e.cost+suffix[e.to]);
+    const suffix=new Float64Array(n+1).fill(Infinity),outgoing=Array.from({length:n},()=>[]);suffix[n]=0;
+    // Preserve edge order and arithmetic while avoiding a scan of every edge
+    // at every node of the segmentation graph.
+    for(const edge of edges)outgoing[edge.from].push(edge);
+    for(let i=n-1;i>=0;i--)for(const e of outgoing[i])suffix[i]=Math.min(suffix[i],e.cost+suffix[e.to]);
+
     const tokens=[];
     for(let at=n;at>0;){
       const step=back[at];if(!step)throw Error('无法切分这一行，请缩小框选区域。');
@@ -633,7 +636,7 @@
     if(options.cancelled?.())throw Error('已取消识别。');
     return changed&&count<=1500?{...baseline,lines,pageRefinement:{rows:changed}}:baseline;
   }
-  async function recognize(image,templateMasks,options={},progress=()=>{}){
+  async function recognizeRaster(image,templateMasks,options={},progress=()=>{}){
     const mask=binarize(image,options),templates=prepareTemplates(templateMasks,options);
     const baseline=await recognizeMask(mask,templates,options,p=>progress({...p,pass:1}));
     // A manual threshold is authoritative. Keep the coarse comparison as an
@@ -693,6 +696,75 @@
     const result={...chosen,thresholdSearch:{baseline:baseline.threshold,selected:chosen.threshold,passes:passes.map(p=>({threshold:p.threshold,evidence:imageEvidence(p)}))}};
     return refineRepeatedGlyphs(image,result,templates,options,progress);
   }
+  function prepareVectorProfile(profile,ids){
+    if(!profile||profile.version!==1||!Array.isArray(profile.variants)||profile.variants.length>1024)throw Error('矢量辅助模板格式不支持。');
+    const allowed=new Set(ids),groups=new Map(),seen=new Set();
+    function descriptor(value,size){
+      const countLimit=size===SIZE?1024:4096,length=size===SIZE?32:128;
+      if(!value||!Number.isInteger(value.count)||value.count<1||value.count>countLimit)throw Error('矢量辅助模板像素计数无效。');
+      const arrays={};
+      for(const key of ['rows','wide']){
+        const input=value[key];
+        if(!(Array.isArray(input)||input instanceof Uint32Array)||input.length!==length||!Array.from(input).every(v=>Number.isInteger(v)&&v>=0&&v<=0xffffffff))throw Error('矢量辅助模板形状无效。');
+        arrays[key]=Uint32Array.from(input);
+      }
+      if(arrays.rows.reduce((n,r)=>n+pop(r),0)!==value.count)throw Error('矢量辅助模板像素计数不一致。');
+      return {...arrays,count:value.count};
+    }
+    for(const entry of profile.variants){
+      if(typeof entry?.id!=='string'||!allowed.has(entry.id)||!Number.isFinite(entry.targetHeight)||entry.targetHeight<8||entry.targetHeight>512||!Number.isFinite(entry.ratio)||entry.ratio<=0||entry.ratio>4)throw Error('矢量辅助模板尺寸或字形标识无效。');
+      const key=JSON.stringify([entry.id,entry.targetHeight]);if(seen.has(key))throw Error('矢量辅助模板包含重复分辨率。');seen.add(key);
+      const template={id:entry.id,targetHeight:entry.targetHeight,ratio:entry.ratio,...descriptor(entry,SIZE),fine:descriptor(entry.fine,64)};
+      if(!groups.has(entry.id))groups.set(entry.id,[]);groups.get(entry.id).push(template);
+    }
+    for(const variants of groups.values())variants.sort((a,b)=>a.targetHeight-b.targetHeight);
+    return groups;
+  }
+  function vectorWinner(candidate,templates,current,height,profile){
+    const native=matchDescriptor(candidate,templates);
+    // The primary recognizer may have used a better threshold or page-local
+    // references. Do not undo that result when these plain source pixels
+    // disagree, or when the native candidate already has a clear margin.
+    if(native[0]?.id!==current||native[0].score<.72||native[0].score-(native[1]?.score||0)>=.035)return null;
+    const contenders=native.filter(c=>native[0].score-c.score<=.025);
+    if(contenders.some(c=>(profile.get(c.id)?.length||0)<2))return null;
+    const ranked=contenders.map(c=>{
+      const variants=profile.get(c.id)||[];if(variants.length<2)return {id:c.id,score:0,nativeScore:c.score};
+      let at=0;for(let i=1;i<variants.length;i++)if(Math.abs(variants[i].targetHeight-height)<Math.abs(variants[at].targetHeight-height))at=i;
+      const neighbor=at===0?1:at===variants.length-1?at-1:Math.abs(variants[at-1].targetHeight-height)<=Math.abs(variants[at+1].targetHeight-height)?at-1:at+1;
+      const scores=[variants[at],variants[neighbor]].map(t=>matchDescriptor(candidate,[t])[0]?.score||0);
+      return {id:c.id,score:Math.min(...scores),nativeScore:c.score};
+    }).sort((a,b)=>b.score-a.score);
+    // Require both raster resolutions, not the best of many noisy votes.
+    return ranked.length>=2&&ranked[0].score>=.94&&ranked[0].score-ranked[1].score>=.06?ranked[0]:null;
+  }
+  async function recognize(image,templateMasks,options={},progress=()=>{}){
+    const result=await recognizeRaster(image,templateMasks,options,progress);
+    if(!options.vectorProfile||options.threshold!=null||options.detail===false||!result.lines.length)return result;
+    if(options.cancelled?.())throw Error('已取消识别。');
+    const profile=prepareVectorProfile(options.vectorProfile,templateMasks.map(t=>t.id)),templates=prepareTemplates(templateMasks,options);
+    const mask=binarize(image,{threshold:result.threshold,polarity:result.polarity});
+    const delta=result.polarity==='dark'?8:-8,preferred=result.threshold+delta;
+    const alternate=binarize(image,{threshold:preferred<0||preferred>254?result.threshold-delta:preferred,polarity:result.polarity});
+    let checked=0,changed=0;
+    const lines=[];
+    for(const row of result.lines){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      const tokens=row.tokens.map(token=>{
+        if(token.certain||token.manual||!token.id||token.box.height<16)return token;
+        checked++;
+        const first=vectorWinner(describe(mask,token.box),templates,token.id,token.box.height,profile);
+        if(!first||first.id===token.id)return token;
+        const second=vectorWinner(describe(alternate,token.box),templates,token.id,token.box.height,profile);
+        if(second?.id!==first.id)return token;
+        const candidate=token.candidates.find(c=>c.id===first.id);if(!candidate)return token;
+        changed++;
+        return {...token,id:first.id,score:candidate.score,certain:false,candidates:[candidate,...token.candidates.filter(c=>c.id!==first.id)],vectorRefinement:{from:token.id,minScore:Math.min(first.score,second.score)}};
+      });
+      lines.push({...row,tokens});
+    }
+    return {...result,lines,vectorReview:{checked,changed}};
+  }
   function tokenGlyph(token){return token.id||token.candidates?.[0]?.id||null;}
   function tokenReading(token,mapping){
     const id=tokenGlyph(token);if(!id)return '[?]';
@@ -714,5 +786,5 @@
     });
     return {text,spans};
   }
-  return {binarize,bounds,describe,prepareTemplates,matchDescriptor,rowBands,recognizeLine,recognize,thresholdConsensus,tokenGlyph,tokenReading,transcribe,toWriter};
+  return {binarize,bounds,describe,prepareTemplates,prepareVectorProfile,matchDescriptor,rowBands,recognizeLine,recognize,thresholdConsensus,tokenGlyph,tokenReading,transcribe,toWriter};
 });
