@@ -423,6 +423,16 @@
 .siren-reading-demo { margin:12px 0; border-top:1px solid var(--line); padding:12px 0 4px; }
 .siren-reading-demo summary { cursor:pointer; }
 #siren-reading-step { width:100%; max-width:440px; }
+.siren-scan-preview {border-top:1px solid var(--line);padding-top:10px;margin-top:12px}
+.siren-preview-groups {display:flex;gap:12px;overflow-x:auto;max-width:100%;padding:2px 0 8px}
+.siren-preview-groups figure {flex:0 0 160px;margin:0;border:1px solid var(--line);padding:8px;text-align:center}
+.siren-preview-groups canvas {width:140px;height:140px;display:block;background:white}
+.siren-preview-groups figcaption {overflow-wrap:anywhere;font-size:14px;margin-top:6px}
+.siren-difference-images {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.siren-difference-images figure {margin:0;min-width:0}
+.siren-difference-images canvas {display:block;width:100%;height:auto;border:1px solid var(--line);background:white}
+.siren-difference-images figcaption {font-size:14px;overflow-wrap:anywhere;margin:6px 0}
+@media(max-width:760px){.siren-difference-images{grid-template-columns:1fr}}
 
     /* Local adaptation of ATO Assistant's cycle-theme.css and editorial.css.
  * Presentation only: no image recoloring, recognition or storage changes. */
@@ -803,6 +813,7 @@ body[data-tool$="-translate"] .translation-input-help { font:14px/1.8 var(--font
           <div id="siren-source-area" hidden>
           <div class="siren-actions"><button type="button" id="siren-auto-scan" class="secondary" disabled>自动分割并匹配</button><button type="button" id="siren-missing-toggle" class="secondary" aria-expanded="false" aria-controls="siren-missing-panel" disabled>只补扫漏掉的大螺旋</button><button type="button" id="siren-scan-cancel" class="secondary" hidden>取消识别</button></div>
           <p id="siren-scan-status" class="siren-note" role="status" aria-live="polite"></p>
+          <section id="siren-scan-preview" class="siren-scan-preview" aria-label="本次逐组识别预览" hidden><p id="siren-preview-status" class="siren-note" role="status" aria-live="polite"></p><p class="siren-note">以下仅为本次预览，不改动已有工作；未完成部分不代表完整英文。全部完成后按原流程加入工作，停止后可明确保留已完成组。</p><div id="siren-preview-groups" class="siren-preview-groups"></div><div class="siren-actions"><button id="siren-preview-keep" type="button" class="secondary" hidden>保留已完成组</button><button id="siren-preview-discard" type="button" class="text-button" hidden>放弃本次预览</button></div></section>
           <p id="siren-source-coverage" class="siren-note" role="status">识别后会在原图标出本次加入的大螺旋范围；请核对数量与原图一致。</p>
           <div id="siren-source-wrap" class="siren-source-wrap"><canvas id="siren-source-canvas" width="600" height="180" tabindex="0" aria-label="原图与组位置；开启补扫后可拖框选择一个漏掉的大螺旋" aria-describedby="siren-source-coverage siren-missing-status"></canvas></div>
           <div id="siren-missing-panel" hidden><p class="siren-note">在原图拖框，只圈住一个漏掉的大螺旋及它的完整小螺旋笔画，留少量边距。补扫结果先预览，确认后仅追加一组；已有组及人工修改保持不变。Esc 取消。</p><div class="siren-actions"><button type="button" id="siren-missing-run" class="secondary" disabled>识别所框漏组</button><button type="button" id="siren-missing-add" class="secondary" disabled>确认追加这一组</button><button type="button" id="siren-missing-close" class="text-button">关闭 / 取消补扫</button></div><p id="siren-missing-status" class="siren-note" role="status" aria-live="polite"></p><canvas id="siren-missing-preview" width="600" height="600" hidden aria-label="补扫候选预览，尚未加入工作"></canvas></div>
@@ -817,6 +828,7 @@ body[data-tool$="-translate"] .translation-input-help { font:14px/1.8 var(--font
             <div class="siren-actions"><button type="button" id="siren-deep-toggle" class="secondary" hidden aria-expanded="false">疑难区域深度识别</button></div>
             <canvas id="siren-stage" width="900" height="900" tabindex="0" aria-label="塞壬语螺旋编辑画布；下方可选择小螺旋或打开精确调节窗口"></canvas>
             <details id="siren-reading-demo" class="siren-reading-demo"><summary>查看读序演示</summary><p class="siren-note">只演示当前细像素首交点顺序，不移动字形、不确认候选。未定位项不加入编号。</p><div class="siren-actions"><button id="siren-reading-prev" type="button" class="secondary">上一步</button><button id="siren-reading-play" type="button" class="secondary">播放</button><button id="siren-reading-next" type="button" class="secondary">下一步</button></div><label for="siren-reading-step" class="siren-note">读取步骤</label><input id="siren-reading-step" type="range" min="1" max="1" value="1" step="1"><p id="siren-reading-status" class="siren-note" role="status" aria-live="polite"></p></details>
+            <details id="siren-difference" class="siren-reading-demo" hidden><summary>整组重建／差异对照</summary><p class="siren-note">红色：原图中未被当前模板解释的笔画；蓝色：模板比原图多出的笔画。差异也可能来自噪声、缩放、灰边或邻组笔画，不代表字母错误或正确率。本功能不修改字形、位置、确认状态或读序。</p><p id="siren-difference-status" class="siren-note" role="status"></p><div id="siren-difference-images" class="siren-difference-images"><figure><canvas id="siren-difference-source" width="600" height="600" aria-label="当前组的原始裁片"></canvas><figcaption>原图裁片</figcaption></figure><figure><canvas id="siren-difference-rebuilt" width="600" height="600" aria-label="按当前所有字形和位置重建"></canvas><figcaption>整组重建</figcaption></figure><figure><canvas id="siren-difference-map" width="600" height="600" aria-label="红色为未解释笔画，蓝色为模板多出笔画"></canvas><figcaption>像素差异：红为未解释，蓝为多出</figcaption></figure></div></details>
             <div id="siren-deep-panel" hidden><p class="siren-note">在画布拖框圈住一个小螺旋的中心；笔画可超出框外。点击候选预览叠加，再确认采用。</p><div class="siren-actions"><button type="button" id="siren-deep-run" class="secondary" disabled>开始深度识别</button><button type="button" id="siren-deep-apply" class="secondary" disabled>采用所选候选</button><button type="button" id="siren-deep-close" class="text-button">关闭 / 取消</button></div><p id="siren-deep-status" class="siren-note" role="status"></p><div id="siren-deep-candidates" class="siren-actions"></div></div>
             <div id="siren-selection-bar" class="siren-selection-bar"><div id="siren-items" class="siren-items" aria-label="小螺旋，按首交点排序"></div><button type="button" id="siren-precision-toggle" class="secondary" aria-expanded="false" aria-controls="siren-precision-panel">精确调节</button><button type="button" id="siren-delete-recognized" class="secondary" hidden disabled>删除所选小螺旋</button><button type="button" id="siren-open-add" class="secondary" aria-controls="siren-keyboard-panel" aria-expanded="false">新增其他小螺旋</button></div>
             <p id="siren-manual-overlap" class="siren-note" role="status" hidden></p>
@@ -4438,7 +4450,22 @@ globalThis.BabelianOCRUI={
    }
    return result(candidates);
   }
-  return {binarize,detectGroups,fitGroup,measurePlacement,deepRegion};
+  // Read-only diagnostic at supplied poses. Never fit, rank or change them.
+  function reconstruct(bitmap,base,items){
+   const {width,height}=bitmap;
+   if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width*height>1200000||bitmap.ink.length!==width*height)throw Error('对照图尺寸无效。');
+   const ink=new Float32Array(width*height);let omitted=0;
+   const poses=[[baseTemplate,base],...items.map(p=>[letters[p.letter],{cx:p.x,cy:p.y,size:p.size,rotation:p.rotation}])];
+   for(const [template,p] of poses){
+    if(!template){omitted++;continue;}
+    if(![p.cx,p.cy,p.size,p.rotation].every(Number.isFinite)||p.size<=0)throw Error('对照位置无效。');
+    const mask=placedMask(template,p,bitmap).ink;for(let i=0;i<ink.length;i++)ink[i]=Math.max(ink[i],mask[i]);
+   }
+   const unexplained=new Float32Array(ink.length),extra=new Float32Array(ink.length);
+   for(let i=0;i<ink.length;i++){const delta=bitmap.ink[i]-ink[i];unexplained[i]=Math.max(0,delta);extra[i]=Math.max(0,-delta);}
+   return {width,height,ink,unexplained,extra,omitted};
+  }
+  return {binarize,detectGroups,fitGroup,measurePlacement,deepRegion,reconstruct};
  }
  return {create,binarize,createLocatorBoundary,createRecognitionBoundary};
 });
@@ -4449,15 +4476,20 @@ globalThis.BabelianOCRUI={
   function runWorker(){
     self.onmessage=event=>{
       try{
-        const {templates,image,operation,limit=20,base,region}=event.data,engine=SirenRecognition.create(templates);
+        const {templates,image,operation,limit=20,base,region,reuse}=event.data,engine=SirenRecognition.create(templates);
         const bitmap=engine.binarize(image);
         const report=p=>self.postMessage({progress:p});
         if(operation==='deep'){self.postMessage({result:engine.deepRegion(bitmap,base,region,{onProgress:report})});return;}
-        const hints=operation==='fit'?[null]:engine.detectGroups(bitmap,{onProgress:report});
+        const hints=reuse?.hints||(operation==='fit'?[null]:engine.detectGroups(bitmap,{onProgress:report}));
         if(hints.length>limit)throw Error('检测到的大螺旋过多，请拆成多张图片，分批识别。');
+        self.postMessage({detected:hints});
         const groups=[];
         for(let i=0;i<hints.length;i++){
           report({stage:'group',progress:i/hints.length,index:i+1,count:hints.length});
+          if(reuse?.groups&&Object.prototype.hasOwnProperty.call(reuse.groups,i)){
+            const result=reuse.groups[i];if(result.base)groups.push(result);
+            self.postMessage({partial:{group:result,index:i+1,count:hints.length,cached:true}});continue;
+          }
           const hint=hints[i],box=hint?.bbox;
           const x=box?Math.max(0,Math.floor(box.x)):0,y=box?Math.max(0,Math.floor(box.y)):0;
           const width=box?Math.min(bitmap.width-x,Math.ceil(box.width)):bitmap.width,height=box?Math.min(bitmap.height-y,Math.ceil(box.height)):bitmap.height;
@@ -4466,29 +4498,82 @@ globalThis.BabelianOCRUI={
           const result=engine.fitGroup({width,height,ink},hint?{...hint,cx:hint.cx-x,cy:hint.cy-y}:null,{onProgress:p=>report({...p,index:i+1,count:hints.length})});
           if(result.base){result.base.cx+=x;result.base.cy+=y;for(const item of result.items){item.x+=x;item.y+=y;for(const c of item.candidates){c.x+=x;c.y+=y;}}}
           if(result.base)groups.push(result);
+          self.postMessage({partial:{group:result,index:i+1,count:hints.length,cached:false}});
         }
         self.postMessage({result:groups});
       }catch(e){self.postMessage({error:e.message||'图像匹配失败。'});}
     };
   }
   function workerSource(engineSource){return 'const SirenRecognition='+engineSource+';\n('+runWorker.toString()+')();';}
-  function create({engineSource,onProgress=()=>{},WorkerClass=globalThis.Worker}={}){
-    let active=null;
+  // Page-memory only. Compare exact bytes, not a lossy hash or object identity.
+  // ImageData exposes non-enumerable fields; normalize them explicitly below.
+  function cacheKey(payload,budget){
+    let bytes=0;const parts=[];
+    function visit(v){
+      if(v===null)return ['null'];
+      if(typeof v!=='object'){
+        if(!['string','number','boolean','undefined'].includes(typeof v))throw Error('Uncacheable');
+        const value=typeof v==='number'&&Object.is(v,-0)?'-0':String(v);bytes+=value.length*2+16;if(bytes>budget)throw Error('Cache budget');return [typeof v,value];
+      }
+      if(ArrayBuffer.isView(v)){
+        bytes+=v.byteLength+64;if(bytes>budget)throw Error('Cache budget');const i=parts.length;parts.push(new Uint8Array(v.buffer,v.byteOffset,v.byteLength).slice());return ['bytes',v.constructor.name,i];
+      }
+      if(Array.isArray(v))return ['array',Array.from(v,visit)];
+      return ['object',Object.keys(v).map(k=>[k,visit(v[k])])];
+    }
+    try{
+      const image=payload.image,normalized={...payload,image:{width:image.width,height:image.height,data:image.data}},description=JSON.stringify(visit(normalized));
+      bytes+=description.length*2;if(bytes>budget)return null;return {description,parts,bytes};
+    }catch(_){return null;}
+  }
+  function sameKey(a,b){return a.description===b.description&&a.parts.length===b.parts.length&&a.parts.every((p,n)=>{const q=b.parts[n];if(p.length!==q.length)return false;for(let i=0;i<p.length;i++)if(p[i]!==q[i])return false;return true;});}
+  function clone(v){if(v===null||typeof v!=='object')return v;if(ArrayBuffer.isView(v))return v.slice();if(Array.isArray(v))return v.map(clone);return Object.fromEntries(Object.entries(v).map(([k,value])=>[k,clone(value)]));}
+  function create({engineSource,onProgress=()=>{},WorkerClass=globalThis.Worker,cacheBytes=32*1024*1024,cacheEntries=3}={}){
+    let active=null,hits=0,reusedGroups=0;const cache=[];
+    cacheBytes=Math.max(0,Number.isFinite(cacheBytes)?cacheBytes:0);cacheEntries=Math.max(0,Math.floor(Number.isFinite(cacheEntries)?cacheEntries:0));
+    const total=()=>cache.reduce((n,e)=>n+e.bytes,0);
+    function trim(){while(cache.length&&(cache.length>cacheEntries||total()>cacheBytes))cache.shift();}
+    function update(entry){if(!entry||!cache.includes(entry))return;entry.bytes=entry.key.bytes+JSON.stringify([entry.hints,entry.groups,entry.result]).length*2;trim();}
     function cancel(){if(!active)return;const old=active;active=null;old.worker.terminate();old.reject(Error('已取消识别；原有解读未改变。'));}
-    function run(payload){
+    function run(payload,{onGroup=()=>{}}={}){
       cancel();
       return new Promise((resolve,reject)=>{
+        const key=cacheEntries&&cacheBytes?cacheKey(payload,cacheBytes):null;
+        let entry=key?cache.find(e=>sameKey(key,e.key)):null;
+        if(entry){cache.splice(cache.indexOf(entry),1);cache.push(entry);hits++;}
+        else if(key){entry={key,groups:{},bytes:key.bytes};cache.push(entry);trim();}
+        if(entry?.complete){
+          let timer;const job={worker:{terminate(){clearTimeout(timer);}},reject};active=job;
+          const slots=Object.keys(entry.groups),step=index=>{
+            if(active!==job)return;
+            try{
+              if(index<slots.length){const slot=Number(slots[index]);reusedGroups++;onProgress({stage:'cached',progress:(index+1)/slots.length,index:slot+1,count:entry.hints?.length||slots.length});
+                if(active!==job)return;onGroup({group:clone(entry.groups[slot]),index:slot+1,count:entry.hints?.length||slots.length,cached:true});
+                if(active===job)timer=setTimeout(()=>step(index+1),0);
+              }else {active=null;resolve(clone(entry.result));}
+            }catch(e){if(active===job){active=null;reject(e);}}
+          };timer=setTimeout(()=>step(0),0);return;
+        }
         if(!WorkerClass){reject(Error('当前浏览器不支持本机后台识别，请使用支持 Web Worker 的浏览器。'));return;}
         let url,worker;
         try{url=URL.createObjectURL(new Blob([workerSource(engineSource)],{type:'text/javascript'}));worker=new WorkerClass(url);}catch(_){reject(Error('无法启动本机识别，请检查浏览器是否允许本地 Worker。'));return;}finally{if(url)URL.revokeObjectURL(url);}
         const job={worker,reject};active=job;
         const finish=(error,result)=>{if(active!==job)return;active=null;worker.terminate();if(error)reject(error);else resolve(result);};
-        worker.onmessage=e=>{if(active!==job)return;if(e.data.progress)onProgress(e.data.progress);else if(e.data.error)finish(Error(e.data.error));else finish(null,e.data.result);};
+        worker.onmessage=e=>{
+          if(active!==job)return;
+          try{
+            if(e.data.progress)onProgress(e.data.progress);
+            else if(e.data.detected){if(entry){entry.hints=clone(e.data.detected);update(entry);}}
+            else if(e.data.partial){const p=e.data.partial;if(entry){entry.groups[p.index-1]=clone(p.group);update(entry);}if(p.cached)reusedGroups++;onGroup(p);}
+            else if(e.data.error)finish(Error(e.data.error));
+            else {if(entry){entry.result=clone(e.data.result);entry.complete=true;update(entry);}finish(null,e.data.result);}
+          }catch(error){finish(error);}
+        };
         worker.onerror=()=>finish(Error('本机识别进程失败；请换用较小图片后重试。'));
-        try{worker.postMessage(payload);}catch(e){finish(e);}
+        try{worker.postMessage(entry?.hints?{...payload,reuse:{hints:entry.hints,groups:entry.groups}}:payload);}catch(e){finish(e);}
       });
     }
-    return {run,cancel};
+    return {run,cancel,clearCache:()=>cache.splice(0),cacheInfo:()=>({entries:cache.length,bytes:total(),maxBytes:cacheBytes,hits,reusedGroups})};
   }
   return {create,workerSource};
 });
@@ -4513,11 +4598,12 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
   let source=null,sourceTicket=0,sourceLoading=false,importTicket=0,loadingImport=false,keyboardPoint=null,templates=null,scanBusy=false,scanTicket=0;
   let deep=null,missing=null,reviewFocus=null;
   let demoIndex=0,demoTimer=null,demoSignature='';
+  let scanPreview=null,differenceSignature='';
   const sourceRegions=new Map();let sourcePaintKey='';
   const keyboardImages=[];
   const manualImages=new Map(),overlapSources=new Map(),overlapCache=new WeakMap();let overlapEngine=null;
   const scan=SirenScan.create({engineSource:SirenRecognition.workerSource(),onProgress:p=>{
-    const stages={'base-regions':'分割大螺旋','base-windows':'分窗寻找大螺旋','base-coarse':'寻找大螺旋','base-refine':'对齐大螺旋','group':'匹配分组','letters-coarse':'比较26个字形','letters-refine':'微调字形位置与大小','letters-joint':'整组像素核验','letters-complete':'整理候选'};
+    const stages={'cached':'复用相同图片的计算','base-regions':'分割大螺旋','base-windows':'分窗寻找大螺旋','base-coarse':'寻找大螺旋','base-refine':'对齐大螺旋','group':'匹配分组','letters-coarse':'比较26个字形','letters-refine':'微调字形位置与大小','letters-joint':'整组像素核验','letters-complete':'整理候选'};
     const regionStages={'region-coarse':'细搜定位与字形','region-refine':'精调候选','region-verify':'原图像素核验'};
     $(missing?.running?'siren-missing-status':deep?.running?'siren-deep-status':'siren-scan-status').textContent=(p.index?'第 '+p.index+'/'+p.count+' 组 · ':'')+(stages[p.stage]||regionStages[p.stage]||'正在匹配')+' '+Math.round((p.progress||0)*100)+'%';
   }});
@@ -4597,7 +4683,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     $('siren-deep-toggle').hidden=mode!=='review';$('siren-deep-toggle').disabled=!g()?.image||scanBusy;
     $('siren-deep-run').disabled=!deep?.region||!!deep?.drag||scanBusy;
     $('siren-deep-apply').disabled=!deep?.preview||scanBusy||!!item()?.positionLocked;
-    renderEntry();
+    renderEntry();renderScanPreview();renderDifference();
   }
   function renderEntry(){
     const emptyReview=mode==='review'&&!doc().groups.length;
@@ -4606,7 +4692,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     $('siren-source-area').hidden=!source;
     $('siren-missing-toggle').hidden=!doc().groups.length;$('siren-source-coverage').hidden=!doc().groups.length;
   }
-  function cancelScan(){scanTicket++;scan.cancel();scanBusy=false;if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
+  function cancelScan({keepPreview=false}={}){scanTicket++;scan.cancel();scanBusy=false;if(scanPreview){scanPreview.stopped=true;if(!keepPreview)scanPreview=null;}if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
   function remember(){history[mode].push(JSON.stringify(doc()));if(history[mode].length>30)history[mode].shift();revisions[mode]++;}
   function changed(){clearDeep();clearMissing();translation.invalidate();if(draft().state())draft().update(payload(),formatOptions());render();}
   function image(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('图片无法读取，请重新选择。'));img.src=src;});}
@@ -4623,17 +4709,41 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     const canvas=document.createElement('canvas'),a=assets.letters[letter];canvas.width=a.width;canvas.height=a.height;
     const ctx=canvas.getContext('2d');ctx.drawImage(images[letter],0,0);ctx.globalCompositeOperation='source-in';ctx.fillStyle='#bb32d3';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalCompositeOperation='source-over';manualImages.set(letter,canvas);return canvas;
   }
+  function reviewBitmap(group){
+    let bitmap=overlapSources.get(group.image);if(bitmap)return bitmap;
+    const bg=backgrounds.get(group.image);if(!bg)return null;
+    const canvas=document.createElement('canvas');canvas.width=600;canvas.height=600;const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(bg,0,0,600,600);if(!overlapEngine)overlapEngine=SirenRecognition.create(templates);bitmap=overlapEngine.binarize(ctx.getImageData(0,0,600,600));
+    overlapSources.set(group.image,bitmap);if(overlapSources.size>3)overlapSources.delete(overlapSources.keys().next().value);return bitmap;
+  }
+  function renderDifference(){
+    const panel=$('siren-difference'),group=g();panel.hidden=mode!=='review'||!group?.image;
+    if(panel.hidden){panel.open=false;differenceSignature='';return;}
+    if(!panel.open)return;
+    const paused=scanBusy||loadingImport||sourceLoading||drag;$('siren-difference-images').hidden=!!paused;
+    if(paused){differenceSignature='';$('siren-difference-status').textContent='操作完成后更新对照图。';return;}
+    const signature=JSON.stringify(group);if(signature===differenceSignature)return;
+    try{
+      const bitmap=reviewBitmap(group);if(!bitmap)throw Error('原图尚未就绪。');
+      const result=overlapEngine.reconstruct(bitmap,{cx:group.cx,cy:group.cy,size:group.baseSize??500,rotation:group.baseRotation??0},group.items.map(p=>({...p,rotation:C.displayRotation(group,p)})));
+      const raw=$('siren-difference-source').getContext('2d');raw.clearRect(0,0,600,600);raw.drawImage(backgrounds.get(group.image),0,0,600,600);
+      for(const [id,diff] of [['siren-difference-rebuilt',false],['siren-difference-map',true]]){
+        const ctx=$(id).getContext('2d'),out=ctx.createImageData(600,600);
+        for(let i=0;i<result.ink.length;i++){
+          const at=i*4,v=Math.round(255*(1-result.ink[i]));let color=[v,v,v];
+          if(diff){const red=result.unexplained[i],blue=result.extra[i],strength=Math.max(red,blue),gray=Math.round(255-bitmap.ink[i]*65);color=strength>.15?(red>=blue?[192,39,39]:[23,104,220]):[gray,gray,gray];}
+          out.data[at]=color[0];out.data[at+1]=color[1];out.data[at+2]=color[2];out.data[at+3]=255;
+        }ctx.putImageData(out,0,0);
+      }
+      $('siren-difference-status').textContent='按当前姿态在600×600逻辑画布对照，不重新匹配。'+(result.omitted?result.omitted+' 个未知字形未重建。':'');differenceSignature=signature;
+    }catch(e){$('siren-difference-images').hidden=true;$('siren-difference-status').textContent=e.message;}
+  }
+  $('siren-difference').addEventListener('toggle',renderDifference);
   function placementOverlap(token){
     const group=g(),signature=JSON.stringify([group.cx,group.cy,group.baseSize,group.baseRotation,token.letter,token.x,token.y,token.size,C.displayRotation(group,token)]),old=overlapCache.get(token);
     if(old?.image===group.image&&old.signature===signature)return old.metric;
     if(!overlapEngine)overlapEngine=SirenRecognition.create(templates);
-    let bitmap=overlapSources.get(group.image);
-    if(!bitmap){
-      const bg=backgrounds.get(group.image);if(!bg)return null;
-      const canvas=document.createElement('canvas');canvas.width=600;canvas.height=600;const ctx=canvas.getContext('2d',{willReadFrequently:true});
-      ctx.drawImage(bg,0,0,600,600);bitmap=overlapEngine.binarize(ctx.getImageData(0,0,600,600));
-      overlapSources.set(group.image,bitmap);if(overlapSources.size>3)overlapSources.delete(overlapSources.keys().next().value);
-    }
+    const bitmap=reviewBitmap(group);if(!bitmap)return null;
     const metric=overlapEngine.measurePlacement(bitmap,group,{...token,rotation:C.displayRotation(group,token)});
     overlapCache.set(token,{image:group.image,signature,metric});return metric;
   }
@@ -5134,38 +5244,74 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
       remember();doc().groups[groupIndex]=validated;selectItem(selectedId);changed();note('已采用 '+p.letter+'；可撤销。');
     }catch(e){note(e.message);}
   });
+  function previewCurrent(job){return scanPreview===job&&mode==='review'&&doc()===job.target&&source===job.source&&sourceTicket===job.imageTicket&&revisions.review===job.revision&&!loadingImport&&!sourceLoading;}
+  function renderScanPreview(){
+    const job=scanPreview,panel=$('siren-scan-preview');
+    if(job&&!previewCurrent(job)){scanPreview=null;}
+    panel.hidden=!scanPreview||!job.entries.size;
+    if(panel.hidden){$('siren-preview-groups').replaceChildren();return;}
+    $('siren-preview-status').textContent=(job.stopped?'已停止 · ':'识别中 · ')+'已完成 '+job.completed+' / '+(job.total||'?')+' 组'+(job.cached?' · 已复用 '+job.cached+' 组计算':'')+'；尚未加入工作。';
+    $('siren-preview-keep').hidden=!job.stopped;$('siren-preview-keep').disabled=scanBusy;
+    $('siren-preview-discard').hidden=!job.stopped;$('siren-preview-discard').disabled=scanBusy;
+    $('siren-preview-groups').replaceChildren();
+    for(const entry of [...job.entries.values()].sort((a,b)=>a.slot-b.slot)){
+      const figure=document.createElement('figure'),canvas=document.createElement('canvas'),caption=document.createElement('figcaption');canvas.width=canvas.height=160;
+      const ctx=canvas.getContext('2d');ctx.scale(160/600,160/600);paint(ctx,entry.group,{review:true});
+      const text=C.read({mode:'review',groups:[entry.group]},group=>geometry.analyze(group,true)).text;
+      caption.textContent='第 '+(entry.slot+1)+' 组 · '+(text||'空')+'（待复核）';figure.append(canvas,caption);$('siren-preview-groups').append(figure);
+    }
+  }
+  function applyScanPreview(job,partial=false){
+    if(!previewCurrent(job))throw Error('原图或工作已变化，预览未应用；请重新识别。');
+    const entries=[...job.entries.values()].sort((a,b)=>a.slot-b.slot),added=entries.map(e=>e.group);
+    if(!added.length)throw Error('没有已完成组可保留。');
+    if(job.operation!=='fit'&&job.target.groups.length+added.length>50)throw Error('已达到50组，请分段保存。');
+    const index=job.operation==='fit'?job.target.groups.indexOf(job.targetGroup):-1;if(job.operation==='fit'&&index<0)throw Error('原组已变化，请重新识别。');
+    remember();
+    if(job.operation==='fit'){
+      const region=sourceRegions.get(job.targetGroup?.id);if(region)sourceRegions.set(added[0].id,region);job.target.groups[index]=added[0];groupIndex=index;
+    }else{
+      for(const e of entries)sourceRegions.set(e.group.id,sourceRegion(e.result,job.input.canvas,e.frame));
+      groupIndex=job.target.groups.length;job.target.groups.push(...added);
+    }
+    scanPreview=null;sourcePaintKey=null;selectItem();$('siren-path').checked=true;$('siren-guides').checked=true;changed();
+    const total=added.reduce((n,g)=>n+g.items.length,0),unknown=added.reduce((n,g)=>n+g.items.filter(i=>!i.letter).length,0);
+    $('siren-scan-status').textContent=(partial?'已保留已完成部分，未完成组未加入。':'')+added.length+' 组 · '+total+' 个小螺旋 · '+unknown+' 个待确认。'+(job.cached?'复用 '+job.cached+' 组缓存计算。':'')+'请核对原图蓝框，确认大螺旋数量没有遗漏。';note('');
+  }
+  $('siren-preview-keep').addEventListener('click',()=>{try{if(!scanBusy&&scanPreview?.stopped)applyScanPreview(scanPreview,true);}catch(e){note(e.message);renderScanPreview();}});
+  $('siren-preview-discard').addEventListener('click',()=>{if(!scanBusy){scanPreview=null;renderScanPreview();}});
   async function runScan(operation,{strict=false}={}){
     if(!ready||loadingImport||scanBusy||sourceLoading||mode!=='review')return;
     if(operation==='fit'&&g()?.items.length&&!confirm('重新匹配会替换本组全部识别项（包括已锁定项）。原图保留，可撤销。继续？'))return;
     setPrecisionOpen(false);clearDeep();clearMissing();
     const target=doc(),targetGroup=g(),revision=revisions.review,imageTicket=sourceTicket,ticket=++scanTicket;
+    const job={target,targetGroup,revision,imageTicket,source,operation,entries:new Map(),completed:0,total:0,cached:0,queue:Promise.resolve(),stopped:false};scanPreview=job;
     scanBusy=true;scanControls();$('siren-scan-status').textContent='正在本机匹配图形，可随时取消；尚未修改原有工作。';
     try{
       const input=scanImage(operation),limit=operation==='fit'?1:Math.min(20,50-target.groups.length);
       if(limit<1)throw Error('已达到50组，请分段保存。');
-      const results=await scan.run({image:input.image,templates,operation,limit});
+      job.input=input;
+      const results=await scan.run({image:input.image,templates,operation,limit},{onGroup:p=>{
+        job.queue=job.queue.then(async()=>{
+          if(ticket!==scanTicket||!previewCurrent(job)||job.error)return;
+          if(p.group.base){let frame;const group=await scanResultGroup(p.group,input.canvas,operation==='fit',value=>{frame=value;});
+            if(ticket!==scanTicket||!previewCurrent(job))return;job.entries.set(p.index-1,{slot:p.index-1,group,frame,result:p.group});}
+          job.completed=p.index;job.total=p.count;if(p.cached)job.cached++;renderScanPreview();
+        }).catch(e=>{job.error=e;});
+      }});
+      await job.queue;if(job.error)throw job.error;
       if(ticket!==scanTicket)return;
       if(!results.length)throw Error('没有找到足够可靠的大螺旋。请使用更清晰的图片，或使用“只补扫漏掉的大螺旋”框选一个漏组。');
-      const added=[],frames=[];for(const result of results)added.push(await scanResultGroup(result,input.canvas,operation==='fit',frame=>frames.push(frame)));
+      if(job.entries.size!==results.length){job.entries.clear();for(let i=0;i<results.length;i++){let frame;const group=await scanResultGroup(results[i],input.canvas,operation==='fit',value=>{frame=value;});job.entries.set(i,{slot:i,group,frame,result:results[i]});}}
       if(ticket!==scanTicket||imageTicket!==sourceTicket||mode!=='review'||doc()!==target)return;
       if(revision!==revisions.review)throw Error('识别期间工作已被修改，本次结果未应用。请重新识别。');
-      if(operation==='fit'){
-        const region=sourceRegions.get(targetGroup?.id);if(region)sourceRegions.set(added[0].id,region);
-      }else for(let i=0;i<added.length;i++){
-        sourceRegions.set(added[i].id,sourceRegion(results[i],input.canvas,frames[i]));
-      }
-      sourcePaintKey=null;remember();
-      if(operation==='fit'){const index=target.groups.indexOf(targetGroup);if(index<0)throw Error('原组已变化，请重新识别。');target.groups[index]=added[0];groupIndex=index;}
-      else{groupIndex=target.groups.length;target.groups.push(...added);}
-      selectItem();$('siren-path').checked=true;$('siren-guides').checked=true;changed();
-      const total=added.reduce((n,g)=>n+g.items.length,0),unknown=added.reduce((n,g)=>n+g.items.filter(i=>!i.letter).length,0);
-      $('siren-scan-status').textContent=added.length+' 组 · '+total+' 个小螺旋 · '+unknown+' 个待确认。请核对原图蓝框，确认大螺旋数量没有遗漏。';note('');
-    }catch(e){if(ticket===scanTicket){$('siren-scan-status').textContent=e.message;note(e.message);}if(strict)throw e;}
+      applyScanPreview(job);
+    }catch(e){if(ticket===scanTicket){job.stopped=true;$('siren-scan-status').textContent=e.message;note(e.message);}if(strict)throw e;}
     finally{if(ticket===scanTicket){scanBusy=false;scanControls();}}
   }
   $('siren-auto-scan').addEventListener('click',()=>runScan('detect'));
   $('siren-fit-group').addEventListener('click',()=>runScan('fit'));
-  $('siren-scan-cancel').addEventListener('click',()=>{const wasMissing=!!missing?.running;cancelScan();if(wasMissing)$('siren-missing-status').textContent='已取消补扫，原有解读未改变。';$('siren-scan-status').textContent='已取消，原有解读未改变。';});
+  $('siren-scan-cancel').addEventListener('click',()=>{const wasMissing=!!missing?.running;cancelScan({keepPreview:true});if(wasMissing)$('siren-missing-status').textContent='已取消补扫，原有解读未改变。';$('siren-scan-status').textContent='已取消，原有解读未改变。'+(scanPreview?.entries.size?'可保留已完成组，或放弃预览。':'');});
   async function copy(el){try{await navigator.clipboard.writeText(el.value);note('已复制。');}catch(_){el.focus();el.select();note(document.execCommand('copy')?'已复制。':'请手动复制已选中的文本。');}}
   $('siren-copy-raw').addEventListener('click',()=>copy($('siren-raw')));
   $('siren-format').addEventListener('click',()=>{if(draft().state()?.dirty&&!confirm('重新生成会替换手动修改的分词与标点。继续？'))return;draft().generate(payload(),formatOptions());$('siren-formatted').value=draft().state().value;translation.invalidate();renderFormatted();});

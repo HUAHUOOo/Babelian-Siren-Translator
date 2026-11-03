@@ -100,3 +100,13 @@
 .siren-reading-demo { margin:12px 0; border-top:1px solid var(--line); padding:12px 0 4px; }
 .siren-reading-demo summary { cursor:pointer; }
 #siren-reading-step { width:100%; max-width:440px; }
+.siren-scan-preview {border-top:1px solid var(--line);padding-top:10px;margin-top:12px}
+.siren-preview-groups {display:flex;gap:12px;overflow-x:auto;max-width:100%;padding:2px 0 8px}
+.siren-preview-groups figure {flex:0 0 160px;margin:0;border:1px solid var(--line);padding:8px;text-align:center}
+.siren-preview-groups canvas {width:140px;height:140px;display:block;background:white}
+.siren-preview-groups figcaption {overflow-wrap:anywhere;font-size:14px;margin-top:6px}
+.siren-difference-images {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.siren-difference-images figure {margin:0;min-width:0}
+.siren-difference-images canvas {display:block;width:100%;height:auto;border:1px solid var(--line);background:white}
+.siren-difference-images figcaption {font-size:14px;overflow-wrap:anywhere;margin:6px 0}
+@media(max-width:760px){.siren-difference-images{grid-template-columns:1fr}}

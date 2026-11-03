@@ -17,6 +17,9 @@
     "screenshotPersistence": false
   },
   "features": [
+    "siren-progressive-group-preview",
+    "siren-exact-memory-cache",
+    "siren-read-only-reconstruction-difference",
     "babelian-image-selection-advice",
     "babelian-text-source-locator",
     "siren-read-only-order-guide",

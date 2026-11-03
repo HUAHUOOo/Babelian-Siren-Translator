@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const C=require('../src/siren-core.js'),F=require('../src/text-format.js'),T=require('../src/translation.js'),assets=require('../src/siren-glyphs.json');
 const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADElEQVR42mNk+M8AAAICAQB7CY0KAAAAAElFTkSuQmCC';
-const nodes=new Map(),events=new Map(),documentEvents=new Map(),downloads=[];let document,sourceDimensions={width:1600,height:800},scanReply=[],lastPayload,scanCalls=0,cancels=0,confirmReply=true;
+const nodes=new Map(),events=new Map(),documentEvents=new Map(),downloads=[];let document,sourceDimensions={width:1600,height:800},scanReply=[],lastPayload,scanGroup,scanCalls=0,cancels=0,confirmReply=true;
 class Element{
  constructor(tag='div'){this.tagName=tag.toUpperCase();this.children=[];this.listeners=new Map();this.attributes={};this.style={};this.classes=new Set();this.classList={toggle:(name,on)=>on?this.classes.add(name):this.classes.delete(name),contains:name=>this.classes.has(name)};this.width=600;this.height=600;this.hidden=false;this.disabled=false;this.checked=false;this.value='';this.textContent='';this.clientHeight=200;this.ctx=new Proxy({arcs:[],boxes:[],draws:[],drawImage(...args){this.draws.push(args);},arc(...args){this.arcs.push(args);},strokeRect(...args){this.boxes.push(args);},getImageData:(x,y,w,h)=>({width:w,height:h,data:new Uint8Array(w*h*4)}),measureText:t=>({width:t.length*10})},{get:(o,k)=>o[k]||(()=>{})});}
  addEventListener(k,f){this.listeners.set(k,f);}setAttribute(k,v){this.attributes[k]=v;}getAttribute(k){return this.attributes[k];}append(...items){this.children.push(...items);}replaceChildren(...items){this.children=[...items];}
@@ -16,7 +16,7 @@ for(const tag of markup.matchAll(/<([a-z][a-z0-9]*)\b([^>]*\bid="([^"]+)"[^>]*)>
 document={activeElement:null,getElementById:id=>{assert(nodes.has(id),id);return nodes.get(id);},createElement:tag=>new Element(tag),addEventListener:(k,f)=>documentEvents.set(k,f),execCommand:()=>true};
 class ImageDouble{set src(value){this.value=value;Object.assign(this,value.startsWith('blob:')?sourceDimensions:{width:600,height:600});queueMicrotask(()=>this.onload?.());}}
 const geometry={analyze:group=>({items:group.items.map(i=>({id:i.id,at:i.x<50?null:i.x,total:600,hits:[],orderSensitive:i.y<50,reason:'synthetic metric'}))}),basePoints:()=>[],arrange:()=>true};
-const scope={console,document,Image:ImageDouble,SirenCore:C,SirenIntersections:{prepare:()=>geometry},SirenStrip:{},SirenRecognition:{createRecognitionBoundary:()=>()=>true,workerSource:()=>''},SirenScan:{create:()=>({cancel(){cancels++;},async run(payload){lastPayload=payload;scanCalls++;return typeof scanReply==='function'?scanReply(payload):scanReply;}})},BabelianTextFormat:F,SirenFormat:require('../src/siren-format.js'),BabelianTranslation:{...T,createClient:()=>async()=>''},BabelianHost:{download:async(blob)=>downloads.push(blob)},confirm:()=>confirmReply,window:{addEventListener:(k,f)=>events.set(k,f)},navigator:{clipboard:{}},Blob,URL,DataView,Uint8Array,atob,setTimeout,clearTimeout};
+const scope={console,document,Image:ImageDouble,SirenCore:C,SirenIntersections:{prepare:()=>geometry},SirenStrip:{},SirenRecognition:{createRecognitionBoundary:()=>()=>true,workerSource:()=>''},SirenScan:{create:()=>({cancel(){cancels++;},async run(payload,options){lastPayload=payload;scanGroup=options?.onGroup;scanCalls++;return typeof scanReply==='function'?scanReply(payload):scanReply;}})},BabelianTextFormat:F,SirenFormat:require('../src/siren-format.js'),BabelianTranslation:{...T,createClient:()=>async()=>''},BabelianHost:{download:async(blob)=>downloads.push(blob)},confirm:()=>confirmReply,window:{addEventListener:(k,f)=>events.set(k,f)},navigator:{clipboard:{}},Blob,URL,DataView,Uint8Array,atob,setTimeout,clearTimeout};
 vm.createContext(scope);vm.runInContext(fs.readFileSync(require.resolve('../src/siren-ui.js'),'utf8'),scope);
 const el=id=>nodes.get('siren-'+id),click=id=>el(id).click(),snapshot=()=>JSON.stringify(ui.snapshot()),lastArc=()=>el('source-canvas').ctx.arcs.at(-1),approx=(a,b)=>assert(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 const ui=scope.SirenUI.mount({assets,path:[],wordData:'a b c',notify(){}});
@@ -73,6 +73,23 @@ function dirty(){let yes=false;events.get('beforeunload')({preventDefault(){yes=
  const beforeImportFailure=snapshot();await loadDoc({format:'invalid'});assert.equal(snapshot(),beforeImportFailure);assert(!el('next-pending').disabled);assert(!el('missing-toggle').disabled);confirmReply=false;await loadDoc(work);confirmReply=true;assert.equal(snapshot(),beforeImportFailure);assert(!el('next-pending').disabled);assert(!el('missing-toggle').disabled);
  const reasons=['字母待确认','读序敏感','未定位','交点同序待确认','交点同序待确认'];for(let n=0;n<reasons.length;n++){await click('next-pending');assert.match(el('pending-status').textContent,new RegExp(reasons[n]));assert.match(el('pending-status').textContent,/无此项原图定位/);assert.equal(snapshot(),pendingDoc);assert.equal(el('stage').ctx.arcs.at(-1)[2]>=18,true);}await click('next-pending');assert.match(el('pending-status').textContent,/第 1 项/);
  const clean=C.create('review');const cleanGroup=C.addGroup(clean);cleanGroup.image=png;C.add(cleanGroup,'A',{x:100,y:100});await loadDoc(clean);assert(el('next-pending').disabled);assert.match(el('pending-status').textContent,/没有 \?/);
+ // Progressive previews are separate from work. Late partials cannot escape
+ // cancellation, source/mode changes, revision changes or a page pause.
+ for(const action of ['keep','discard','replace-source','mode-switch','pause','revision','error']){
+  await loadDoc(clean);await loadSource();const before=snapshot();let release,reject;scanReply=new Promise((a,b)=>{release=a;reject=b;});const running=click('auto-scan'),emit=scanGroup;
+  const partial={group:result(400,300,300,false),index:1,count:2,cached:false};emit(partial);await new Promise(r=>setTimeout(r,0));assert(!el('scan-preview').hidden);assert.equal(el('preview-groups').children.length,1);assert.equal(snapshot(),before);assert(el('preview-keep').hidden);
+  if(['keep','discard'].includes(action))await click('scan-cancel');
+  else if(action==='replace-source')await loadSource();else if(action==='mode-switch'){await click('mode-generate');await click('mode-review');}else if(action==='pause'){ui.pause();ui.refresh();}else if(action==='revision'){await el('items').children[0].click();await click('position-lock');}
+  const retained=snapshot();
+  if(action==='error')reject(Error('synthetic worker failure'));else {emit({...partial,index:2});release([partial.group,result(900,300,300,false)]);}await running;
+  assert.equal(snapshot(),retained,'Late/failed recognition must not alter work');
+  if(['keep','discard','error'].includes(action)){
+   assert(!el('preview-keep').hidden);assert(!el('preview-keep').disabled);assert.equal(el('preview-groups').children.length,1);
+   if(action==='discard'){await click('preview-discard');assert.equal(snapshot(),retained);}else{await click('preview-keep');assert.equal(ui.snapshot().groups.length,2);assert.equal(JSON.stringify(ui.snapshot().groups[0]),JSON.stringify(JSON.parse(retained).groups[0]));await click('undo');assert.equal(snapshot(),retained);}
+  }
+  assert(el('scan-preview').hidden);
+ }
+ console.log('PASS progressive preview lifecycle: non-mutating partials, late events, explicit keep/discard, one-step undo, worker failure, source/mode/pause/revision invalidation.');
  const full=C.create('review');for(let n=0;n<50;n++)C.addGroup(full).image=png;await loadDoc(full);assert(el('missing-toggle').disabled);const limitBefore=scanCalls;await click('missing-toggle');assert(el('missing-panel').hidden);assert.equal(scanCalls,limitBefore);assert.equal(ui.snapshot().groups.length,50);
  console.log('PASS synthetic Siren review shortcuts: pending cycle/reasons/locks/no edits, exact source highlights with repeated PNGs, reorder/delete/undo, ROI CSS mapping, preview/append/single undo, duplicate/empty/multi/50 limit, cancel/stale source/revision/mode, old-work fallback and explicit duplicate review. No browser/visual or recognition accuracy claim.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

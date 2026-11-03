@@ -641,7 +641,22 @@
    }
    return result(candidates);
   }
-  return {binarize,detectGroups,fitGroup,measurePlacement,deepRegion};
+  // Read-only diagnostic at supplied poses. Never fit, rank or change them.
+  function reconstruct(bitmap,base,items){
+   const {width,height}=bitmap;
+   if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width*height>1200000||bitmap.ink.length!==width*height)throw Error('对照图尺寸无效。');
+   const ink=new Float32Array(width*height);let omitted=0;
+   const poses=[[baseTemplate,base],...items.map(p=>[letters[p.letter],{cx:p.x,cy:p.y,size:p.size,rotation:p.rotation}])];
+   for(const [template,p] of poses){
+    if(!template){omitted++;continue;}
+    if(![p.cx,p.cy,p.size,p.rotation].every(Number.isFinite)||p.size<=0)throw Error('对照位置无效。');
+    const mask=placedMask(template,p,bitmap).ink;for(let i=0;i<ink.length;i++)ink[i]=Math.max(ink[i],mask[i]);
+   }
+   const unexplained=new Float32Array(ink.length),extra=new Float32Array(ink.length);
+   for(let i=0;i<ink.length;i++){const delta=bitmap.ink[i]-ink[i];unexplained[i]=Math.max(0,delta);extra[i]=Math.max(0,-delta);}
+   return {width,height,ink,unexplained,extra,omitted};
+  }
+  return {binarize,detectGroups,fitGroup,measurePlacement,deepRegion,reconstruct};
  }
  return {create,binarize,createLocatorBoundary,createRecognitionBoundary};
 });

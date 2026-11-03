@@ -8,11 +8,12 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
   let source=null,sourceTicket=0,sourceLoading=false,importTicket=0,loadingImport=false,keyboardPoint=null,templates=null,scanBusy=false,scanTicket=0;
   let deep=null,missing=null,reviewFocus=null;
   let demoIndex=0,demoTimer=null,demoSignature='';
+  let scanPreview=null,differenceSignature='';
   const sourceRegions=new Map();let sourcePaintKey='';
   const keyboardImages=[];
   const manualImages=new Map(),overlapSources=new Map(),overlapCache=new WeakMap();let overlapEngine=null;
   const scan=SirenScan.create({engineSource:SirenRecognition.workerSource(),onProgress:p=>{
-    const stages={'base-regions':'分割大螺旋','base-windows':'分窗寻找大螺旋','base-coarse':'寻找大螺旋','base-refine':'对齐大螺旋','group':'匹配分组','letters-coarse':'比较26个字形','letters-refine':'微调字形位置与大小','letters-joint':'整组像素核验','letters-complete':'整理候选'};
+    const stages={'cached':'复用相同图片的计算','base-regions':'分割大螺旋','base-windows':'分窗寻找大螺旋','base-coarse':'寻找大螺旋','base-refine':'对齐大螺旋','group':'匹配分组','letters-coarse':'比较26个字形','letters-refine':'微调字形位置与大小','letters-joint':'整组像素核验','letters-complete':'整理候选'};
     const regionStages={'region-coarse':'细搜定位与字形','region-refine':'精调候选','region-verify':'原图像素核验'};
     $(missing?.running?'siren-missing-status':deep?.running?'siren-deep-status':'siren-scan-status').textContent=(p.index?'第 '+p.index+'/'+p.count+' 组 · ':'')+(stages[p.stage]||regionStages[p.stage]||'正在匹配')+' '+Math.round((p.progress||0)*100)+'%';
   }});
@@ -92,7 +93,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     $('siren-deep-toggle').hidden=mode!=='review';$('siren-deep-toggle').disabled=!g()?.image||scanBusy;
     $('siren-deep-run').disabled=!deep?.region||!!deep?.drag||scanBusy;
     $('siren-deep-apply').disabled=!deep?.preview||scanBusy||!!item()?.positionLocked;
-    renderEntry();
+    renderEntry();renderScanPreview();renderDifference();
   }
   function renderEntry(){
     const emptyReview=mode==='review'&&!doc().groups.length;
@@ -101,7 +102,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     $('siren-source-area').hidden=!source;
     $('siren-missing-toggle').hidden=!doc().groups.length;$('siren-source-coverage').hidden=!doc().groups.length;
   }
-  function cancelScan(){scanTicket++;scan.cancel();scanBusy=false;if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
+  function cancelScan({keepPreview=false}={}){scanTicket++;scan.cancel();scanBusy=false;if(scanPreview){scanPreview.stopped=true;if(!keepPreview)scanPreview=null;}if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
   function remember(){history[mode].push(JSON.stringify(doc()));if(history[mode].length>30)history[mode].shift();revisions[mode]++;}
   function changed(){clearDeep();clearMissing();translation.invalidate();if(draft().state())draft().update(payload(),formatOptions());render();}
   function image(src){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('图片无法读取，请重新选择。'));img.src=src;});}
@@ -118,17 +119,41 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     const canvas=document.createElement('canvas'),a=assets.letters[letter];canvas.width=a.width;canvas.height=a.height;
     const ctx=canvas.getContext('2d');ctx.drawImage(images[letter],0,0);ctx.globalCompositeOperation='source-in';ctx.fillStyle='#bb32d3';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalCompositeOperation='source-over';manualImages.set(letter,canvas);return canvas;
   }
+  function reviewBitmap(group){
+    let bitmap=overlapSources.get(group.image);if(bitmap)return bitmap;
+    const bg=backgrounds.get(group.image);if(!bg)return null;
+    const canvas=document.createElement('canvas');canvas.width=600;canvas.height=600;const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(bg,0,0,600,600);if(!overlapEngine)overlapEngine=SirenRecognition.create(templates);bitmap=overlapEngine.binarize(ctx.getImageData(0,0,600,600));
+    overlapSources.set(group.image,bitmap);if(overlapSources.size>3)overlapSources.delete(overlapSources.keys().next().value);return bitmap;
+  }
+  function renderDifference(){
+    const panel=$('siren-difference'),group=g();panel.hidden=mode!=='review'||!group?.image;
+    if(panel.hidden){panel.open=false;differenceSignature='';return;}
+    if(!panel.open)return;
+    const paused=scanBusy||loadingImport||sourceLoading||drag;$('siren-difference-images').hidden=!!paused;
+    if(paused){differenceSignature='';$('siren-difference-status').textContent='操作完成后更新对照图。';return;}
+    const signature=JSON.stringify(group);if(signature===differenceSignature)return;
+    try{
+      const bitmap=reviewBitmap(group);if(!bitmap)throw Error('原图尚未就绪。');
+      const result=overlapEngine.reconstruct(bitmap,{cx:group.cx,cy:group.cy,size:group.baseSize??500,rotation:group.baseRotation??0},group.items.map(p=>({...p,rotation:C.displayRotation(group,p)})));
+      const raw=$('siren-difference-source').getContext('2d');raw.clearRect(0,0,600,600);raw.drawImage(backgrounds.get(group.image),0,0,600,600);
+      for(const [id,diff] of [['siren-difference-rebuilt',false],['siren-difference-map',true]]){
+        const ctx=$(id).getContext('2d'),out=ctx.createImageData(600,600);
+        for(let i=0;i<result.ink.length;i++){
+          const at=i*4,v=Math.round(255*(1-result.ink[i]));let color=[v,v,v];
+          if(diff){const red=result.unexplained[i],blue=result.extra[i],strength=Math.max(red,blue),gray=Math.round(255-bitmap.ink[i]*65);color=strength>.15?(red>=blue?[192,39,39]:[23,104,220]):[gray,gray,gray];}
+          out.data[at]=color[0];out.data[at+1]=color[1];out.data[at+2]=color[2];out.data[at+3]=255;
+        }ctx.putImageData(out,0,0);
+      }
+      $('siren-difference-status').textContent='按当前姿态在600×600逻辑画布对照，不重新匹配。'+(result.omitted?result.omitted+' 个未知字形未重建。':'');differenceSignature=signature;
+    }catch(e){$('siren-difference-images').hidden=true;$('siren-difference-status').textContent=e.message;}
+  }
+  $('siren-difference').addEventListener('toggle',renderDifference);
   function placementOverlap(token){
     const group=g(),signature=JSON.stringify([group.cx,group.cy,group.baseSize,group.baseRotation,token.letter,token.x,token.y,token.size,C.displayRotation(group,token)]),old=overlapCache.get(token);
     if(old?.image===group.image&&old.signature===signature)return old.metric;
     if(!overlapEngine)overlapEngine=SirenRecognition.create(templates);
-    let bitmap=overlapSources.get(group.image);
-    if(!bitmap){
-      const bg=backgrounds.get(group.image);if(!bg)return null;
-      const canvas=document.createElement('canvas');canvas.width=600;canvas.height=600;const ctx=canvas.getContext('2d',{willReadFrequently:true});
-      ctx.drawImage(bg,0,0,600,600);bitmap=overlapEngine.binarize(ctx.getImageData(0,0,600,600));
-      overlapSources.set(group.image,bitmap);if(overlapSources.size>3)overlapSources.delete(overlapSources.keys().next().value);
-    }
+    const bitmap=reviewBitmap(group);if(!bitmap)return null;
     const metric=overlapEngine.measurePlacement(bitmap,group,{...token,rotation:C.displayRotation(group,token)});
     overlapCache.set(token,{image:group.image,signature,metric});return metric;
   }
@@ -629,38 +654,74 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
       remember();doc().groups[groupIndex]=validated;selectItem(selectedId);changed();note('已采用 '+p.letter+'；可撤销。');
     }catch(e){note(e.message);}
   });
+  function previewCurrent(job){return scanPreview===job&&mode==='review'&&doc()===job.target&&source===job.source&&sourceTicket===job.imageTicket&&revisions.review===job.revision&&!loadingImport&&!sourceLoading;}
+  function renderScanPreview(){
+    const job=scanPreview,panel=$('siren-scan-preview');
+    if(job&&!previewCurrent(job)){scanPreview=null;}
+    panel.hidden=!scanPreview||!job.entries.size;
+    if(panel.hidden){$('siren-preview-groups').replaceChildren();return;}
+    $('siren-preview-status').textContent=(job.stopped?'已停止 · ':'识别中 · ')+'已完成 '+job.completed+' / '+(job.total||'?')+' 组'+(job.cached?' · 已复用 '+job.cached+' 组计算':'')+'；尚未加入工作。';
+    $('siren-preview-keep').hidden=!job.stopped;$('siren-preview-keep').disabled=scanBusy;
+    $('siren-preview-discard').hidden=!job.stopped;$('siren-preview-discard').disabled=scanBusy;
+    $('siren-preview-groups').replaceChildren();
+    for(const entry of [...job.entries.values()].sort((a,b)=>a.slot-b.slot)){
+      const figure=document.createElement('figure'),canvas=document.createElement('canvas'),caption=document.createElement('figcaption');canvas.width=canvas.height=160;
+      const ctx=canvas.getContext('2d');ctx.scale(160/600,160/600);paint(ctx,entry.group,{review:true});
+      const text=C.read({mode:'review',groups:[entry.group]},group=>geometry.analyze(group,true)).text;
+      caption.textContent='第 '+(entry.slot+1)+' 组 · '+(text||'空')+'（待复核）';figure.append(canvas,caption);$('siren-preview-groups').append(figure);
+    }
+  }
+  function applyScanPreview(job,partial=false){
+    if(!previewCurrent(job))throw Error('原图或工作已变化，预览未应用；请重新识别。');
+    const entries=[...job.entries.values()].sort((a,b)=>a.slot-b.slot),added=entries.map(e=>e.group);
+    if(!added.length)throw Error('没有已完成组可保留。');
+    if(job.operation!=='fit'&&job.target.groups.length+added.length>50)throw Error('已达到50组，请分段保存。');
+    const index=job.operation==='fit'?job.target.groups.indexOf(job.targetGroup):-1;if(job.operation==='fit'&&index<0)throw Error('原组已变化，请重新识别。');
+    remember();
+    if(job.operation==='fit'){
+      const region=sourceRegions.get(job.targetGroup?.id);if(region)sourceRegions.set(added[0].id,region);job.target.groups[index]=added[0];groupIndex=index;
+    }else{
+      for(const e of entries)sourceRegions.set(e.group.id,sourceRegion(e.result,job.input.canvas,e.frame));
+      groupIndex=job.target.groups.length;job.target.groups.push(...added);
+    }
+    scanPreview=null;sourcePaintKey=null;selectItem();$('siren-path').checked=true;$('siren-guides').checked=true;changed();
+    const total=added.reduce((n,g)=>n+g.items.length,0),unknown=added.reduce((n,g)=>n+g.items.filter(i=>!i.letter).length,0);
+    $('siren-scan-status').textContent=(partial?'已保留已完成部分，未完成组未加入。':'')+added.length+' 组 · '+total+' 个小螺旋 · '+unknown+' 个待确认。'+(job.cached?'复用 '+job.cached+' 组缓存计算。':'')+'请核对原图蓝框，确认大螺旋数量没有遗漏。';note('');
+  }
+  $('siren-preview-keep').addEventListener('click',()=>{try{if(!scanBusy&&scanPreview?.stopped)applyScanPreview(scanPreview,true);}catch(e){note(e.message);renderScanPreview();}});
+  $('siren-preview-discard').addEventListener('click',()=>{if(!scanBusy){scanPreview=null;renderScanPreview();}});
   async function runScan(operation,{strict=false}={}){
     if(!ready||loadingImport||scanBusy||sourceLoading||mode!=='review')return;
     if(operation==='fit'&&g()?.items.length&&!confirm('重新匹配会替换本组全部识别项（包括已锁定项）。原图保留，可撤销。继续？'))return;
     setPrecisionOpen(false);clearDeep();clearMissing();
     const target=doc(),targetGroup=g(),revision=revisions.review,imageTicket=sourceTicket,ticket=++scanTicket;
+    const job={target,targetGroup,revision,imageTicket,source,operation,entries:new Map(),completed:0,total:0,cached:0,queue:Promise.resolve(),stopped:false};scanPreview=job;
     scanBusy=true;scanControls();$('siren-scan-status').textContent='正在本机匹配图形，可随时取消；尚未修改原有工作。';
     try{
       const input=scanImage(operation),limit=operation==='fit'?1:Math.min(20,50-target.groups.length);
       if(limit<1)throw Error('已达到50组，请分段保存。');
-      const results=await scan.run({image:input.image,templates,operation,limit});
+      job.input=input;
+      const results=await scan.run({image:input.image,templates,operation,limit},{onGroup:p=>{
+        job.queue=job.queue.then(async()=>{
+          if(ticket!==scanTicket||!previewCurrent(job)||job.error)return;
+          if(p.group.base){let frame;const group=await scanResultGroup(p.group,input.canvas,operation==='fit',value=>{frame=value;});
+            if(ticket!==scanTicket||!previewCurrent(job))return;job.entries.set(p.index-1,{slot:p.index-1,group,frame,result:p.group});}
+          job.completed=p.index;job.total=p.count;if(p.cached)job.cached++;renderScanPreview();
+        }).catch(e=>{job.error=e;});
+      }});
+      await job.queue;if(job.error)throw job.error;
       if(ticket!==scanTicket)return;
       if(!results.length)throw Error('没有找到足够可靠的大螺旋。请使用更清晰的图片，或使用“只补扫漏掉的大螺旋”框选一个漏组。');
-      const added=[],frames=[];for(const result of results)added.push(await scanResultGroup(result,input.canvas,operation==='fit',frame=>frames.push(frame)));
+      if(job.entries.size!==results.length){job.entries.clear();for(let i=0;i<results.length;i++){let frame;const group=await scanResultGroup(results[i],input.canvas,operation==='fit',value=>{frame=value;});job.entries.set(i,{slot:i,group,frame,result:results[i]});}}
       if(ticket!==scanTicket||imageTicket!==sourceTicket||mode!=='review'||doc()!==target)return;
       if(revision!==revisions.review)throw Error('识别期间工作已被修改，本次结果未应用。请重新识别。');
-      if(operation==='fit'){
-        const region=sourceRegions.get(targetGroup?.id);if(region)sourceRegions.set(added[0].id,region);
-      }else for(let i=0;i<added.length;i++){
-        sourceRegions.set(added[i].id,sourceRegion(results[i],input.canvas,frames[i]));
-      }
-      sourcePaintKey=null;remember();
-      if(operation==='fit'){const index=target.groups.indexOf(targetGroup);if(index<0)throw Error('原组已变化，请重新识别。');target.groups[index]=added[0];groupIndex=index;}
-      else{groupIndex=target.groups.length;target.groups.push(...added);}
-      selectItem();$('siren-path').checked=true;$('siren-guides').checked=true;changed();
-      const total=added.reduce((n,g)=>n+g.items.length,0),unknown=added.reduce((n,g)=>n+g.items.filter(i=>!i.letter).length,0);
-      $('siren-scan-status').textContent=added.length+' 组 · '+total+' 个小螺旋 · '+unknown+' 个待确认。请核对原图蓝框，确认大螺旋数量没有遗漏。';note('');
-    }catch(e){if(ticket===scanTicket){$('siren-scan-status').textContent=e.message;note(e.message);}if(strict)throw e;}
+      applyScanPreview(job);
+    }catch(e){if(ticket===scanTicket){job.stopped=true;$('siren-scan-status').textContent=e.message;note(e.message);}if(strict)throw e;}
     finally{if(ticket===scanTicket){scanBusy=false;scanControls();}}
   }
   $('siren-auto-scan').addEventListener('click',()=>runScan('detect'));
   $('siren-fit-group').addEventListener('click',()=>runScan('fit'));
-  $('siren-scan-cancel').addEventListener('click',()=>{const wasMissing=!!missing?.running;cancelScan();if(wasMissing)$('siren-missing-status').textContent='已取消补扫，原有解读未改变。';$('siren-scan-status').textContent='已取消，原有解读未改变。';});
+  $('siren-scan-cancel').addEventListener('click',()=>{const wasMissing=!!missing?.running;cancelScan({keepPreview:true});if(wasMissing)$('siren-missing-status').textContent='已取消补扫，原有解读未改变。';$('siren-scan-status').textContent='已取消，原有解读未改变。'+(scanPreview?.entries.size?'可保留已完成组，或放弃预览。':'');});
   async function copy(el){try{await navigator.clipboard.writeText(el.value);note('已复制。');}catch(_){el.focus();el.select();note(document.execCommand('copy')?'已复制。':'请手动复制已选中的文本。');}}
   $('siren-copy-raw').addEventListener('click',()=>copy($('siren-raw')));
   $('siren-format').addEventListener('click',()=>{if(draft().state()?.dirty&&!confirm('重新生成会替换手动修改的分词与标点。继续？'))return;draft().generate(payload(),formatOptions());$('siren-formatted').value=draft().state().value;translation.invalidate();renderFormatted();});
