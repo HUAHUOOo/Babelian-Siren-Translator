@@ -40,7 +40,7 @@ const fixture={width:500,height:160,threshold:127,polarity:'dark',lines:[{box:{x
 const context={console,Map,Set,Uint8Array,Blob,Error,Number,Math,JSON,BabelianOCRCorrection:correction,Work,$,seed:copy(fixture)};
 vm.createContext(context);
 vm.runInContext(`
- let source={width:1000,height:400},crop={x:73,y:41,width:500,height:160},result=seed,selected={line:0,token:1},rebox=null,drag=null,busy=false,deepSuggestion=null,splitToken=null,reviewContext=null;
+ let source={width:1000,height:400},crop={x:73,y:41,width:500,height:160},result=seed,selected={line:0,token:1},rebox=null,drag=null,busy=false,deepSuggestion=null,splitToken=null,reviewContext=null,located=[];
  const preview=$('ocr-preview'),ctx=preview.getContext('2d'),panel=$('panel-decode'),prepared=[];
  preview.clientWidth=500;const resultImage={width:500,height:160};let matches=0,failMatch=0;
  const OCR={binarize:()=>({width:500,height:160,data:new Uint8Array(500*160)}),bounds:(_mask,x,y,right,bottom)=>({x:x+1,y:y+1,width:Math.max(1,right-x-2),height:bottom-y-2}),describe:()=>({}),matchDescriptor:()=>{if(++matches===failMatch)throw Error('synthetic matching failure');return [{id:'h',score:.8}];}};
@@ -57,14 +57,16 @@ vm.runInContext(`
  globalThis.h={snapshot:()=>JSON.parse(JSON.stringify({result,selected})),select,closeReview,open:setSegmentationOpen,refresh:renderResults,resize:()=>{draw();drawReviewContext();},failAfter:n=>{failMatch=matches+n;},rebox:v=>{rebox=v;syncReviewControls();},resetSplitPreview};
 `,context);
 const h=context.h,fire=(id,type='click')=>$(id).events[type](),set=percent=>{$('ocr-split-at').value=String(percent);fire('ocr-split-at','input');};
+vm.runInContext('located=[{line:0,token:0}];draw();',context);assert($('ocr-preview').ctx.calls.some(c=>c.x===83&&c.width===40&&c.color==='#1768dc'),'Text locator highlight uses source crop offsets');vm.runInContext('located=[];draw();',context);
 const unchanged=h.snapshot();h.open(true);assert.equal($('ocr-split-at').value,'50');
 for(const percent of [10,30,70,90]){
  set(percent);assert.deepEqual(h.snapshot(),unchanged,'live preview must not change result or selection');
  const [left,right]=correction.splitBoxes(fixture.lines[0].tokens[1].box,percent);
  const area=Work.context(fixture,{line:0,token:1}).box;
- for(const id of ['ocr-context','ocr-split-preview']){
-  const calls=$(id).ctx.calls;assert.equal(calls.length,2);assert.deepEqual(calls.at(-1),{x:left.x-area.x,y:left.y-area.y,width:left.width,height:left.height,color:'#1768dc',dash:[]});assert.equal(calls[0].width,right.width);assert(calls[0].dash.length);
- }
+ const full=fixture.lines[0].tokens[1].box,upper=$('ocr-context').ctx.calls,lower=$('ocr-split-preview').ctx.calls;
+ assert.deepEqual(upper,[{x:full.x-area.x,y:full.y-area.y,width:full.width,height:full.height,color:'#1768dc',dash:[]}],'Upper context always frames the whole glyph with one solid border');
+ assert.equal(lower.length,2);assert.deepEqual(lower.at(-1),{x:left.x-area.x,y:left.y-area.y,width:left.width,height:left.height,color:'#1768dc',dash:[]});assert.equal(lower[0].width,right.width);assert(lower[0].dash.length);
+ assert(!/虚线|左半|右半/.test($('ocr-context-caption').textContent));
  assert.deepEqual($('ocr-preview').ctx.calls.at(-1),{x:73+left.x,y:41+left.y,width:left.width,height:left.height,color:'#1768dc',dash:[]});
  assert.match($('ocr-split-at').attributes['aria-valuetext'],new RegExp('左侧 '+left.width+' 像素'));
 }

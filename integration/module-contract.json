@@ -17,6 +17,9 @@
     "screenshotPersistence": false
   },
   "features": [
+    "babelian-image-selection-advice",
+    "babelian-text-source-locator",
+    "siren-read-only-order-guide",
     "glyph-keyboard",
     "five-mapping-slots",
     "image-only-ocr",

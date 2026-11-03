@@ -1,21 +1,23 @@
     <section id="panel-decode" role="tabpanel" aria-labelledby="tab-decode" hidden>
-      <div class="ocr-card">
-        <h2>截图破解</h2>
-        <p class="ocr-help">上传或粘贴截图，框选巴别语区域。先按当前映射逐字输出，再生成可编辑的分词断句建议；自动整理不改变识别字母或大小写。</p>
+      <div class="ocr-card translation-entry-card">
+        <h2 class="ocr-sr">导入图片</h2>
         <fieldset id="ocr-controls">
           <legend class="ocr-sr">图片与识别设置</legend>
-          <div class="ocr-toolbar"><button id="ocr-upload" type="button" class="primary">选择截图</button><input id="ocr-file" type="file" accept="image/png,image/jpeg,image/webp" hidden><span id="ocr-file-info">尚未选择图片</span></div>
-          <p class="ocr-help">支持 PNG / JPG / WebP，最多16MB；也可拖入图片或在此页粘贴。仅本机处理；刷新或关闭前请复制所需结果。</p>
+          <div class="ocr-toolbar translation-input-actions"><button id="ocr-paste-image" type="button" class="primary">粘贴图片</button><button id="ocr-upload" type="button" class="secondary">选择图片</button><input id="ocr-file" type="file" accept="image/png,image/jpeg,image/webp" hidden></div>
+          <p class="ocr-help translation-input-help">支持 Ctrl+V、拖入或选择图片（PNG / JPG / WebP，最多16MB）。图片仅在本机处理。</p>
+          <p id="ocr-file-info" class="ocr-help" hidden>尚未选择图片</p>
           <div id="ocr-image-area" hidden>
+            <p class="ocr-help">检查金色框是否完整包含巴别语；可手动框选，再点击识别。识别结果按当前映射输出，分词和机翻另行处理。</p>
             <div id="ocr-rebox-bar" class="ocr-rebox-bar" hidden>
               <p id="ocr-rebox-status" role="status" aria-live="polite"></p>
               <div class="ocr-toolbar"><button id="ocr-rebox-apply" type="button" class="primary" disabled>应用新框</button><button id="ocr-rebox-cancel" type="button" class="secondary">取消重新框选</button></div>
               <p class="ocr-help">在金色识别区域内拖出完整字形，蓝色虚线为新框。旧框移出的笔画自动交给本行邻近区域重新识别；新框覆盖前后原框超过20%时也会局部重匹配。新框保持固定，其余区域不动。Esc 可取消。</p>
             </div>
             <div class="ocr-canvas-wrap"><canvas id="ocr-preview" width="1" height="1" aria-label="截图预览；拖动框选密码区域。点击识别框可复核。"></canvas></div>
+            <div id="ocr-image-advice" class="ocr-image-advice" hidden><p id="ocr-auto-note" class="ocr-help" role="status"></p><p id="ocr-quality-note" class="ocr-help"></p><button id="ocr-revert-suggestion" type="button" class="text-button" hidden>撤回自动选区，使用全图</button></div>
           </div>
         </fieldset>
-        <div class="ocr-toolbar"><button id="ocr-run" class="primary" type="button" disabled>识别所选区域</button><button id="ocr-cancel" class="secondary" type="button" hidden>取消识别</button><span id="ocr-status" role="status" aria-live="polite">优先使用清晰、端正的截图，并排除英文、插图和边框。</span></div>
+        <div id="ocr-run-toolbar" class="ocr-toolbar" hidden><button id="ocr-run" class="primary" type="button" hidden disabled>识别所选区域</button><button id="ocr-cancel" class="secondary" type="button" hidden>取消识别</button><span id="ocr-status" role="status" aria-live="polite"></span></div>
       </div>
       <div id="ocr-inspection" class="ocr-card" hidden>
         <h2>逐字复核</h2>
@@ -77,5 +79,7 @@
           </div>
           <p id="ocr-format-help" class="ocr-help">原图字距与行尾不能直接还原词间空格和句号。下方建议由本机词频表和规则推测，会接续跨行单词；可能分错词或句子，请核对。不会补全 [?] 或 [未映射]。上方逐字原文始终保留，修改字母请到逐字复核或映射中操作。</p>
         </section>
+        <section id="ocr-location" class="ocr-location" aria-label="英文对应的原图" hidden><p id="ocr-location-status" class="ocr-help" role="status"></p><figure><canvas id="ocr-location-preview" width="1" height="1" aria-label="蓝框为当前英文对应的原图字形；点击蓝框可复核"></canvas></figure><div class="ocr-toolbar"><button id="ocr-location-review" type="button" class="secondary">复核此处</button><button id="ocr-location-close" type="button" class="text-button">关闭对照</button></div></section>
+        <p id="ocr-location-help" class="ocr-help">点击整理英文中的单词，可对照原图；点击逐字英文可定位单个字形。不改变文字或确认状态。</p>
       </div>
     </section>

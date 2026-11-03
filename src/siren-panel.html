@@ -1,11 +1,11 @@
     <section id="panel-siren" aria-labelledby="siren-title" hidden>
-      <div class="siren-heading"><h1 id="siren-title" tabindex="-1">塞壬语生成</h1><span id="siren-heading-note">六字母一组 · 沿大螺旋首交点排序</span></div>
+      <div class="siren-heading translation-heading"><h1 id="siren-title" tabindex="-1">塞壬语生成</h1><span id="siren-heading-note">六字母一组 · 沿大螺旋首交点排序</span></div>
       <div id="siren-work-actions" class="siren-actions" role="group" aria-label="塞壬语工作模式"><button type="button" id="siren-mode-generate" aria-pressed="true" class="secondary">字母 → 螺旋</button><button type="button" id="siren-mode-review" aria-pressed="false" class="secondary">截图 → 识别与复核</button><button type="button" id="siren-save" class="text-button">保存塞壬语工作</button><button type="button" id="siren-load" class="text-button">载入工作</button><input type="file" id="siren-work-file" accept=".json,application/json" hidden></div>
       <p id="siren-work-note" class="siren-note">离开前请保存塞壬语工作。</p>
       <fieldset id="siren-tools" disabled>
-        <div id="siren-review-tools" class="siren-card" hidden>
-          <div class="siren-actions"><button type="button" id="siren-paste-image" class="primary">粘贴图片</button><button type="button" id="siren-upload" class="secondary">选择图片</button><input type="file" id="siren-image-file" accept="image/png,image/jpeg,image/webp" hidden></div>
-          <p class="siren-note">支持 Ctrl+V、拖入或选择图片（PNG / JPG / WebP，最多16MB）。载入后点击识别，仅在本机处理。</p>
+        <div id="siren-review-tools" class="siren-card translation-entry-card" hidden>
+          <div class="siren-actions translation-input-actions"><button type="button" id="siren-paste-image" class="primary">粘贴图片</button><button type="button" id="siren-upload" class="secondary">选择图片</button><input type="file" id="siren-image-file" accept="image/png,image/jpeg,image/webp" hidden></div>
+          <p class="siren-note translation-input-help">支持 Ctrl+V、拖入或选择图片（PNG / JPG / WebP，最多16MB）。图片仅在本机处理。</p>
           <div id="siren-source-area" hidden>
           <div class="siren-actions"><button type="button" id="siren-auto-scan" class="secondary" disabled>自动分割并匹配</button><button type="button" id="siren-missing-toggle" class="secondary" aria-expanded="false" aria-controls="siren-missing-panel" disabled>只补扫漏掉的大螺旋</button><button type="button" id="siren-scan-cancel" class="secondary" hidden>取消识别</button></div>
           <p id="siren-scan-status" class="siren-note" role="status" aria-live="polite"></p>
@@ -22,6 +22,7 @@
             <div class="siren-actions"><strong id="siren-group-label">第1组</strong><button type="button" id="siren-group-prev" class="text-button">组前移</button><button type="button" id="siren-group-next" class="text-button">组后移</button><button type="button" id="siren-delete-group" class="text-button">删除此组</button><button type="button" id="siren-undo" class="text-button">撤销</button><button type="button" id="siren-fit-group" class="secondary" hidden>重新匹配本组</button></div>
             <div class="siren-actions"><button type="button" id="siren-deep-toggle" class="secondary" hidden aria-expanded="false">疑难区域深度识别</button></div>
             <canvas id="siren-stage" width="900" height="900" tabindex="0" aria-label="塞壬语螺旋编辑画布；下方可选择小螺旋或打开精确调节窗口"></canvas>
+            <details id="siren-reading-demo" class="siren-reading-demo"><summary>查看读序演示</summary><p class="siren-note">只演示当前细像素首交点顺序，不移动字形、不确认候选。未定位项不加入编号。</p><div class="siren-actions"><button id="siren-reading-prev" type="button" class="secondary">上一步</button><button id="siren-reading-play" type="button" class="secondary">播放</button><button id="siren-reading-next" type="button" class="secondary">下一步</button></div><label for="siren-reading-step" class="siren-note">读取步骤</label><input id="siren-reading-step" type="range" min="1" max="1" value="1" step="1"><p id="siren-reading-status" class="siren-note" role="status" aria-live="polite"></p></details>
             <div id="siren-deep-panel" hidden><p class="siren-note">在画布拖框圈住一个小螺旋的中心；笔画可超出框外。点击候选预览叠加，再确认采用。</p><div class="siren-actions"><button type="button" id="siren-deep-run" class="secondary" disabled>开始深度识别</button><button type="button" id="siren-deep-apply" class="secondary" disabled>采用所选候选</button><button type="button" id="siren-deep-close" class="text-button">关闭 / 取消</button></div><p id="siren-deep-status" class="siren-note" role="status"></p><div id="siren-deep-candidates" class="siren-actions"></div></div>
             <div id="siren-selection-bar" class="siren-selection-bar"><div id="siren-items" class="siren-items" aria-label="小螺旋，按首交点排序"></div><button type="button" id="siren-precision-toggle" class="secondary" aria-expanded="false" aria-controls="siren-precision-panel">精确调节</button><button type="button" id="siren-delete-recognized" class="secondary" hidden disabled>删除所选小螺旋</button><button type="button" id="siren-open-add" class="secondary" aria-controls="siren-keyboard-panel" aria-expanded="false">新增其他小螺旋</button></div>
             <p id="siren-manual-overlap" class="siren-note" role="status" hidden></p>
@@ -29,13 +30,14 @@
               <div class="siren-precision-header"><div class="siren-precision-heading"><h3 id="siren-precision-heading">精确调节</h3><button type="button" id="siren-precision-close" class="text-button" aria-label="关闭精确调节窗口">关闭</button></div><p id="siren-selection" class="siren-note">先添加或选择一个小螺旋。</p></div>
               <div class="siren-precision-body">
               <div id="siren-match-review" class="siren-note" hidden><p id="siren-match-status"></p><div class="siren-match-row"><div id="siren-match-candidates" class="siren-actions"></div><div class="siren-match-tools"><button type="button" id="siren-position-lock" class="secondary" aria-pressed="false">锁定位置</button><button type="button" id="siren-reset-position" class="secondary" hidden>复位</button></div></div></div>
+              <button type="button" id="siren-contact" class="primary" hidden>标记最内侧交点</button>
               <div class="siren-fields">
                 <div><label for="siren-radius">位置半径（不用于排序）</label><input type="number" id="siren-radius" min="0" max="850" step="0.1"><input type="range" id="siren-radius-slider" min="0" max="850" step="0.1" aria-label="位置半径滑块"></div>
                 <div><label for="siren-angle">环绕角度 °</label><input type="number" id="siren-angle" min="-180" max="180" step="1"><input type="range" id="siren-angle-slider" min="-180" max="180" step="1" aria-label="环绕角度滑块"></div>
                 <div><div class="siren-field-heading"><label for="siren-rotation">字形朝向 °</label><button id="siren-rotation-mode" type="button" class="secondary" aria-pressed="false" title="切换自动或可调朝向">自动</button></div><input type="number" id="siren-rotation" min="-180" max="180" step="1" readonly><input type="range" id="siren-rotation-slider" min="-180" max="180" step="1" aria-label="字形朝向滑块" disabled></div>
                 <div><label for="siren-base-size">大螺旋大小（同步缩放小螺旋）</label><input id="siren-base-size" type="number" min="100" max="900" value="500" step="1"><input id="siren-base-size-slider" type="range" min="100" max="900" value="500" step="1" aria-label="大螺旋大小滑块"></div>
               </div>
-              <div class="siren-actions"><label><input id="siren-guides" type="checkbox" checked> 显示序号和交点</label><label><input id="siren-path" type="checkbox"> 显示大螺旋参考路径</label><label id="siren-overlay-label" hidden><input id="siren-overlay" type="checkbox"> 叠加所选模板</label><button type="button" id="siren-contact" class="secondary" hidden>标记最内侧交点</button></div>
+              <div class="siren-actions"><label><input id="siren-guides" type="checkbox" checked> 显示序号和交点</label><label><input id="siren-path" type="checkbox"> 显示大螺旋参考路径</label><label id="siren-overlay-label" hidden><input id="siren-overlay" type="checkbox"> 叠加所选模板</label></div>
               <p id="siren-stage-hint" class="siren-note">自由拖动小螺旋，松手后按首交点重排；点击空白处恢复添加。</p>
               </div>
             </div>

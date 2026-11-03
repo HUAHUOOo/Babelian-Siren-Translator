@@ -3,6 +3,8 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const C=require('../src/siren-core.js'),F=require('../src/text-format.js'),T=require('../src/translation.js'),assets=require('../src/siren-glyphs.json');
 const markup=fs.readFileSync(require.resolve('../src/siren-panel.html'),'utf8');
+assert.match(markup,/<button[^>]*id="siren-contact"[^>]*class="primary"/);
+assert(markup.indexOf('id="siren-contact"')<markup.indexOf('for="siren-radius"'),'Contact marker comes before the radius field');
 const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADElEQVR42mNk+M8AAAICAQB7CY0KAAAAAElFTkSuQmCC';
 const nodes=new Map(),documentEvents=new Map(),windowEvents=new Map(),downloads=[];let document,scanReply=[],scanCalls=0;
 function listen(map,type,fn){if(!map.has(type))map.set(type,[]);map.get(type).push(fn);}

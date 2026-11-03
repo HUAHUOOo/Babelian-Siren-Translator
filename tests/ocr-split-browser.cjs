@@ -16,21 +16,24 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
   await page.mouse.move(cropBounds.x+cropBounds.width*50/600,cropBounds.y+cropBounds.height*30/240);await page.mouse.down();
   await page.mouse.move(cropBounds.x+cropBounds.width*550/600,cropBounds.y+cropBounds.height*190/240,{steps:8});await page.mouse.up();
   await page.locator('#ocr-run').click();await page.locator('#ocr-results').waitFor();
-  await page.locator('#ocr-review-toggle').click();await page.locator('.ocr-token').nth(1).click();await page.locator('#ocr-segmentation-toggle').click();
+  await page.locator('#ocr-review-toggle').click();await page.locator('.ocr-token').nth(1).click();
+  const upperBefore=await page.locator('#ocr-context').evaluate(c=>c.toDataURL());await page.locator('#ocr-segmentation-toggle').click();assert.equal(await page.locator('#ocr-context').evaluate(c=>c.toDataURL()),upperBefore,'Opening segmentation must not change the upper context');
   const snapshot=()=>page.evaluate(()=>BABELIAN_APP.ocr.snapshot()),baseline=await snapshot(),slider=page.locator('#ocr-split-at');assert.equal(await slider.getAttribute('type'),'range');
   const set=async percent=>{await slider.evaluate((el,value)=>{el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));},String(percent));};
   const blueBoundary=async()=>page.evaluate(()=>{
    const {result,selected,crop}=BABELIAN_APP.ocr.snapshot(),box=result.lines[selected.line].tokens[selected.token].box,area=BabelianOCRWork.context(result,selected).box;
    const [left]=BabelianOCRCorrection.splitBoxes(box,Number(document.getElementById('ocr-split-at').value)),cut=left.x+left.width;
-   return ['ocr-preview','ocr-context','ocr-split-preview'].map(id=>{const canvas=document.getElementById(id),x=id==='ocr-preview'?crop.x+cut:cut-area.x,y=id==='ocr-preview'?crop.y+box.y+10:box.y-area.y+10,p=canvas.getContext('2d').getImageData(x,y,1,1).data;return p[2]>160&&p[0]<100&&p[1]<180;});
+   // Scan the interior column instead of one pixel, which may land in a dash
+   // gap. The upper context must have no divider at all.
+   return ['ocr-preview','ocr-context','ocr-split-preview'].map(id=>{const canvas=document.getElementById(id),x=id==='ocr-preview'?crop.x+cut:cut-area.x,y=id==='ocr-preview'?crop.y+box.y:box.y-area.y,c=canvas.getContext('2d');for(let yy=y+4;yy<y+box.height-4;yy++)for(let dx=-1;dx<=1;dx++){const p=c.getImageData(Math.round(x)+dx,yy,1,1).data;if(p[2]>160&&p[0]<100&&p[1]<180)return true;}return false;});
   });
-  for(const value of [10,30,70,90]){await set(value);assert.deepEqual(await snapshot(),baseline);assert.deepEqual(await blueBoundary(),[true,true,true]);assert.equal(await page.locator('#ocr-undo').count(),0);}
+  for(const value of [10,30,70,90]){await set(value);assert.deepEqual(await snapshot(),baseline);assert.deepEqual(await blueBoundary(),[true,false,true]);assert.equal(await page.locator('#ocr-context').evaluate(c=>c.toDataURL()),upperBefore,'Slider changes only the lower context preview');assert.equal(await page.locator('#ocr-undo').count(),0);}
   await set(50);await slider.focus();await page.keyboard.press('ArrowRight');assert.equal(await slider.inputValue(),'51');assert.deepEqual(await snapshot(),baseline,'native range arrows must not move selection');
   await page.keyboard.press('Home');assert.equal(await slider.inputValue(),'10');await page.keyboard.press('End');assert.equal(await slider.inputValue(),'90');
   await slider.scrollIntoViewIfNeeded();const rect=await slider.boundingBox();
   if(width<600)await page.touchscreen.tap(rect.x+rect.width*.4,rect.y+rect.height/2);
   else{await page.mouse.move(rect.x+rect.width*.9,rect.y+rect.height/2);await page.mouse.down();await page.mouse.move(rect.x+rect.width*.4,rect.y+rect.height/2,{steps:8});await page.mouse.up();}
-  assert(Number(await slider.inputValue())<75);assert.deepEqual(await snapshot(),baseline);assert.deepEqual(await blueBoundary(),[true,true,true]);
+  assert(Number(await slider.inputValue())<75);assert.deepEqual(await snapshot(),baseline);assert.deepEqual(await blueBoundary(),[true,false,true]);assert.equal(await page.locator('#ocr-context').evaluate(c=>c.toDataURL()),upperBefore);
   // A live preview leaves the recognized geometry untouched.
   assert.deepEqual((await snapshot()).result,baseline.result);
   await page.locator('#ocr-segmentation-toggle').click();await page.locator('#ocr-segmentation-toggle').click();assert.equal(await slider.inputValue(),'50');

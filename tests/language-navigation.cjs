@@ -13,6 +13,7 @@ get('language-open-siren').events.click();assert(!get('panel-siren').hidden);ass
 get('language-back').events.click();assert.equal(focused,'language-open-siren');assert.equal(JSON.stringify(draft),before);assert.throws(()=>nav.show('nope'));assert.equal(nav.current(),'home');
 for(const language of ['babelian','siren']){
  get('language-open-'+language+'-translate').events.click();assert.equal(nav.current(),language+'-translate');
+ assert.equal(document.body.dataset.tool,language+'-translate');
  assert.equal(document.body.dataset.language,language);assert.equal(document.body.dataset.cycle,language==='babelian'?'c4':'c5');assert.equal(themeMeta.content,language==='babelian'?'#faf7ed':'#eef3f7');
  assert.equal(get('language-babelian').hidden,language!=='babelian');assert.equal(get('panel-siren').hidden,language!=='siren');
  assert.equal(get('babelian-backups').hidden,language!=='babelian');assert.equal(focused,language+'-title');

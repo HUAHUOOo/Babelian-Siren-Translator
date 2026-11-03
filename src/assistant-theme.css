@@ -200,3 +200,17 @@ summary { color:var(--muted); }
   .keyboard-title span { display:block; margin-left:0; margin-top:4px; }
   #english-input { font-size:18px; }
 }
+/* Shared translation entry structure; language palettes remain independent. */
+body[data-tool$="-translate"] #language-babelian,
+body[data-tool$="-translate"] #panel-siren { margin-top:0; }
+body[data-tool$="-translate"] .translation-heading { display:block; margin:24px 0 0; }
+body[data-tool="babelian-translate"] #babelian-description,
+body[data-tool="babelian-translate"] .intro .eyebrow,
+body[data-tool="babelian-translate"] .intro .export-actions,
+body[data-tool="babelian-translate"] #language-babelian > .footer,
+body[data-tool="babelian-translate"][data-babelian-result="false"] .workspace-tabs { display:none; }
+body[data-tool$="-translate"] .translation-entry-card { margin:20px 0 0; padding:20px; border:1px solid var(--line); background:var(--panel); border-radius:0; box-shadow:none; }
+body[data-tool$="-translate"] .translation-input-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:0; }
+body[data-tool$="-translate"] .translation-input-actions button { font:600 14px/1.35 var(--font-body); padding:12px 16px; min-height:44px; }
+body[data-tool$="-translate"] .translation-input-help { font:14px/1.8 var(--font-body); color:var(--muted); margin:12px 0 0; }
+#siren-status:empty { display:none; }

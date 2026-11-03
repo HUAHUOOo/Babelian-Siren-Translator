@@ -7,6 +7,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
   const stripBounds=new WeakMap(),tile=document.createElement('canvas');tile.width=600;tile.height=600;
   let source=null,sourceTicket=0,sourceLoading=false,importTicket=0,loadingImport=false,keyboardPoint=null,templates=null,scanBusy=false,scanTicket=0;
   let deep=null,missing=null,reviewFocus=null;
+  let demoIndex=0,demoTimer=null,demoSignature='';
   const sourceRegions=new Map();let sourcePaintKey='';
   const keyboardImages=[];
   const manualImages=new Map(),overlapSources=new Map(),overlapCache=new WeakMap();let overlapEngine=null;
@@ -22,6 +23,35 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
   const doc=()=>docs[mode],g=()=>doc().groups[groupIndex],item=()=>g()?.items.find(i=>i.id===itemId),draft=()=>drafts[mode];
   const note=text=>{$('siren-status').textContent=text;};
   const analysis=group=>drag&&group===g()?drag.analysis:geometry?.analyze(group,mode==='review');
+  function demoPlan(){return g()&&globalThis.SirenReadingGuide?.plan(g(),analysis(g()))||{entries:[],points:[],missing:0};}
+  function stopDemo(close=false){if(demoTimer!==null){clearTimeout(demoTimer);demoTimer=null;}if(close)$('siren-reading-demo').open=false;$('siren-reading-play').textContent='播放';}
+  function renderDemo(){
+    if(!globalThis.SirenReadingGuide)return;
+    const signature=JSON.stringify([mode,g()]);if(signature!==demoSignature){stopDemo();demoIndex=0;demoSignature=signature;}
+    if(scanBusy||loadingImport||sourceLoading||drag)stopDemo(true);
+    const plan=demoPlan(),n=plan.entries.length;demoIndex=Math.max(0,Math.min(demoIndex,n-1));
+    $('siren-reading-step').max=String(Math.max(1,n));$('siren-reading-step').value=String(demoIndex+1);$('siren-reading-step').disabled=!n;
+    $('siren-reading-prev').disabled=!n||demoIndex===0;$('siren-reading-next').disabled=!n||demoIndex===n-1;$('siren-reading-play').disabled=!n;
+    const e=plan.entries[demoIndex];$('siren-reading-status').textContent=e?`第 ${demoIndex+1} / ${n} 步：${e.letter}${e.unconfirmed?'（候选，尚未确认）':''}。${e.tied?' 首交点接近同序，请复核。':''}${e.sensitive?' 此处读序对细微位置变化敏感。':''}${plan.missing?` ${plan.missing} 个未定位项未参与演示。`:''}`:`当前没有可定位的交点。${plan.missing?` ${plan.missing} 个字形需要先定位。`:''}`;
+  }
+  function demoMove(index){stopDemo();demoIndex=index;renderDemo();draw();}
+  function demoTick(){
+    if(!$('siren-reading-demo').open||$('panel-siren').hidden||document.hidden||scanBusy||drag){stopDemo();return;}
+    const plan=demoPlan();if(demoIndex>=plan.entries.length-1){stopDemo();renderDemo();return;}
+    demoIndex++;renderDemo();draw();demoTimer=setTimeout(demoTick,1100);
+  }
+  $('siren-reading-demo').addEventListener('toggle',()=>{if(!$('siren-reading-demo').open)stopDemo();renderDemo();draw();});
+  $('siren-reading-prev').addEventListener('click',()=>demoMove(demoIndex-1));$('siren-reading-next').addEventListener('click',()=>demoMove(demoIndex+1));
+  $('siren-reading-step').addEventListener('input',()=>demoMove(Number($('siren-reading-step').value)-1));
+  $('siren-reading-play').addEventListener('click',()=>{if(demoTimer!==null){stopDemo();return;}const n=demoPlan().entries.length;if(!n)return;if(demoIndex>=n-1)demoIndex=0;renderDemo();draw();$('siren-reading-play').textContent='暂停';demoTimer=setTimeout(demoTick,1100);});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopDemo();});
+  function drawDemo(){
+    if(!$('siren-reading-demo').open||drag||!globalThis.SirenReadingGuide)return;const plan=demoPlan(),e=plan.entries[demoIndex];if(!e)return;
+    context.save();context.strokeStyle='#b7650b';context.lineWidth=4;context.beginPath();let started=false;
+    for(const p of plan.points){if(p.at>e.at)break;if(!started){context.moveTo(p.x,p.y);started=true;}else context.lineTo(p.x,p.y);}context.stroke();
+    const p=e.point;if(p){context.fillStyle='#b7650b';context.beginPath();context.arc(p.x,p.y,8,0,Math.PI*2);context.fill();}
+    context.strokeStyle='#1768dc';context.lineWidth=4;context.beginPath();context.arc(e.x,e.y,23,0,Math.PI*2);context.stroke();context.restore();
+  }
   const row=group=>C.ordered(group,analysis(group));
   const reading=()=>C.read(doc(),analysis);
   const payload=()=>({text:reading().groups.join(''),spans:[]});
@@ -51,6 +81,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     $('siren-key-angle').textContent='对照朝向：'+Math.round(angle)+'°';
   }
   function scanControls(){
+    if(scanBusy||loadingImport||sourceLoading)stopDemo(true);
     $('siren-precision-toggle').disabled=!ready||loadingImport||scanBusy||sourceLoading;
     $('siren-auto-scan').disabled=!source||!ready||scanBusy||sourceLoading;
     $('siren-missing-toggle').disabled=!source||!ready||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
@@ -68,6 +99,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     for(const id of ['siren-work-actions','siren-work-note','siren-heading-note','siren-group-toolbar','siren-results','siren-pending-tools'])$(id).hidden=emptyReview||id==='siren-pending-tools'&&mode!=='review';
     $('siren-editor-area').hidden=emptyReview;
     $('siren-source-area').hidden=!source;
+    $('siren-missing-toggle').hidden=!doc().groups.length;$('siren-source-coverage').hidden=!doc().groups.length;
   }
   function cancelScan(){scanTicket++;scan.cancel();scanBusy=false;if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
   function remember(){history[mode].push(JSON.stringify(doc()));if(history[mode].length>30)history[mode].shift();revisions[mode]++;}
@@ -143,7 +175,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     }
     if(reviewFocus&&reviewFocus.groupId===g()?.id&&reviewFocus.itemId===itemId&&item()){
       const token=item();context.save();context.strokeStyle='#b65606';context.lineWidth=4;context.beginPath();context.arc(token.x,token.y,Math.max(18,token.size*.22),0,Math.PI*2);context.stroke();context.restore();
-    }context.restore();}
+    }drawDemo();context.restore();}
   function drawStrip(canvas,maxSide=8192,groups=doc().groups){
     const tileContext=tile.getContext('2d',{willReadFrequently:true});
     if(!tileContext)throw Error('无法生成螺旋图片。');
@@ -236,9 +268,9 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     $('siren-overlay-label').hidden=mode!=='review';
     $('siren-mode-generate').setAttribute('aria-pressed',String(mode==='generate'));$('siren-mode-review').setAttribute('aria-pressed',String(mode==='review'));
     $('siren-stage-hint').textContent='拖动调整位置；红圈为首交点。';
-    renderGroups();renderFields();renderReading();draw();scanControls();renderSource();
+    renderGroups();renderFields();renderReading();renderDemo();draw();scanControls();renderSource();
   }
-  function switchMode(next){if(!['generate','review'].includes(next))throw Error('未知塞壬语功能。');if(loadingImport||!ready)return;if(next===mode){render();return;}setPrecisionOpen(false);cancelScan();clearMissing();sourceTicket++;sourceLoading=false;selections[mode]=groupIndex;mode=next;groupIndex=selections[mode];selectItem();drag=null;translation.invalidate();$('siren-path').checked=mode==='review';render();}
+  function switchMode(next){if(!['generate','review'].includes(next))throw Error('未知塞壬语功能。');if(loadingImport||!ready)return;if(next===mode){render();return;}stopDemo(true);setPrecisionOpen(false);cancelScan();clearMissing();sourceTicket++;sourceLoading=false;selections[mode]=groupIndex;mode=next;groupIndex=selections[mode];selectItem();drag=null;translation.invalidate();$('siren-path').checked=mode==='review';render();}
   function pick(letter,fromKeyboard=false){
     try{
       if($('siren-keyboard-panel').hidden&&!(fromKeyboard&&item()))return;
@@ -257,7 +289,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
   function point(event,canvas,width=600,height=600){const r=canvas.getBoundingClientRect();return {x:Math.max(0,Math.min(width,(event.clientX-r.left)*width/r.width)),y:Math.max(0,Math.min(height,(event.clientY-r.top)*height/r.height))};}
   function nearest(p){return g()?.items.map(i=>({i,d:Math.hypot(i.x-p.x,i.y-p.y)})).filter(x=>x.d<Math.max(24,x.i.size*.45)).sort((a,b)=>a.d-b.d)[0]?.i;}
   stage.addEventListener('pointerdown',event=>{
-    if(!ready||loadingImport||!g()||event.button!==0)return;event.preventDefault();stage.focus({preventScroll:true});const p=point(event,stage);keyboardPoint=p;renderKeyboardAngle();
+    if(!ready||loadingImport||!g()||event.button!==0)return;stopDemo(true);event.preventDefault();stage.focus({preventScroll:true});const p=point(event,stage);keyboardPoint=p;renderKeyboardAngle();
     if(deep){if(scanBusy)return;deep.drag={id:event.pointerId,start:p};deep.region=null;deep.preview=null;deep.candidates=[];$('siren-deep-candidates').replaceChildren();stage.setPointerCapture(event.pointerId);scanControls();draw();return;}
     if(contactMode&&item()){
       if(item().positionLocked)return;const match=geometry.project(geometry.basePoints(g()),p);if(!match||match.distance>12){note('标记离参考路径过远，请先对齐路径。');return;}
@@ -413,7 +445,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
       const entries=await navigator.clipboard.read();if(!acceptsPaste()||sourceTicket!==ticket)return;
       for(const entry of entries){const type=entry.types.find(t=>/^image\/(png|jpeg|webp)$/.test(t));if(type){const file=await entry.getType(type);if(acceptsPaste()&&sourceTicket===ticket)await loadSourceFile(file);return;}}
       throw Error('剪贴板中没有 PNG / JPG / WebP 图片，请先复制截图。');
-    }catch(e){note('无法读取剪贴板：'+e.message+' 也可用 Ctrl+V 或选择文件。');}
+    }catch(e){if(acceptsPaste()&&sourceTicket===ticket)note('无法读取剪贴板：'+e.message+' 也可用 Ctrl+V 或选择文件。');}
   });
   function sourceRegion(result,canvas,frame,region={x:0,y:0,width:source.width,height:source.height}){
     const base=result.base,ratioX=region.width/canvas.width,ratioY=region.height/canvas.height;
@@ -678,5 +710,5 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
         const b=button('',()=>pick(letter)),img=document.createElement('img');img.src=assets.letters[letter].src;img.alt='';keyboardImages.push(img);const label=document.createElement('span');label.textContent=letter;b.append(img,label);b.title='塞壬字母 '+letter;b.setAttribute('aria-label','塞壬字母 '+letter);$('siren-keyboard').append(b);
       }render();note('');
     }).catch(e=>note('塞壬语素材加载失败：'+e.message+' 请检查模块素材是否完整。'));
-  return {setMode:switchMode,refresh:()=>{if(ready)render();},pause:()=>{setPrecisionOpen(false);cancelScan();clearMissing();sourceTicket++;sourceLoading=false;translation.cancel();drag=null;contactMode=false;showKeyboard(false);if(ready)changed();},ready:loaded,snapshot:()=>JSON.parse(JSON.stringify(doc()))};
+  return {setMode:switchMode,refresh:()=>{if(ready)render();},pause:()=>{stopDemo(true);setPrecisionOpen(false);cancelScan();clearMissing();sourceTicket++;sourceLoading=false;translation.cancel();drag=null;contactMode=false;showKeyboard(false);if(ready)changed();},ready:loaded,snapshot:()=>JSON.parse(JSON.stringify(doc()))};
 }};

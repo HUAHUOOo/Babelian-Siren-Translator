@@ -136,7 +136,7 @@
   return {width:box.width,height:box.height,ink};
  }
  function asset(a,withNegative=false){
-  const pixels=a.data||a.pixels;let alpha=a.alpha;
+  const pixels=a.data||a.pixels;let alpha=a.alpha;const providedAlpha=alpha;
   if(!alpha){if(!pixels||pixels.length<a.width*a.height*4)throw Error('Asset pixels missing');alpha=Float32Array.from({length:a.width*a.height},(_,i)=>pixels[i*4+3]/255);}
   else if(alpha.some(v=>v>1))alpha=Float32Array.from(alpha,v=>v/255);
   const out={width:a.width,height:a.height,ink:alpha,pivotX:a.pivotX??.5,pivotY:a.pivotY??.5},all=[],negative=[];
@@ -145,13 +145,31 @@
   if(withNegative)for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(alpha[y*a.width+x]<.1)negative.push(y*a.width+x);
   if(all.length<10)throw Error('Asset contains too little ink');
   const pointsFrom=(indices,limit)=>{const n=Math.min(limit,indices.length),p=new Float32Array(n*2);for(let i=0;i<n;i++){const q=indices[Math.floor((i+.5)*indices.length/n)];p[i*2]=(q%a.width)/a.width-out.pivotX;p[i*2+1]=Math.floor(q/a.width)/a.width-a.height/a.width*out.pivotY;}return p;};
-  out.points=limit=>pointsFrom(all,limit);
-  out.negativePoints=limit=>pointsFrom(negative,limit);
+  const pointCache=new Map(),negativeCache=new Map();
+  const cached=(indices,limit,cache)=>{if(!cache.has(limit))cache.set(limit,pointsFrom(indices,limit));return cache.get(limit);};
+  out.points=limit=>cached(all,limit,pointCache);
+  out.negativePoints=limit=>cached(negative,limit,negativeCache);
+  // Bound only private, immutable alpha snapshots. Borrowed mutable alpha
+  // keeps the original rectangle so an external pixel edit cannot stale a box.
+  if(alpha!==providedAlpha){
+   let x0=a.width,y0=a.height,x1=-1,y1=-1,valid=true;
+   for(let y=0;y<a.height;y++)for(let x=0;x<a.width;x++){const v=alpha[y*a.width+x];if(!Number.isFinite(v)||v<0||v>1||Object.is(v,-0))valid=false;if(v!==0){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}}
+   if(valid&&x1>=x0)out.inkBox={x0:x0-1,y0:y0-1,x1:x1+1,y1:y1+1};
+  }
   return out;
+ }
+ function rasterBounds(template,fit,bitmap,c,s,scale){
+  const reach=fit.size*.8,original={x0:Math.max(0,Math.floor(fit.cx-reach)),x1:Math.min(bitmap.width-1,Math.ceil(fit.cx+reach)),y0:Math.max(0,Math.floor(fit.cy-reach)),y1:Math.min(bitmap.height-1,Math.ceil(fit.cy+reach))},b=template.inkBox;
+  if(!b||![fit.cx,fit.cy,fit.size,template.pivotX,template.pivotY].every(v=>Number.isFinite(v)&&Math.abs(v)<=1000000)||!Number.isFinite(c)||!Number.isFinite(s)||!Number.isFinite(scale)||fit.size<=0||scale<1e-6||scale>1e6)return original;
+  // inkBox includes one bilinear neighbour; two destination pixels cover
+  // rounding. Intersect with the old rectangle, never extend its coverage.
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const x of [b.x0,b.x1])for(const y of [b.y0,b.y1]){const dx=x-template.width*template.pivotX,dy=y-template.height*template.pivotY,px=fit.cx+(dx*c-dy*s)/scale,py=fit.cy+(dx*s+dy*c)/scale;x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py);}
+  return {x0:Math.max(original.x0,Math.floor(x0)-2),x1:Math.min(original.x1,Math.ceil(x1)+2),y0:Math.max(original.y0,Math.floor(y0)-2),y1:Math.min(original.y1,Math.ceil(y1)+2)};
  }
  function placedMask(template,fit,bitmap){
   const w=bitmap.width,h=bitmap.height,ink=new Float32Array(w*h),c=Math.cos(rad(fit.rotation)),s=Math.sin(rad(fit.rotation)),scale=template.width/fit.size;
-  const reach=fit.size*.8,x0=Math.max(0,Math.floor(fit.cx-reach)),x1=Math.min(w-1,Math.ceil(fit.cx+reach)),y0=Math.max(0,Math.floor(fit.cy-reach)),y1=Math.min(h-1,Math.ceil(fit.cy+reach));
+  const {x0,x1,y0,y1}=rasterBounds(template,fit,bitmap,c,s,scale);
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const dx=x-fit.cx,dy=y-fit.cy;ink[y*w+x]=sample(template,(dx*c+dy*s)*scale+template.width*template.pivotX,(-dx*s+dy*c)*scale+template.height*template.pivotY);}
   return {width:w,height:h,ink};
  }
@@ -180,6 +198,34 @@
    negativeInk/=negativePts.length/2;score-=Math.max(0,negativeInk-.38)*.85;
   }
   return {score,support:full,uniqueSupport:uniqueScore,uniqueFraction,visible:visible/count,negativeInk};
+ }
+ // Exact coarse branch-and-bound. minimum may rise only after insertTop's
+ // existing list is full: a candidate at or below it cannot alter that list.
+ function seedSupport(bitmap,pts,cx,cy,size,baseMask,basis,minimum){
+  const c=basis.c*size,s=basis.s*size,w=bitmap.width,h=bitmap.height,a=bitmap.ink,b=baseMask.ink,count=pts.length/2;
+  let sum=0,unique=0,un=0,visible=0;
+  for(let i=0;i<pts.length;i+=2){
+   const x=Math.round(cx+pts[i]*c-pts[i+1]*s),y=Math.round(cy+pts[i]*s+pts[i+1]*c);
+   if(x<0||x>=w||y<0||y>=h)continue;
+   const j=y*w+x,v=a[j];visible++;sum+=v;if(b[j]<.25){unique+=v;un++;}
+   if((i+2)%32===0){const remaining=count-(i+2)/2,maxUnique=un+remaining,fullMax=(sum+remaining)/count,uniqueMax=maxUnique?(unique+remaining)/maxUnique:0,upper=(fullMax*.25+uniqueMax*.75)*Math.min(1,maxUnique/count/.40);
+    if(upper<minimum-1e-12||maxUnique/count<.35-1e-12||(visible+remaining)/count<.95-1e-12)return null;}
+  }
+  const full=sum/count,uniqueFraction=un/count,uniqueScore=un?unique/un:0;
+  if(!(uniqueFraction>.35&&visible/count>.95))return null;
+  const score=(full*.25+uniqueScore*.75)*Math.min(1,uniqueFraction/.40);if(!(score>minimum))return null;
+  return {score,support:full,uniqueSupport:uniqueScore,uniqueFraction,visible:visible/count,negativeInk:0};
+ }
+ // No base mask in this pass. Negative evidence only subtracts, so full
+ // remaining ink is a conservative score bound until the exact penalty runs.
+ function baseSeedSupport(bitmap,pts,negativePts,cx,cy,c,s,minimum){
+  const a=bitmap.ink,w=bitmap.width,h=bitmap.height,count=pts.length/2;let sum=0,visible=0;
+  for(let i=0;i<pts.length;i+=2){const x=Math.round(cx+pts[i]*c-pts[i+1]*s),y=Math.round(cy+pts[i]*s+pts[i+1]*c);if(x<0||x>=w||y<0||y>=h)continue;visible++;sum+=a[y*w+x];
+   if((i+2)%32===0){const remaining=count-(i+2)/2;if((sum+remaining)/count<minimum-1e-12||(visible+remaining)/count<.92-1e-12)return null;}}
+  const full=sum/count;if(!(full>minimum&&visible/count>.92))return null;let score=full,negativeInk=0;
+  if(negativePts?.length&&full>.5){for(let i=0;i<negativePts.length;i+=2){const x=Math.round(cx+negativePts[i]*c-negativePts[i+1]*s),y=Math.round(cy+negativePts[i]*s+negativePts[i+1]*c);if(x>=0&&x<w&&y>=0&&y<h)negativeInk+=a[y*w+x];}negativeInk/=negativePts.length/2;score-=Math.max(0,negativeInk-.38)*.85;}
+  if(!(score>minimum))return null;
+  return {score,support:full,uniqueSupport:visible?sum/visible:0,uniqueFraction:visible/count,visible:visible/count,negativeInk};
  }
  function insertTop(list,entry,limit,distance,angleDistance=Infinity){
   if(list.length>=limit&&entry.score<=list[list.length-1].score)return;
@@ -252,11 +298,16 @@
    // A five-pixel centre grid can step over an entire valid pose in a small,
    // densely overlaid base. Keep the same bounded candidate budget and final
    // pixel thresholds, but sample centres closely enough to preserve those poses.
-   const best=[],step=3;
+   const best=[],step=3,fastSeeds=options.coarsePruning!==false&&!target.ink.some(v=>!Number.isFinite(v)||v<0||v>1);
    for(let si=0;si<sizes.length;si++){
     const size=sizes[si];
-    for(let rotation=-180;rotation<180;rotation+=15)for(let cy=b.y;cy<=b.y+b.height;cy+=step)for(let cx=b.x;cx<=b.x+b.width;cx+=step){
-     const f={cx,cy,size,rotation},m=support(target,pts,f,null,negativePts);if(m.score>.52&&m.visible>.92)insertTop(best,{...f,...m},64,10,15);
+    for(let rotation=-180;rotation<180;rotation+=15){
+     const c=Math.cos(rad(rotation))*size,s=Math.sin(rad(rotation))*size;
+     for(let cy=b.y;cy<=b.y+b.height;cy+=step)for(let cx=b.x;cx<=b.x+b.width;cx+=step){
+      const floor=best.length>=64?Math.max(.52,best.at(-1).score):.52;
+      const m=fastSeeds?baseSeedSupport(target,pts,negativePts,cx,cy,c,s,floor):support(target,pts,{cx,cy,size,rotation},null,negativePts);
+      if(m&&m.score>.52&&m.visible>.92)insertTop(best,{cx,cy,size,rotation,...m},64,10,15);
+     }
     }
     progress(options,'base-coarse',(si+1)/sizes.length);
    }
@@ -307,13 +358,15 @@
    // Opt-out supports exact regression comparisons. Unbounded custom inputs
    // keep full evaluation; only this letter stage uses the early-out bound.
    const coarseGate=options.coarsePruning===false||target.ink.some(v=>!Number.isFinite(v)||v<0||v>1)?null:.69;
+   const sizes=[.94,1,1.06].map(ratio=>defaultSize*ratio);
+   for(const p of locations){const bearing=Math.atan2(p.cy-baseSmall.cy,p.cx-baseSmall.cx)*180/Math.PI-90;p.angles=[-25,-10,0,10,25].map(delta=>{const rotation=normalize(bearing+delta);return {delta,rotation,c:Math.cos(rad(rotation)),s:Math.sin(rad(rotation))};});}
    for(let li=0;li<letterNames.length;li++){
     const letter=letterNames[li],pts=letters[letter].points(64),top=[],edgeTop=[];
-    for(const {cx,cy,edge} of locations){
-     const bearing=Math.atan2(cy-baseSmall.cy,cx-baseSmall.cx)*180/Math.PI-90;
-     for(const ratio of [.94,1,1.06])for(const delta of [-25,-10,0,10,25]){
-      const f={cx,cy,size:defaultSize*ratio,rotation:normalize(bearing+delta),delta},m=support(target,pts,f,baseSmallMask,null,coarseGate);
-      if(m&&m.score>.69&&m.uniqueFraction>.35&&m.visible>.95)insertTop(edge?edgeTop:top,{...f,...m,letter},8,defaultSize*.30);
+    for(const {cx,cy,edge,angles} of locations){
+     for(const size of sizes)for(const angle of angles){
+      const list=edge?edgeTop:top,floor=list.length>=8?Math.max(.69,list.at(-1).score):.69;
+      const m=coarseGate===null?support(target,pts,{cx,cy,size,rotation:angle.rotation,delta:angle.delta},baseSmallMask):seedSupport(target,pts,cx,cy,size,baseSmallMask,angle,floor);
+      if(m&&m.score>.69&&m.uniqueFraction>.35&&m.visible>.95)insertTop(list,{cx,cy,size,rotation:angle.rotation,delta:angle.delta,...m,letter},8,defaultSize*.30);
      }
     }
     proposals.push(...top,...edgeTop);progress(options,'letters-coarse',(li+1)/letterNames.length);
@@ -405,7 +458,8 @@
     const template=p.letter?letters[p.letter]:baseTemplate,indices=[],values=[],w=bitmap.width,h=bitmap.height;
     const c=Math.cos(rad(p.rotation)),s=Math.sin(rad(p.rotation)),scale=template.width/p.size,reach=p.size*.8;
     let benefit=0;
-    for(let y=Math.max(0,Math.floor(p.cy-reach));y<=Math.min(h-1,Math.ceil(p.cy+reach));y++)for(let x=Math.max(0,Math.floor(p.cx-reach));x<=Math.min(w-1,Math.ceil(p.cx+reach));x++){
+    const {x0,x1,y0,y1}=rasterBounds(template,p,bitmap,c,s,scale);
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
      const dx=x-p.cx,dy=y-p.cy,v=sample(template,(dx*c+dy*s)*scale+template.width*template.pivotX,(-dx*s+dy*c)*scale+template.height*template.pivotY);
      if(v<=.005)continue;const j=y*w+x,before=other[j],after=Math.max(before,v),target=bitmap.ink[j];
      benefit+=(target-before)**2-(target-after)**2;indices.push(j);values.push(v);

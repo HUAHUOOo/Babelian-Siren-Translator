@@ -42,6 +42,7 @@ globalThis.BabelianOCRUI={
   let source=null,crop=null,result=null,resultImage=null,selected=null,drag=null,rebox=null;
   let templatesPromise=null,templates=null,prepared=null,worker=null,job=0,loading=0,busy=false;
   let deepSuggestion=null,splitToken=null,reviewContext=null;
+  let located=[],locationArea=null;
   const formatter=BabelianTextFormat.create(wordData),formattedDraft=BabelianTextFormat.createDraft(formatter);
   const translation=BabelianTranslation.createSession(BabelianTranslation.createClient(),renderTranslation);
   const label=id=>'G'+String(ids.indexOf(id)+1).padStart(2,'0');
@@ -50,14 +51,22 @@ globalThis.BabelianOCRUI={
   const options=()=>({polarity:'auto',threshold:null,oneLine:false,detail:true});
   const recognitionOptions=()=>({...options(),...(globalThis.BabelianVectorTemplateProfile?{vectorProfile:globalThis.BabelianVectorTemplateProfile}:{})});
   const outputOptions=()=>({joinLines:$('ocr-join').checked});
-  function message(text){$('ocr-status').textContent=text;}
+  function renderEntry(){
+    const hasSource=!!source,hasMessage=!!$('ocr-status').textContent.trim();
+    if(document.body?.dataset){document.body.dataset.babelianImage=String(hasSource);document.body.dataset.babelianResult=String(!!result);}
+    $('ocr-file-info').hidden=!hasSource;$('ocr-run').hidden=!hasSource;
+    $('ocr-status').hidden=!hasMessage;$('ocr-run-toolbar').hidden=!hasSource&&!busy&&!hasMessage;
+  }
+  function message(text){$('ocr-status').textContent=text;renderEntry();}
   function imageElement(id){const img=document.createElement('img');img.src=displayGlyphs[id].src;img.alt=label(id);return img;}
-  function setBusy(value){busy=value;$('ocr-run').disabled=value||!source;$('ocr-cancel').hidden=!value;$('ocr-controls').disabled=value;$('ocr-deep').disabled=value;panel.setAttribute('aria-busy',String(value));syncReviewControls();}
+  function setBusy(value){busy=value;$('ocr-run').disabled=value||!source;$('ocr-cancel').hidden=!value;$('ocr-controls').disabled=value;$('ocr-deep').disabled=value;panel.setAttribute('aria-busy',String(value));syncReviewControls();renderEntry();}
   function cancel(){job++;if(worker){worker.terminate();worker=null;}setBusy(false);}
   function clearResult(){
+    clearLocation();
     formattedDraft.clear();$('ocr-formatted').value='';$('ocr-format-status').textContent='';
     translation.invalidate('识别结果已清除，请重新整理后翻译。');endRebox();
     result=null;resultImage=null;selected=null;deepSuggestion=null;$('ocr-deep-candidates').replaceChildren();$('ocr-deep-status').textContent='';$('ocr-results').hidden=true;$('ocr-review').hidden=true;$('ocr-inspection').hidden=true;
+    renderEntry();
     setReviewOpen(false);setSegmentationOpen(false);$('ocr-output-note').textContent='';
     $('ocr-pending-only').checked=false;$('ocr-filter-empty').hidden=true;syncReviewControls();
     setTranslationOpen(false);
@@ -70,7 +79,9 @@ globalThis.BabelianOCRUI={
     if(!source||busy)return;
     const x=Math.max(0,Math.min(source.width-1,Math.round(next.x))),y=Math.max(0,Math.min(source.height-1,Math.round(next.y)));
     crop={x,y,width:Math.max(1,Math.min(source.width-x,Math.round(next.width))),height:Math.max(1,Math.min(source.height-y,Math.round(next.height)))};
-    clearResult();draw();message('框选区域已更新。点击“识别所选区域”。');
+    clearResult();$('ocr-revert-suggestion').hidden=true;$('ocr-auto-note').textContent='已采用手动框选，自动建议不会覆盖此区域。';
+    if(globalThis.BabelianImageAssist)try{$('ocr-quality-note').textContent=BabelianImageAssist.quality(source.getContext('2d').getImageData(crop.x,crop.y,crop.width,crop.height)).join(' ');}catch(_){}
+    draw();message('框选区域已更新。点击“识别所选区域”。');
   }
   function draw(){
     if(!source)return;
@@ -83,9 +94,9 @@ globalThis.BabelianOCRUI={
     ctx.strokeStyle='#a57b37';ctx.lineWidth=line;ctx.strokeRect(crop.x,crop.y,crop.width,crop.height);
     const parts=splitPreview();
     if(result)result.lines.forEach((row,li)=>row.tokens.forEach((token,ti)=>{
-      const current=selected?.line===li&&selected?.token===ti,b=token.box;
+      const current=selected?.line===li&&selected?.token===ti,b=token.box,linked=located.some(p=>p.line===li&&p.token===ti);
       if(current&&parts)return;
-      ctx.strokeStyle=current?'#1768dc':token.manual||token.certain?'#188041':'#c86613';
+      ctx.strokeStyle=current||linked?'#1768dc':token.manual||token.certain?'#188041':'#c86613';
       ctx.strokeRect(crop.x+b.x,crop.y+b.y,b.width,b.height);
     }));
     if(parts)drawSplitBoxes(ctx,parts,crop.x,crop.y,scale);
@@ -161,11 +172,32 @@ globalThis.BabelianOCRUI={
       source.getContext('2d').drawImage(img,0,0,source.width,source.height);
       crop={x:0,y:0,width:source.width,height:source.height};clearResult();$('ocr-image-area').hidden=false;
       $('ocr-file-info').textContent=`${file.name} · ${source.width} × ${source.height}${scale<1?'（已缩小，请优先上传裁剪后的原尺寸密码图）':''}`;
-      $('ocr-run').disabled=false;draw();message('请拖动框选纯巴别语区域，排除英文、标题、插图和边框。');
+      $('ocr-image-advice').hidden=true;$('ocr-auto-note').textContent='';$('ocr-quality-note').textContent='';$('ocr-revert-suggestion').hidden=true;
+      if(globalThis.BabelianImageAssist){
+        message('正在检查文字区域，图片只在本机处理…');draw();
+        try{
+          await loadTemplates(false);await new Promise(resolve=>setTimeout(resolve,0));if(version!==loading)return;
+          const advice=BabelianImageAssist.analyze(source.getContext('2d').getImageData(0,0,source.width,source.height),templates,OCR);
+          if(advice.crop){crop=advice.crop;$('ocr-revert-suggestion').hidden=false;}
+          $('ocr-auto-note').textContent=advice.crop?`已建议框出 ${advice.rows} 个疑似文字行。请检查是否完整，仍可拖动调整。`:advice.ambiguous?'检测到多处疑似文字，未自动缩小范围，请手动框选。':'未找到足够明确的文字区域，已保留全图，请按需手动框选。';
+          $('ocr-quality-note').textContent=advice.warnings.join(' ');$('ocr-image-advice').hidden=false;
+        }catch(_){if(version!==loading)return;$('ocr-auto-note').textContent='自动建议不可用，已保留全图，可以手动框选。';$('ocr-image-advice').hidden=false;}
+      }
+      $('ocr-run').disabled=false;draw();message('检查金色选区是否包含全部密码文字，点击“识别所选区域”；也可拖动调整。');
     }catch(e){if(version===loading)message(e.message);}
     finally{URL.revokeObjectURL(url);$('ocr-file').value='';if(version===loading)setBusy(false);}
   }
   $('ocr-upload').addEventListener('click',()=>$('ocr-file').click());
+  $('ocr-paste-image').addEventListener('click',async()=>{
+    if(panel.hidden||busy)return;const ticket=loading,current=()=>!panel.hidden&&!busy&&ticket===loading;
+    try{
+      if(!navigator.clipboard?.read)throw Error('浏览器不支持按钮读取剪贴板，请使用 Ctrl+V 粘贴图片。');
+      const entries=await navigator.clipboard.read();if(!current())return;
+      for(const entry of entries){const type=entry.types.find(t=>/^image\/(png|jpeg|webp)$/.test(t));if(type){const blob=await entry.getType(type);if(current())await loadFile(new File([blob],'clipboard.'+(type==='image/jpeg'?'jpg':type.split('/')[1]),{type}));return;}}
+      throw Error('剪贴板中没有 PNG / JPG / WebP 图片，请先复制截图。');
+    }catch(e){if(current())message('无法读取剪贴板：'+e.message+' 也可用 Ctrl+V 或选择文件。');}
+  });
+  $('ocr-revert-suggestion').addEventListener('click',()=>{if(!source||busy)return;changeCrop({x:0,y:0,width:source.width,height:source.height});$('ocr-auto-note').textContent='已撤回自动选区，使用完整原图；可继续手动框选。';});
   $('ocr-file').addEventListener('change',e=>loadFile(e.target.files[0]));
   panel.addEventListener('dragover',e=>{e.preventDefault();});
   panel.addEventListener('drop',e=>{e.preventDefault();if(!busy)loadFile(e.dataTransfer.files[0]);});
@@ -217,7 +249,9 @@ globalThis.BabelianOCRUI={
   $('ocr-run').addEventListener('click',recognize);
   $('ocr-cancel').addEventListener('click',()=>{loading++;cancel();message('已取消。可以调整框选后重新识别。');});
   function renderResults(){
+    renderEntry();
     if(!result)return;
+    clearLocation();
     const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,total=0,noCandidate=0;
     result.lines.forEach((line,li)=>{
       const row=document.createElement('div');row.className='ocr-token-line';const title=document.createElement('span');title.className='ocr-row-label';title.textContent=`第 ${li+1} 行`;row.append(title);
@@ -355,11 +389,11 @@ globalThis.BabelianOCRUI={
       // object-fit:contain can letterbox in either direction. Work in original
       // crop pixels and compensate only the stroke width for display scaling.
       const scale=Math.max(area.width/Math.max(1,canvas.clientWidth),area.height/80);
-      if(parts)drawSplitBoxes(context,parts,-area.x,-area.y,scale);
-      else{context.lineWidth=Math.max(1,scale*1.5);context.strokeStyle='#1768dc';context.strokeRect(b.x-area.x,b.y-area.y,b.width,b.height);}
+      if(parts&&id==='ocr-split-preview')drawSplitBoxes(context,parts,-area.x,-area.y,scale);
+      else{context.setLineDash([]);context.lineWidth=Math.max(1,scale*1.5);context.strokeStyle='#1768dc';context.strokeRect(b.x-area.x,b.y-area.y,b.width,b.height);}
     }
-    $('ocr-context-caption').textContent=`原图上下文 · 当前项${neighbors?`及 ${neighbors} 个相邻字形`:''}，`+(parts?'蓝色实线为左半、虚线为右半；仅预览，尚未拆分。':'蓝框为当前项；保留全部原始笔画。');
-    $('ocr-context').setAttribute('aria-label',parts?'选中字形与相邻原图：蓝色实线框为左半，虚线框为右半':'选中字形与同一原图行前后相邻字形；蓝框为当前字形');
+    $('ocr-context-caption').textContent=`原图上下文 · 当前项${neighbors?`及 ${neighbors} 个相邻字形`:''}，蓝框为当前项；保留全部原始笔画。`;
+    $('ocr-context').setAttribute('aria-label','选中字形与同一原图行前后相邻字形；蓝色实线框为完整当前字形');
   }
   $('ocr-split-at').addEventListener('input',()=>{
     if(busy||rebox||!active())return;
@@ -448,6 +482,34 @@ globalThis.BabelianOCRUI={
     list.splice(selected.token,2,classify({x,y,width:right-x,height:bottom-y},BabelianOCRCorrection.exclusionsFor([a,b])));renderResults();draw();message('已合并，请确认新候选。');
   });
   $('ocr-join').addEventListener('change',renderResults);
+  function clearLocation(){located=[];locationArea=null;$('ocr-location').hidden=true;$('ocr-location-preview').hidden=true;}
+  function locateText(field,formatted){
+    if(!globalThis.BabelianTextLocator||!result||busy||rebox)return;
+    field.insertAdjacentElement('afterend',$('ocr-location'));
+    try{
+      const raw=BabelianTextLocator.payload(result,mapping(),OCR,formatted?false:$('ocr-join').checked);
+      if(formatted&&formattedDraft.state()?.error)throw Error('整理文本已变化，请先解决上方提示或重新生成建议，再定位原图。');
+      const projected=formatted?BabelianTextFormat.reflow(raw,field.value):raw;
+      located=BabelianTextLocator.locate(projected,field.selectionStart,field.selectionEnd,formatted);
+      if(!located.length){clearLocation();draw();return;}
+      const boxes=located.map(p=>result.lines[p.line].tokens[p.token].box),pad=8;
+      const x=Math.max(0,Math.min(...boxes.map(b=>b.x))-pad),y=Math.max(0,Math.min(...boxes.map(b=>b.y))-pad);
+      locationArea={x,y,width:Math.min(resultImage.width,Math.max(...boxes.map(b=>b.x+b.width))+pad)-x,height:Math.min(resultImage.height,Math.max(...boxes.map(b=>b.y+b.height))+pad)-y};
+      const cv=$('ocr-location-preview'),tmp=document.createElement('canvas');tmp.width=resultImage.width;tmp.height=resultImage.height;tmp.getContext('2d').putImageData(resultImage,0,0);
+      cv.width=locationArea.width;cv.height=locationArea.height;const c=cv.getContext('2d');c.drawImage(tmp,x,y,cv.width,cv.height,0,0,cv.width,cv.height);c.strokeStyle='#1768dc';c.lineWidth=Math.max(1,cv.width/600*2);
+      for(const b of boxes)c.strokeRect(b.x-x,b.y-y,b.width,b.height);
+      $('ocr-location-status').textContent=`对应 ${located.length} 个字形 · 第 ${[...new Set(located.map(p=>p.line+1))].join('、')} 行。点击蓝框或“复核此处”才打开复核。`;
+      cv.hidden=false;$('ocr-location').hidden=false;draw();
+    }catch(e){clearLocation();$('ocr-location-status').textContent=e.message;$('ocr-location').hidden=false;$('ocr-location-review').disabled=true;return;}
+    $('ocr-location-review').disabled=false;
+  }
+  for(const [id,formatted] of [['ocr-output',false],['ocr-formatted',true]])$(id).addEventListener('click',()=>locateText($(id),formatted));
+  $('ocr-location-review').addEventListener('click',()=>{const p=located[0];if(!p||busy)return;select(p.line,p.token);$('ocr-review').scrollIntoView({block:'nearest'});});
+  $('ocr-location-close').addEventListener('click',()=>{clearLocation();draw();});
+  $('ocr-location-preview').addEventListener('click',event=>{
+    if(!locationArea||busy)return;const cv=$('ocr-location-preview'),r=cv.getBoundingClientRect(),scale=Math.min(r.width/cv.width,r.height/cv.height),px=(event.clientX-r.left)/scale,py=(event.clientY-r.top-(r.height-cv.height*scale)/2)/scale;if(px<0||py<0||px>cv.width||py>cv.height)return;const x=locationArea.x+px,y=locationArea.y+py;
+    const p=located.find(p=>{const b=result.lines[p.line].tokens[p.token].box;return x>=b.x&&x<=b.x+b.width&&y>=b.y&&y<=b.y+b.height;});if(p)select(p.line,p.token);
+  });
   function formattingInput(){
     const map=mapping();
     // Word readings and optional game names only affect spacing suggestions,
@@ -480,7 +542,7 @@ globalThis.BabelianOCRUI={
     if(formattedDraft.state()?.dirty&&!confirm('重新生成会替换手动调整的空格和标点，继续吗？'))return;
     refreshFormatted(true);
   });
-  $('ocr-formatted').addEventListener('input',()=>renderFormattedState(formattedDraft.edit($('ocr-formatted').value)));
+  $('ocr-formatted').addEventListener('input',()=>{clearLocation();draw();renderFormattedState(formattedDraft.edit($('ocr-formatted').value));});
   $('ocr-formatted-copy').addEventListener('click',async()=>{
     try{
       const payload=formattedDraft.payload();
@@ -531,5 +593,6 @@ globalThis.BabelianOCRUI={
   $('ocr-append').addEventListener('click',()=>{if(result)append(OCR.toWriter(result,mapping(),outputOptions()));});
   window.addEventListener('babelian-mapping-change',renderResults);
   window.addEventListener('resize',()=>{draw();drawReviewContext();});
-  return {refresh:()=>{renderResults();draw();},pause:()=>{loading++;cancel();translation.cancel();},snapshot:()=>JSON.parse(JSON.stringify({crop,result,selected}))};
+  renderEntry();
+  return {refresh:()=>{renderResults();draw();},pause:()=>{loading++;cancel();clearLocation();translation.cancel();},snapshot:()=>JSON.parse(JSON.stringify({crop,result,selected}))};
 }};

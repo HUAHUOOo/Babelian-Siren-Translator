@@ -13,6 +13,7 @@
       // theme preference. Switching never mutates either language's drafts.
       if(document.body?.dataset){
         document.body.dataset.language=babelian?'babelian':siren?'siren':'home';
+        document.body.dataset.tool=next;
         if(babelian||siren)document.body.dataset.cycle=babelian?'c4':'c5';
         else delete document.body.dataset.cycle;
       }

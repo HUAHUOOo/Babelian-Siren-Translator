@@ -33,6 +33,7 @@
     .siren-precision-header .siren-note {margin-bottom:0}
     .siren-precision-body {flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px}
     .siren-precision .siren-fields {grid-template-columns:1fr;gap:12px}
+    .siren-precision #siren-contact {max-width:100%;margin-bottom:12px}
     .siren-precision .siren-actions {align-items:flex-start;flex-direction:column;gap:10px}
     .siren-precision .siren-actions label {display:flex;align-items:center;gap:6px;min-height:32px}
     .siren-precision .siren-actions button {max-width:100%;min-height:44px}
@@ -96,3 +97,6 @@
     #siren-missing-preview {display:block;width:min(100%,360px);height:auto;border:2px solid #b65606;background:#fffdf7}
     #siren-pending-tools {position:sticky;top:0;z-index:2;background:var(--panel);border:1px solid var(--line);padding:8px 12px}
     #siren-pending-status {margin:0}
+.siren-reading-demo { margin:12px 0; border-top:1px solid var(--line); padding:12px 0 4px; }
+.siren-reading-demo summary { cursor:pointer; }
+#siren-reading-step { width:100%; max-width:440px; }
