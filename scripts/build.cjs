@@ -5,6 +5,10 @@ const root=path.resolve(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,'src',file),'utf8');
 const sourceGlyphs=JSON.parse(read('glyphs.json')),sourceParts=JSON.parse(read('parts.json'));
 const sourceSiren=JSON.parse(read('siren-glyphs.json'));
+const apkProfiles=require('./apk-resources.cjs').load(root);
+if(!require('../src/babelian-visuals.js').create(sourceGlyphs,apkProfiles.artwork).vectorReady)throw Error('Incomplete APK display profile');
+if(require('../src/ocr-engine.js').prepareVectorProfile(apkProfiles.recognition,Object.keys(sourceGlyphs)).size!==58)throw Error('Incomplete APK recognition profile');
+const safeJSON=data=>JSON.stringify(data).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
 const domainTerms=JSON.parse(read('domain-terms.json'));
 const dictionary=fs.readFileSync(path.join(root,'src/english-words.txt.gz'));
 if(crypto.createHash('sha256').update(dictionary).digest('hex')!==JSON.parse(read('english-words-source.json')).sha256)throw Error('English vocabulary checksum mismatch');
@@ -52,6 +56,7 @@ function htmlFor(mode,glyphs,parts,siren){
   html=html.replace(placeholder,()=>content);
  }
  if(/__[A-Z_]+__/.test(html))throw Error('Unresolved build placeholder');
+ html=html.replace('<script>',()=>'<script>\nglobalThis.BabelianVectorArtwork='+safeJSON(apkProfiles.artwork)+';\nglobalThis.BabelianVectorTemplateProfile='+safeJSON(apkProfiles.recognition)+';\n</script>\n<script>');
  return html;
 }
 const standalone=htmlFor('standalone',sourceGlyphs,sourceParts,sourceSiren);

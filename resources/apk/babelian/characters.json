@@ -1,0 +1,820 @@
+{
+  "font": "fonts/Babelian_Cypher.ttf",
+  "unitsPerEm": 1000,
+  "mapped_codepoints": 124,
+  "nonempty_printable_ascii": 58,
+  "glyphs": [
+    {
+      "codepoint": 49,
+      "character": "1",
+      "glyph": "one",
+      "bounds": [
+        0.833333333333333,
+        -200,
+        1001,
+        799.2857142857143
+      ],
+      "advance": 1020,
+      "svg": "babelian/svg/U0031.svg",
+      "png": "babelian/png/U0031.png"
+    },
+    {
+      "codepoint": 50,
+      "character": "2",
+      "glyph": "two",
+      "bounds": [
+        0.833333333333333,
+        -200,
+        728.8214285714286,
+        799.2857142857143
+      ],
+      "advance": 763,
+      "svg": "babelian/svg/U0032.svg",
+      "png": "babelian/png/U0032.png"
+    },
+    {
+      "codepoint": 51,
+      "character": "3",
+      "glyph": "three",
+      "bounds": [
+        0.833333333333333,
+        -200,
+        1001,
+        799.2857142857143
+      ],
+      "advance": 1020,
+      "svg": "babelian/svg/U0033.svg",
+      "png": "babelian/png/U0033.png"
+    },
+    {
+      "codepoint": 52,
+      "character": "4",
+      "glyph": "four",
+      "bounds": [
+        0.833333333333333,
+        -200,
+        728.8214285714286,
+        800
+      ],
+      "advance": 754,
+      "svg": "babelian/svg/U0034.svg",
+      "png": "babelian/png/U0034.png"
+    },
+    {
+      "codepoint": 53,
+      "character": "5",
+      "glyph": "five",
+      "bounds": [
+        1,
+        -200.02380952380952,
+        934,
+        799.0238095238095
+      ],
+      "advance": 970,
+      "svg": "babelian/svg/U0035.svg",
+      "png": "babelian/png/U0035.png"
+    },
+    {
+      "codepoint": 63,
+      "character": "?",
+      "glyph": "question",
+      "bounds": [
+        0.5,
+        -199.57142857142858,
+        992,
+        800
+      ],
+      "advance": 1000,
+      "svg": "babelian/svg/U003F.svg",
+      "png": "babelian/png/U003F.png"
+    },
+    {
+      "codepoint": 65,
+      "character": "A",
+      "glyph": "A",
+      "bounds": [
+        0,
+        -200.02325581395348,
+        510.9310344827586,
+        800.1333333333333
+      ],
+      "advance": 531,
+      "svg": "babelian/svg/U0041.svg",
+      "png": "babelian/png/U0041.png"
+    },
+    {
+      "codepoint": 66,
+      "character": "B",
+      "glyph": "B",
+      "bounds": [
+        0,
+        -200.16666666666666,
+        1114.6666666666667,
+        800.1666666666666
+      ],
+      "advance": 1136,
+      "svg": "babelian/svg/U0042.svg",
+      "png": "babelian/png/U0042.png"
+    },
+    {
+      "codepoint": 67,
+      "character": "C",
+      "glyph": "C",
+      "bounds": [
+        0,
+        -200,
+        919,
+        800
+      ],
+      "advance": 940,
+      "svg": "babelian/svg/U0043.svg",
+      "png": "babelian/png/U0043.png"
+    },
+    {
+      "codepoint": 68,
+      "character": "D",
+      "glyph": "D",
+      "bounds": [
+        0,
+        -198.07142857142858,
+        936.1818181818181,
+        800.16
+      ],
+      "advance": 957,
+      "svg": "babelian/svg/U0044.svg",
+      "png": "babelian/png/U0044.png"
+    },
+    {
+      "codepoint": 69,
+      "character": "E",
+      "glyph": "E",
+      "bounds": [
+        0.7999999999999998,
+        -200.16666666666666,
+        1030,
+        800.1666666666666
+      ],
+      "advance": 1050,
+      "svg": "babelian/svg/U0045.svg",
+      "png": "babelian/png/U0045.png"
+    },
+    {
+      "codepoint": 70,
+      "character": "F",
+      "glyph": "F",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        846,
+        800
+      ],
+      "advance": 867,
+      "svg": "babelian/svg/U0046.svg",
+      "png": "babelian/png/U0046.png"
+    },
+    {
+      "codepoint": 71,
+      "character": "G",
+      "glyph": "G",
+      "bounds": [
+        -1,
+        -200,
+        1352.3076923076924,
+        800
+      ],
+      "advance": 1371,
+      "svg": "babelian/svg/U0047.svg",
+      "png": "babelian/png/U0047.png"
+    },
+    {
+      "codepoint": 72,
+      "character": "H",
+      "glyph": "H",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1114.6666666666667,
+        800
+      ],
+      "advance": 1135,
+      "svg": "babelian/svg/U0048.svg",
+      "png": "babelian/png/U0048.png"
+    },
+    {
+      "codepoint": 73,
+      "character": "I",
+      "glyph": "I",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        846,
+        800
+      ],
+      "advance": 867,
+      "svg": "babelian/svg/U0049.svg",
+      "png": "babelian/png/U0049.png"
+    },
+    {
+      "codepoint": 74,
+      "character": "J",
+      "glyph": "J",
+      "bounds": [
+        0.7999999999999998,
+        -203.22222222222223,
+        1021,
+        801.2857142857143
+      ],
+      "advance": 1042,
+      "svg": "babelian/svg/U004A.svg",
+      "png": "babelian/png/U004A.png"
+    },
+    {
+      "codepoint": 75,
+      "character": "K",
+      "glyph": "K",
+      "bounds": [
+        0,
+        -200.02325581395348,
+        1311,
+        801.2857142857143
+      ],
+      "advance": 1332,
+      "svg": "babelian/svg/U004B.svg",
+      "png": "babelian/png/U004B.png"
+    },
+    {
+      "codepoint": 76,
+      "character": "L",
+      "glyph": "L",
+      "bounds": [
+        -1,
+        -200.16666666666666,
+        754,
+        804.0277777777778
+      ],
+      "advance": 773,
+      "svg": "babelian/svg/U004C.svg",
+      "png": "babelian/png/U004C.png"
+    },
+    {
+      "codepoint": 77,
+      "character": "M",
+      "glyph": "M",
+      "bounds": [
+        1,
+        -200.02380952380952,
+        1188,
+        799.0238095238095
+      ],
+      "advance": 1208,
+      "svg": "babelian/svg/U004D.svg",
+      "png": "babelian/png/U004D.png"
+    },
+    {
+      "codepoint": 78,
+      "character": "N",
+      "glyph": "N",
+      "bounds": [
+        1,
+        -200.02380952380952,
+        849,
+        799.0238095238095
+      ],
+      "advance": 869,
+      "svg": "babelian/svg/U004E.svg",
+      "png": "babelian/png/U004E.png"
+    },
+    {
+      "codepoint": 79,
+      "character": "O",
+      "glyph": "O",
+      "bounds": [
+        -1,
+        -200,
+        1167,
+        800
+      ],
+      "advance": 1187,
+      "svg": "babelian/svg/U004F.svg",
+      "png": "babelian/png/U004F.png"
+    },
+    {
+      "codepoint": 80,
+      "character": "P",
+      "glyph": "P",
+      "bounds": [
+        0,
+        -200.02325581395348,
+        1243,
+        800.1333333333333
+      ],
+      "advance": 1264,
+      "svg": "babelian/svg/U0050.svg",
+      "png": "babelian/png/U0050.png"
+    },
+    {
+      "codepoint": 81,
+      "character": "Q",
+      "glyph": "Q",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        923,
+        804.0322580645161
+      ],
+      "advance": 943,
+      "svg": "babelian/svg/U0051.svg",
+      "png": "babelian/png/U0051.png"
+    },
+    {
+      "codepoint": 82,
+      "character": "R",
+      "glyph": "R",
+      "bounds": [
+        0,
+        -200,
+        1327.3076923076924,
+        800
+      ],
+      "advance": 1349,
+      "svg": "babelian/svg/U0052.svg",
+      "png": "babelian/png/U0052.png"
+    },
+    {
+      "codepoint": 83,
+      "character": "S",
+      "glyph": "S",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1443,
+        800
+      ],
+      "advance": 1464,
+      "svg": "babelian/svg/U0053.svg",
+      "png": "babelian/png/U0053.png"
+    },
+    {
+      "codepoint": 84,
+      "character": "T",
+      "glyph": "T",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        778,
+        804.0277777777778
+      ],
+      "advance": 799,
+      "svg": "babelian/svg/U0054.svg",
+      "png": "babelian/png/U0054.png"
+    },
+    {
+      "codepoint": 85,
+      "character": "U",
+      "glyph": "U",
+      "bounds": [
+        1,
+        -200.02380952380952,
+        1244,
+        799.0238095238095
+      ],
+      "advance": 1264,
+      "svg": "babelian/svg/U0055.svg",
+      "png": "babelian/png/U0055.png"
+    },
+    {
+      "codepoint": 86,
+      "character": "V",
+      "glyph": "V",
+      "bounds": [
+        1,
+        -200.16666666666666,
+        1256,
+        799.1666666666666
+      ],
+      "advance": 1301,
+      "svg": "babelian/svg/U0056.svg",
+      "png": "babelian/png/U0056.png"
+    },
+    {
+      "codepoint": 87,
+      "character": "W",
+      "glyph": "W",
+      "bounds": [
+        -1,
+        -200.16666666666666,
+        1270,
+        804.0277777777778
+      ],
+      "advance": 1289,
+      "svg": "babelian/svg/U0057.svg",
+      "png": "babelian/png/U0057.png"
+    },
+    {
+      "codepoint": 88,
+      "character": "X",
+      "glyph": "X",
+      "bounds": [
+        0,
+        -200.02325581395348,
+        1082.2857142857142,
+        804.0277777777778
+      ],
+      "advance": 1103,
+      "svg": "babelian/svg/U0058.svg",
+      "png": "babelian/png/U0058.png"
+    },
+    {
+      "codepoint": 89,
+      "character": "Y",
+      "glyph": "Y",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1114.2857142857142,
+        801.0434782608696
+      ],
+      "advance": 1135,
+      "svg": "babelian/svg/U0059.svg",
+      "png": "babelian/png/U0059.png"
+    },
+    {
+      "codepoint": 90,
+      "character": "Z",
+      "glyph": "Z",
+      "bounds": [
+        0,
+        -200.02325581395348,
+        1041,
+        801
+      ],
+      "advance": 1060,
+      "svg": "babelian/svg/U005A.svg",
+      "png": "babelian/png/U005A.png"
+    },
+    {
+      "codepoint": 97,
+      "character": "a",
+      "glyph": "a",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        510,
+        804.0277777777778
+      ],
+      "advance": 520,
+      "svg": "babelian/svg/U0061.svg",
+      "png": "babelian/png/U0061.png"
+    },
+    {
+      "codepoint": 98,
+      "character": "b",
+      "glyph": "b",
+      "bounds": [
+        -1,
+        -200.16666666666666,
+        1116,
+        804.0277777777778
+      ],
+      "advance": 1136,
+      "svg": "babelian/svg/U0062.svg",
+      "png": "babelian/png/U0062.png"
+    },
+    {
+      "codepoint": 99,
+      "character": "c",
+      "glyph": "c",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        917,
+        801
+      ],
+      "advance": 938,
+      "svg": "babelian/svg/U0063.svg",
+      "png": "babelian/png/U0063.png"
+    },
+    {
+      "codepoint": 100,
+      "character": "d",
+      "glyph": "d",
+      "bounds": [
+        1.125,
+        -198.07142857142858,
+        941,
+        799
+      ],
+      "advance": 961,
+      "svg": "babelian/svg/U0064.svg",
+      "png": "babelian/png/U0064.png"
+    },
+    {
+      "codepoint": 101,
+      "character": "e",
+      "glyph": "e",
+      "bounds": [
+        -1,
+        -200.16666666666666,
+        1030.2857142857142,
+        800.1666666666666
+      ],
+      "advance": 1050,
+      "svg": "babelian/svg/U0065.svg",
+      "png": "babelian/png/U0065.png"
+    },
+    {
+      "codepoint": 102,
+      "character": "f",
+      "glyph": "f",
+      "bounds": [
+        -1,
+        -200,
+        850.9310344827586,
+        800
+      ],
+      "advance": 870,
+      "svg": "babelian/svg/U0066.svg",
+      "png": "babelian/png/U0066.png"
+    },
+    {
+      "codepoint": 103,
+      "character": "g",
+      "glyph": "g",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1332,
+        800
+      ],
+      "advance": 1352,
+      "svg": "babelian/svg/U0067.svg",
+      "png": "babelian/png/U0067.png"
+    },
+    {
+      "codepoint": 104,
+      "character": "h",
+      "glyph": "h",
+      "bounds": [
+        -1,
+        -200,
+        1168.68,
+        800
+      ],
+      "advance": 1188,
+      "svg": "babelian/svg/U0068.svg",
+      "png": "babelian/png/U0068.png"
+    },
+    {
+      "codepoint": 105,
+      "character": "i",
+      "glyph": "i",
+      "bounds": [
+        0,
+        -200,
+        849.9310344827586,
+        801.2857142857143
+      ],
+      "advance": 870,
+      "svg": "babelian/svg/U0069.svg",
+      "png": "babelian/png/U0069.png"
+    },
+    {
+      "codepoint": 106,
+      "character": "j",
+      "glyph": "j",
+      "bounds": [
+        -1,
+        -200,
+        1023.3076923076923,
+        800
+      ],
+      "advance": 1045,
+      "svg": "babelian/svg/U006A.svg",
+      "png": "babelian/png/U006A.png"
+    },
+    {
+      "codepoint": 107,
+      "character": "k",
+      "glyph": "k",
+      "bounds": [
+        -1,
+        -200,
+        1196,
+        801
+      ],
+      "advance": 1225,
+      "svg": "babelian/svg/U006B.svg",
+      "png": "babelian/png/U006B.png"
+    },
+    {
+      "codepoint": 108,
+      "character": "l",
+      "glyph": "l",
+      "bounds": [
+        0,
+        -200.16666666666666,
+        812,
+        800.1666666666666
+      ],
+      "advance": 837,
+      "svg": "babelian/svg/U006C.svg",
+      "png": "babelian/png/U006C.png"
+    },
+    {
+      "codepoint": 109,
+      "character": "m",
+      "glyph": "m",
+      "bounds": [
+        1,
+        -200.02380952380952,
+        1185,
+        799.0238095238095
+      ],
+      "advance": 1210,
+      "svg": "babelian/svg/U006D.svg",
+      "png": "babelian/png/U006D.png"
+    },
+    {
+      "codepoint": 110,
+      "character": "n",
+      "glyph": "n",
+      "bounds": [
+        1,
+        -200.02380952380952,
+        846,
+        799.0238095238095
+      ],
+      "advance": 864,
+      "svg": "babelian/svg/U006E.svg",
+      "png": "babelian/png/U006E.png"
+    },
+    {
+      "codepoint": 111,
+      "character": "o",
+      "glyph": "o",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1168,
+        800
+      ],
+      "advance": 1190,
+      "svg": "babelian/svg/U006F.svg",
+      "png": "babelian/png/U006F.png"
+    },
+    {
+      "codepoint": 112,
+      "character": "p",
+      "glyph": "p",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1243,
+        804.0277777777778
+      ],
+      "advance": 1265,
+      "svg": "babelian/svg/U0070.svg",
+      "png": "babelian/png/U0070.png"
+    },
+    {
+      "codepoint": 113,
+      "character": "q",
+      "glyph": "q",
+      "bounds": [
+        0,
+        -200,
+        921.9310344827586,
+        800.0322580645161
+      ],
+      "advance": 944,
+      "svg": "babelian/svg/U0071.svg",
+      "png": "babelian/png/U0071.png"
+    },
+    {
+      "codepoint": 114,
+      "character": "r",
+      "glyph": "r",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1367,
+        800
+      ],
+      "advance": 1387,
+      "svg": "babelian/svg/U0072.svg",
+      "png": "babelian/png/U0072.png"
+    },
+    {
+      "codepoint": 115,
+      "character": "s",
+      "glyph": "s",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1454.5625,
+        800
+      ],
+      "advance": 1475,
+      "svg": "babelian/svg/U0073.svg",
+      "png": "babelian/png/U0073.png"
+    },
+    {
+      "codepoint": 116,
+      "character": "t",
+      "glyph": "t",
+      "bounds": [
+        0,
+        -200.02325581395348,
+        777.68,
+        804.0277777777778
+      ],
+      "advance": 800,
+      "svg": "babelian/svg/U0074.svg",
+      "png": "babelian/png/U0074.png"
+    },
+    {
+      "codepoint": 117,
+      "character": "u",
+      "glyph": "u",
+      "bounds": [
+        1,
+        -200.02380952380952,
+        979,
+        799.0238095238095
+      ],
+      "advance": 1264,
+      "svg": "babelian/svg/U0075.svg",
+      "png": "babelian/png/U0075.png"
+    },
+    {
+      "codepoint": 118,
+      "character": "v",
+      "glyph": "v",
+      "bounds": [
+        0,
+        -200.16666666666666,
+        1194,
+        799.1666666666666
+      ],
+      "advance": 1224,
+      "svg": "babelian/svg/U0076.svg",
+      "png": "babelian/png/U0076.png"
+    },
+    {
+      "codepoint": 119,
+      "character": "w",
+      "glyph": "w",
+      "bounds": [
+        0,
+        -200.16666666666666,
+        1264,
+        800.1666666666666
+      ],
+      "advance": 1290,
+      "svg": "babelian/svg/U0077.svg",
+      "png": "babelian/png/U0077.png"
+    },
+    {
+      "codepoint": 120,
+      "character": "x",
+      "glyph": "x",
+      "bounds": [
+        0,
+        -200.02325581395348,
+        1079,
+        804.0277777777778
+      ],
+      "advance": 1100,
+      "svg": "babelian/svg/U0078.svg",
+      "png": "babelian/png/U0078.png"
+    },
+    {
+      "codepoint": 121,
+      "character": "y",
+      "glyph": "y",
+      "bounds": [
+        0.7999999999999998,
+        -200,
+        1114.2857142857142,
+        804.0277777777778
+      ],
+      "advance": 1135,
+      "svg": "babelian/svg/U0079.svg",
+      "png": "babelian/png/U0079.png"
+    },
+    {
+      "codepoint": 122,
+      "character": "z",
+      "glyph": "z",
+      "bounds": [
+        0,
+        -200.02325581395348,
+        1081,
+        804.0277777777778
+      ],
+      "advance": 1102,
+      "svg": "babelian/svg/U007A.svg",
+      "png": "babelian/png/U007A.png"
+    }
+  ]
+}

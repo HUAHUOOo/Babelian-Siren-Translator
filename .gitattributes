@@ -1,0 +1,2 @@
+# Resource manifests pin exact bytes, including JSON/SVG line endings.
+resources/apk/** -text

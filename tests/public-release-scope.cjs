@@ -1,5 +1,6 @@
 /* Public Translator release boundary. Pinned bytes come from public 3b9a96f.
- * Uses only the already-public glyph assets and fixture hashes, never private inputs. */
+ * Original raster bytes stay pinned; explicitly published APK data has its own
+ * exact manifest. Never bundle private screenshots, passages or account data. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..'),read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
@@ -17,13 +18,17 @@ for(const [file,digest] of Object.entries(pinned))assert.equal(hash(read(file).r
 assert.deepEqual(fs.readdirSync(path.join(root,'tests/fixtures')).sort(),['babelian-350x.json','siren-3491.json'],'Only existing public fixtures belong in this release');
 function walk(dir){return fs.readdirSync(path.join(root,dir),{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(path.join(dir,entry.name)):[path.join(dir,entry.name).split(path.sep).join('/')]);}
 const rootEntries=fs.readdirSync(root,{withFileTypes:true});
-const publicRoots=new Set(['.gitignore','README.md','BABELIAN.md','SIREN.md','package.json','package-lock.json','index.html']);
-const allowedDirectories=new Set(['.git','src','scripts','integration','tests','dist','node_modules','test-results','playwright-report']);
+const publicRoots=new Set(['.gitignore','.gitattributes','README.md','BABELIAN.md','SIREN.md','package.json','package-lock.json','index.html']);
+const allowedDirectories=new Set(['.git','src','scripts','integration','resources','tests','dist','node_modules','test-results','playwright-report']);
 for(const entry of rootEntries){
  if(entry.name==='.git'){assert(entry.isDirectory()||entry.isFile()&&/^gitdir: /.test(read('.git')),'Invalid worktree metadata');continue;}
  assert(entry.isDirectory()?allowedDirectories.has(entry.name):publicRoots.has(entry.name),`Unexpected release-root input or payload: ${entry.name}`);
 }
-const published=[...walk('src'),...walk('scripts'),...walk('integration'),...rootEntries.filter(entry=>entry.isFile()&&entry.name!=='.git').map(entry=>entry.name)];
+const published=[...walk('src'),...walk('scripts'),...walk('integration'),...walk('resources'),...rootEntries.filter(entry=>entry.isFile()&&entry.name!=='.git').map(entry=>entry.name)];
+assert.equal(hash(read('resources/apk/manifest.json').replace(/\r\n/g,'\n')),'58efbcc9b700d2062e62e1ba62173bbc21ede26a6455277213c41d8872ac8f5c','APK release manifest changed unexpectedly');
+const apk=require('../scripts/apk-resources.cjs').load(root).manifest;
+const apkAllowed=new Set(['resources/apk/manifest.json','resources/apk/README.md','resources/apk/NOTICE.md',...Object.keys(apk.files).map(n=>'resources/apk/'+n)]);
+assert.deepEqual(walk('resources').sort(),[...apkAllowed].sort(),'Only explicitly listed APK data may be published');
 const excluded=/CipherProofreading|\bproof-(?:open|home|queue|import|feedback)\b|__PROOFREADING_[A-Z_]+__|\bindexedDB\b|ato-cipher-(?:proofreading|collection)|\bproofreading\s*[:.]|proofreading[-.]|import-feedback-workbench/i;
 for(const file of published){
  assert(!excluded.test(file),`Private feature filename in public release: ${file}`);
@@ -32,7 +37,7 @@ for(const file of published){
 for(const file of [...walk('tests'),...published]){
  if(file.startsWith('tests/qa/'))continue;
  assert(!/(?:proofreading|feedback-workbench|private[-_](?:fixture|story|feedback))/i.test(path.basename(file)),`Private test/helper in public release: ${file}`);
- assert(!/\.(?:png|jpe?g|webp|gif|zip|pdf)$/i.test(file),`Unexpected bundled input image/archive: ${file}`);
+ assert(apkAllowed.has(file)||!/\.(?:png|jpe?g|webp|gif|zip|pdf|ttf|otf)$/i.test(file),`Unexpected bundled input image/archive: ${file}`);
 }
 const glyphs=JSON.parse(read('src/glyphs.json')),parts=JSON.parse(read('src/parts.json')),siren=JSON.parse(read('src/siren-glyphs.json'));
 const assets=[...Object.values(glyphs),...parts.components,siren.base,...Object.values(siren.letters)];
@@ -58,4 +63,4 @@ if(fs.existsSync(path.join(root,dist))){
  assert(!excluded.test(read(path.join(dist,'index.html'))),'Private feature code in ATO build');
  for(const [file,entry] of Object.entries(manifest.files))assert.equal(hash(fs.readFileSync(path.join(root,dist,file))),entry.sha256,`ATO manifest mismatch: ${file}`);
 }
-console.log('PASS public release scope: no private workbench/hooks/storage/payloads/tests; manual review and Siren save/load preserved; removed controls absent; 91 public PNGs and existing fixtures unchanged; standalone and available ATO package audited.');
+console.log('PASS release scope: exact declared APK resource manifest, no private screenshots/passages/account payloads; manual review and Siren save/load preserved; removed controls absent; original 91 PNGs and fixtures unchanged; standalone and ATO package audited.');

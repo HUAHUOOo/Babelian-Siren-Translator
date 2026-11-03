@@ -1,0 +1,635 @@
+{
+  "font": {
+    "kind": "Font",
+    "name": "Babelian_Cypher",
+    "path": "fonts/Babelian_Cypher.ttf",
+    "bytes": 59268,
+    "characters": 124,
+    "family": "Babelian_Cypher",
+    "full_name": "Babelian_Cypher",
+    "license": null,
+    "license_url": null
+  },
+  "cmap": [
+    {
+      "unicode": 0,
+      "character": "\u0000",
+      "glyph": "uni0000"
+    },
+    {
+      "unicode": 1,
+      "character": "\u0001",
+      "glyph": "uni0001"
+    },
+    {
+      "unicode": 2,
+      "character": "\u0002",
+      "glyph": "uni0002"
+    },
+    {
+      "unicode": 3,
+      "character": "\u0003",
+      "glyph": "uni0003"
+    },
+    {
+      "unicode": 4,
+      "character": "\u0004",
+      "glyph": "uni0004"
+    },
+    {
+      "unicode": 5,
+      "character": "\u0005",
+      "glyph": "uni0005"
+    },
+    {
+      "unicode": 6,
+      "character": "\u0006",
+      "glyph": "uni0006"
+    },
+    {
+      "unicode": 7,
+      "character": "\u0007",
+      "glyph": "uni0007"
+    },
+    {
+      "unicode": 8,
+      "character": "\b",
+      "glyph": "uni0008"
+    },
+    {
+      "unicode": 9,
+      "character": "\t",
+      "glyph": "uni0009"
+    },
+    {
+      "unicode": 10,
+      "character": "\n",
+      "glyph": "uni000A"
+    },
+    {
+      "unicode": 11,
+      "character": "\u000b",
+      "glyph": "uni000B"
+    },
+    {
+      "unicode": 12,
+      "character": "\f",
+      "glyph": "uni000C"
+    },
+    {
+      "unicode": 13,
+      "character": "\r",
+      "glyph": "uni000D"
+    },
+    {
+      "unicode": 14,
+      "character": "\u000e",
+      "glyph": "uni000E"
+    },
+    {
+      "unicode": 15,
+      "character": "\u000f",
+      "glyph": "uni000F"
+    },
+    {
+      "unicode": 16,
+      "character": "\u0010",
+      "glyph": "uni0010"
+    },
+    {
+      "unicode": 17,
+      "character": "\u0011",
+      "glyph": "uni0011"
+    },
+    {
+      "unicode": 18,
+      "character": "\u0012",
+      "glyph": "uni0012"
+    },
+    {
+      "unicode": 19,
+      "character": "\u0013",
+      "glyph": "uni0013"
+    },
+    {
+      "unicode": 20,
+      "character": "\u0014",
+      "glyph": "uni0014"
+    },
+    {
+      "unicode": 21,
+      "character": "\u0015",
+      "glyph": "uni0015"
+    },
+    {
+      "unicode": 22,
+      "character": "\u0016",
+      "glyph": "uni0016"
+    },
+    {
+      "unicode": 23,
+      "character": "\u0017",
+      "glyph": "uni0017"
+    },
+    {
+      "unicode": 24,
+      "character": "\u0018",
+      "glyph": "uni0018"
+    },
+    {
+      "unicode": 25,
+      "character": "\u0019",
+      "glyph": "uni0019"
+    },
+    {
+      "unicode": 26,
+      "character": "\u001a",
+      "glyph": "uni001A"
+    },
+    {
+      "unicode": 27,
+      "character": "\u001b",
+      "glyph": "uni001B"
+    },
+    {
+      "unicode": 28,
+      "character": "\u001c",
+      "glyph": "uni001C"
+    },
+    {
+      "unicode": 29,
+      "character": "\u001d",
+      "glyph": "uni001D"
+    },
+    {
+      "unicode": 30,
+      "character": "\u001e",
+      "glyph": "uni001E"
+    },
+    {
+      "unicode": 31,
+      "character": "\u001f",
+      "glyph": "uni001F"
+    },
+    {
+      "unicode": 32,
+      "character": " ",
+      "glyph": "space"
+    },
+    {
+      "unicode": 45,
+      "character": "-",
+      "glyph": "hyphen"
+    },
+    {
+      "unicode": 49,
+      "character": "1",
+      "glyph": "one"
+    },
+    {
+      "unicode": 50,
+      "character": "2",
+      "glyph": "two"
+    },
+    {
+      "unicode": 51,
+      "character": "3",
+      "glyph": "three"
+    },
+    {
+      "unicode": 52,
+      "character": "4",
+      "glyph": "four"
+    },
+    {
+      "unicode": 53,
+      "character": "5",
+      "glyph": "five"
+    },
+    {
+      "unicode": 63,
+      "character": "?",
+      "glyph": "question"
+    },
+    {
+      "unicode": 65,
+      "character": "A",
+      "glyph": "A"
+    },
+    {
+      "unicode": 66,
+      "character": "B",
+      "glyph": "B"
+    },
+    {
+      "unicode": 67,
+      "character": "C",
+      "glyph": "C"
+    },
+    {
+      "unicode": 68,
+      "character": "D",
+      "glyph": "D"
+    },
+    {
+      "unicode": 69,
+      "character": "E",
+      "glyph": "E"
+    },
+    {
+      "unicode": 70,
+      "character": "F",
+      "glyph": "F"
+    },
+    {
+      "unicode": 71,
+      "character": "G",
+      "glyph": "G"
+    },
+    {
+      "unicode": 72,
+      "character": "H",
+      "glyph": "H"
+    },
+    {
+      "unicode": 73,
+      "character": "I",
+      "glyph": "I"
+    },
+    {
+      "unicode": 74,
+      "character": "J",
+      "glyph": "J"
+    },
+    {
+      "unicode": 75,
+      "character": "K",
+      "glyph": "K"
+    },
+    {
+      "unicode": 76,
+      "character": "L",
+      "glyph": "L"
+    },
+    {
+      "unicode": 77,
+      "character": "M",
+      "glyph": "M"
+    },
+    {
+      "unicode": 78,
+      "character": "N",
+      "glyph": "N"
+    },
+    {
+      "unicode": 79,
+      "character": "O",
+      "glyph": "O"
+    },
+    {
+      "unicode": 80,
+      "character": "P",
+      "glyph": "P"
+    },
+    {
+      "unicode": 81,
+      "character": "Q",
+      "glyph": "Q"
+    },
+    {
+      "unicode": 82,
+      "character": "R",
+      "glyph": "R"
+    },
+    {
+      "unicode": 83,
+      "character": "S",
+      "glyph": "S"
+    },
+    {
+      "unicode": 84,
+      "character": "T",
+      "glyph": "T"
+    },
+    {
+      "unicode": 85,
+      "character": "U",
+      "glyph": "U"
+    },
+    {
+      "unicode": 86,
+      "character": "V",
+      "glyph": "V"
+    },
+    {
+      "unicode": 87,
+      "character": "W",
+      "glyph": "W"
+    },
+    {
+      "unicode": 88,
+      "character": "X",
+      "glyph": "X"
+    },
+    {
+      "unicode": 89,
+      "character": "Y",
+      "glyph": "Y"
+    },
+    {
+      "unicode": 90,
+      "character": "Z",
+      "glyph": "Z"
+    },
+    {
+      "unicode": 94,
+      "character": "^",
+      "glyph": "asciicircum"
+    },
+    {
+      "unicode": 95,
+      "character": "_",
+      "glyph": "underscore"
+    },
+    {
+      "unicode": 97,
+      "character": "a",
+      "glyph": "a"
+    },
+    {
+      "unicode": 98,
+      "character": "b",
+      "glyph": "b"
+    },
+    {
+      "unicode": 99,
+      "character": "c",
+      "glyph": "c"
+    },
+    {
+      "unicode": 100,
+      "character": "d",
+      "glyph": "d"
+    },
+    {
+      "unicode": 101,
+      "character": "e",
+      "glyph": "e"
+    },
+    {
+      "unicode": 102,
+      "character": "f",
+      "glyph": "f"
+    },
+    {
+      "unicode": 103,
+      "character": "g",
+      "glyph": "g"
+    },
+    {
+      "unicode": 104,
+      "character": "h",
+      "glyph": "h"
+    },
+    {
+      "unicode": 105,
+      "character": "i",
+      "glyph": "i"
+    },
+    {
+      "unicode": 106,
+      "character": "j",
+      "glyph": "j"
+    },
+    {
+      "unicode": 107,
+      "character": "k",
+      "glyph": "k"
+    },
+    {
+      "unicode": 108,
+      "character": "l",
+      "glyph": "l"
+    },
+    {
+      "unicode": 109,
+      "character": "m",
+      "glyph": "m"
+    },
+    {
+      "unicode": 110,
+      "character": "n",
+      "glyph": "n"
+    },
+    {
+      "unicode": 111,
+      "character": "o",
+      "glyph": "o"
+    },
+    {
+      "unicode": 112,
+      "character": "p",
+      "glyph": "p"
+    },
+    {
+      "unicode": 113,
+      "character": "q",
+      "glyph": "q"
+    },
+    {
+      "unicode": 114,
+      "character": "r",
+      "glyph": "r"
+    },
+    {
+      "unicode": 115,
+      "character": "s",
+      "glyph": "s"
+    },
+    {
+      "unicode": 116,
+      "character": "t",
+      "glyph": "t"
+    },
+    {
+      "unicode": 117,
+      "character": "u",
+      "glyph": "u"
+    },
+    {
+      "unicode": 118,
+      "character": "v",
+      "glyph": "v"
+    },
+    {
+      "unicode": 119,
+      "character": "w",
+      "glyph": "w"
+    },
+    {
+      "unicode": 120,
+      "character": "x",
+      "glyph": "x"
+    },
+    {
+      "unicode": 121,
+      "character": "y",
+      "glyph": "y"
+    },
+    {
+      "unicode": 122,
+      "character": "z",
+      "glyph": "z"
+    },
+    {
+      "unicode": 126,
+      "character": "~",
+      "glyph": "asciitilde"
+    },
+    {
+      "unicode": 127,
+      "character": "",
+      "glyph": "uni007F"
+    },
+    {
+      "unicode": 160,
+      "character": " ",
+      "glyph": "uni00A0"
+    },
+    {
+      "unicode": 161,
+      "character": "¡",
+      "glyph": "exclamdown"
+    },
+    {
+      "unicode": 162,
+      "character": "¢",
+      "glyph": "cent"
+    },
+    {
+      "unicode": 163,
+      "character": "£",
+      "glyph": "sterling"
+    },
+    {
+      "unicode": 164,
+      "character": "¤",
+      "glyph": "currency"
+    },
+    {
+      "unicode": 165,
+      "character": "¥",
+      "glyph": "yen"
+    },
+    {
+      "unicode": 166,
+      "character": "¦",
+      "glyph": "brokenbar"
+    },
+    {
+      "unicode": 167,
+      "character": "§",
+      "glyph": "section"
+    },
+    {
+      "unicode": 168,
+      "character": "¨",
+      "glyph": "dieresis"
+    },
+    {
+      "unicode": 169,
+      "character": "©",
+      "glyph": "copyright"
+    },
+    {
+      "unicode": 170,
+      "character": "ª",
+      "glyph": "ordfeminine"
+    },
+    {
+      "unicode": 171,
+      "character": "«",
+      "glyph": "guillemotleft"
+    },
+    {
+      "unicode": 172,
+      "character": "¬",
+      "glyph": "logicalnot"
+    },
+    {
+      "unicode": 173,
+      "character": "­",
+      "glyph": "uni00AD"
+    },
+    {
+      "unicode": 174,
+      "character": "®",
+      "glyph": "registered"
+    },
+    {
+      "unicode": 175,
+      "character": "¯",
+      "glyph": "macron"
+    },
+    {
+      "unicode": 176,
+      "character": "°",
+      "glyph": "degree"
+    },
+    {
+      "unicode": 177,
+      "character": "±",
+      "glyph": "plusminus"
+    },
+    {
+      "unicode": 178,
+      "character": "²",
+      "glyph": "uni00B2"
+    },
+    {
+      "unicode": 179,
+      "character": "³",
+      "glyph": "uni00B3"
+    },
+    {
+      "unicode": 180,
+      "character": "´",
+      "glyph": "acute"
+    },
+    {
+      "unicode": 181,
+      "character": "µ",
+      "glyph": "mu"
+    },
+    {
+      "unicode": 182,
+      "character": "¶",
+      "glyph": "paragraph"
+    },
+    {
+      "unicode": 183,
+      "character": "·",
+      "glyph": "periodcentered"
+    },
+    {
+      "unicode": 184,
+      "character": "¸",
+      "glyph": "cedilla"
+    },
+    {
+      "unicode": 185,
+      "character": "¹",
+      "glyph": "uni00B9"
+    },
+    {
+      "unicode": 186,
+      "character": "º",
+      "glyph": "ordmasculine"
+    },
+    {
+      "unicode": 187,
+      "character": "»",
+      "glyph": "guillemotright"
+    }
+  ]
+}

@@ -1,0 +1,3512 @@
+[
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "danger",
+    "index": 0,
+    "path": "icons/ato_text_icons_01/danger.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_0__resources.assets__2036.png",
+    "extraction": "sprite",
+    "width": 96,
+    "height": 110,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 112,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "fate",
+    "index": 1,
+    "path": "icons/ato_text_icons_01/fate.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_1__resources.assets__979.png",
+    "extraction": "sprite",
+    "width": 106,
+    "height": 102,
+    "inline_scale": 1.2000000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 112,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "rage",
+    "index": 2,
+    "path": "icons/ato_text_icons_01/rage.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_2__resources.assets__994.png",
+    "extraction": "sprite",
+    "width": 114,
+    "height": 112,
+    "inline_scale": 1.149999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 113,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "crew",
+    "index": 3,
+    "path": "icons/ato_text_icons_01/crew.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_3__resources.assets__1009.png",
+    "extraction": "sprite",
+    "width": 110,
+    "height": 110,
+    "inline_scale": 1.2000000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -1.0099999904632568,
+      "m_HorizontalBearingY": 110,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "hull",
+    "index": 4,
+    "path": "icons/ato_text_icons_01/hull.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_4__resources.assets__1031.png",
+    "extraction": "sprite",
+    "width": 110,
+    "height": 112,
+    "inline_scale": 1.25,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "progress",
+    "index": 5,
+    "path": "icons/ato_text_icons_01/progress.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_5__resources.assets__1037.png",
+    "extraction": "sprite",
+    "width": 102,
+    "height": 117,
+    "inline_scale": 1.600000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -11.300000190734863,
+      "m_HorizontalBearingY": 95,
+      "m_HorizontalAdvance": 102.47000122070312
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "doom",
+    "index": 6,
+    "path": "icons/ato_text_icons_01/doom.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_6__resources.assets__1006.png",
+    "extraction": "sprite",
+    "width": 104,
+    "height": 114,
+    "inline_scale": 1.600000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -5.659999847412109,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 110
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "argo_fate",
+    "index": 7,
+    "path": "icons/ato_text_icons_01/argo_fate.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_7__resources.assets__1036.png",
+    "extraction": "sprite",
+    "width": 114,
+    "height": 102,
+    "inline_scale": 1.399999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -10.600000381469727,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 105
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "reaction",
+    "index": 8,
+    "path": "icons/ato_text_icons_01/reaction.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_8__resources.assets__2001.png",
+    "extraction": "sprite",
+    "width": 115,
+    "height": 115,
+    "inline_scale": 1.25,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "gear",
+    "index": 9,
+    "path": "icons/ato_text_icons_01/gear.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_9__resources.assets__1032.png",
+    "extraction": "sprite",
+    "width": 84,
+    "height": 114,
+    "inline_scale": 1.4500000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -12.430000305175781,
+      "m_HorizontalBearingY": 102,
+      "m_HorizontalAdvance": 90
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "titan",
+    "index": 10,
+    "path": "icons/ato_text_icons_01/titan.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_10__resources.assets__2027.png",
+    "extraction": "sprite",
+    "width": 96,
+    "height": 115,
+    "inline_scale": 1.4500000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -13.59000015258789,
+      "m_HorizontalBearingY": 102,
+      "m_HorizontalAdvance": 95
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "river",
+    "index": 11,
+    "path": "icons/ato_text_icons_01/river.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_11__resources.assets__1035.png",
+    "extraction": "sprite",
+    "width": 113,
+    "height": 114,
+    "inline_scale": 1.350000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 108,
+      "m_HorizontalAdvance": 122
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "stranger",
+    "index": 12,
+    "path": "icons/ato_text_icons_01/stranger.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_12__resources.assets__2010.png",
+    "extraction": "sprite",
+    "width": 86,
+    "height": 111,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 110
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "centimanes_one",
+    "index": 13,
+    "path": "icons/ato_text_icons_01/centimanes_one.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_13__resources.assets__1962.png",
+    "extraction": "sprite",
+    "width": 115,
+    "height": 115,
+    "inline_scale": 1.149999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "good",
+    "index": 14,
+    "path": "icons/ato_text_icons_01/good.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_14__resources.assets__1973.png",
+    "extraction": "sprite",
+    "width": 112,
+    "height": 114,
+    "inline_scale": 1.149999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 110,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "at_token",
+    "index": 15,
+    "path": "icons/ato_text_icons_01/at_token.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_15__resources.assets__1063.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 117,
+    "inline_scale": 1.3300000429153442,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 102,
+      "m_HorizontalAdvance": 123
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "charge",
+    "index": 16,
+    "path": "icons/ato_text_icons_01/charge.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_16__resources.assets__1055.png",
+    "extraction": "sprite",
+    "width": 111,
+    "height": 111,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 108,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "refugee",
+    "index": 17,
+    "path": "icons/ato_text_icons_01/refugee.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_17__resources.assets__1027.png",
+    "extraction": "sprite",
+    "width": 78,
+    "height": 111,
+    "inline_scale": 1.3250000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -13.600000381469727,
+      "m_HorizontalBearingY": 97.94000244140625,
+      "m_HorizontalAdvance": 90.4000015258789
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "upstream",
+    "index": 18,
+    "path": "icons/ato_text_icons_01/upstream.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_18__resources.assets__1053.png",
+    "extraction": "sprite",
+    "width": 113,
+    "height": 64,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 90,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "second_cataract",
+    "index": 19,
+    "path": "icons/ato_text_icons_01/second_cataract.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_19__resources.assets__1011.png",
+    "extraction": "sprite",
+    "width": 115,
+    "height": 69,
+    "inline_scale": 2.299999952316284,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -6.300000190734863,
+      "m_HorizontalBearingY": 85.41000366210938,
+      "m_HorizontalAdvance": 114.69000244140625
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "padlock",
+    "index": 20,
+    "path": "icons/ato_text_icons_01/padlock.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_20__resources.assets__1981.png",
+    "extraction": "sprite",
+    "width": 101,
+    "height": 109,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 110,
+      "m_HorizontalAdvance": 118
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "diolkos",
+    "index": 21,
+    "path": "icons/ato_text_icons_01/diolkos.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_21__resources.assets__1061.png",
+    "extraction": "sprite",
+    "width": 111,
+    "height": 112,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 90,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "combat_action",
+    "index": 22,
+    "path": "icons/ato_text_icons_01/combat_action.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_22__resources.assets__1015.png",
+    "extraction": "sprite",
+    "width": 111,
+    "height": 111,
+    "inline_scale": 1.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -4.199999809265137,
+      "m_HorizontalBearingY": 95,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "movement_action",
+    "index": 23,
+    "path": "icons/ato_text_icons_01/movement_action.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_23__resources.assets__992.png",
+    "extraction": "sprite",
+    "width": 110,
+    "height": 110,
+    "inline_scale": 1.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -3.4200000762939453,
+      "m_HorizontalBearingY": 95,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "ariadnes_anchor",
+    "index": 24,
+    "path": "icons/ato_text_icons_01/ariadnes_anchor.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_24__resources.assets__1978.png",
+    "extraction": "sprite",
+    "width": 111,
+    "height": 111,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 90,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "deadalus_lantern",
+    "index": 25,
+    "path": "icons/ato_text_icons_01/deadalus_lantern.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_25__resources.assets__1076.png",
+    "extraction": "sprite",
+    "width": 78,
+    "height": 114,
+    "inline_scale": 1.399999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -18,
+      "m_HorizontalBearingY": 97.0999984741211,
+      "m_HorizontalAdvance": 92
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "portal_future",
+    "index": 26,
+    "path": "icons/ato_text_icons_01/portal_future.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_26__resources.assets__998.png",
+    "extraction": "sprite",
+    "width": 114,
+    "height": 114,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "portal_past",
+    "index": 27,
+    "path": "icons/ato_text_icons_01/portal_past.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_27__resources.assets__2042.png",
+    "extraction": "sprite",
+    "width": 117,
+    "height": 116,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "time_wound",
+    "index": 28,
+    "path": "icons/ato_text_icons_01/time_wound.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_28__resources.assets__2055.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 118,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "tech_combat",
+    "index": 29,
+    "path": "icons/ato_text_icons_01/tech_combat.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_29__resources.assets__1054.png",
+    "extraction": "sprite",
+    "width": 111,
+    "height": 111,
+    "inline_scale": 1.350000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -3.690000057220459,
+      "m_HorizontalBearingY": 110,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "tech_structural",
+    "index": 30,
+    "path": "icons/ato_text_icons_01/tech_structural.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_30__resources.assets__2045.png",
+    "extraction": "sprite",
+    "width": 117,
+    "height": 117,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -4.340000152587891,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 110
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "adventure",
+    "index": 31,
+    "path": "icons/ato_text_icons_01/adventure.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_31__resources.assets__996.png",
+    "extraction": "sprite",
+    "width": 104,
+    "height": 88,
+    "inline_scale": 1.4500000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 95,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "workshop",
+    "index": 32,
+    "path": "icons/ato_text_icons_01/workshop.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_32__resources.assets__986.png",
+    "extraction": "sprite",
+    "width": 115,
+    "height": 115,
+    "inline_scale": 1.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "evasion_reroll",
+    "index": 33,
+    "path": "icons/ato_text_icons_01/evasion_reroll.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_33__resources.assets__2061.png",
+    "extraction": "sprite",
+    "width": 92,
+    "height": 108,
+    "inline_scale": 1.600000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -2.0299999713897705,
+      "m_HorizontalBearingY": 90,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "evasion",
+    "index": 34,
+    "path": "icons/ato_text_icons_01/evasion.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_34__resources.assets__1000.png",
+    "extraction": "sprite",
+    "width": 116,
+    "height": 103,
+    "inline_scale": 1.4500000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 95,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "potential",
+    "index": 35,
+    "path": "icons/ato_text_icons_01/potential.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_35__resources.assets__1051.png",
+    "extraction": "sprite",
+    "width": 123,
+    "height": 108,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 122
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "paradox",
+    "index": 36,
+    "path": "icons/ato_text_icons_01/paradox.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_36__resources.assets__1967.png",
+    "extraction": "sprite",
+    "width": 100,
+    "height": 111,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 116
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "support",
+    "index": 37,
+    "path": "icons/ato_text_icons_01/support.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_37__resources.assets__1998.png",
+    "extraction": "sprite",
+    "width": 109,
+    "height": 109,
+    "inline_scale": 1.3200000524520874,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "argo_knowledge",
+    "index": 38,
+    "path": "icons/ato_text_icons_01/argo_knowledge.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_38__resources.assets__2009.png",
+    "extraction": "sprite",
+    "width": 91,
+    "height": 111,
+    "inline_scale": 1.4500000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -1.350000023841858,
+      "m_HorizontalBearingY": 114,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "city",
+    "index": 39,
+    "path": "icons/ato_text_icons_01/city.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_39__resources.assets__980.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 118,
+    "inline_scale": 1.2699999809265137,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -2.380000114440918,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "red_power_die",
+    "index": 40,
+    "path": "icons/ato_text_icons_01/red_power_die.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_40__resources.assets__2035.png",
+    "extraction": "sprite",
+    "width": 105,
+    "height": 103,
+    "inline_scale": 1.399999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 122
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "precision_token",
+    "index": 41,
+    "path": "icons/ato_text_icons_01/precision_token.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_41__resources.assets__1057.png",
+    "extraction": "sprite",
+    "width": 117,
+    "height": 117,
+    "inline_scale": 1.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 92,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "to_hit_token",
+    "index": 42,
+    "path": "icons/ato_text_icons_01/to_hit_token.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_42__resources.assets__975.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 118,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 102.11000061035156,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "trireme_token",
+    "index": 43,
+    "path": "icons/ato_text_icons_01/trireme_token.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_43__resources.assets__1974.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 118,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 90,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "verified_ico",
+    "index": 44,
+    "path": "icons/ato_text_icons_01/verified_ico.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_44__resources.assets__2029.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 113,
+    "inline_scale": 1.2000000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 123
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "failed_ico",
+    "index": 45,
+    "path": "icons/ato_text_icons_01/failed_ico.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_45__resources.assets__1008.png",
+    "extraction": "sprite",
+    "width": 112,
+    "height": 113,
+    "inline_scale": 1.2000000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 123
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "unverified_ico",
+    "index": 46,
+    "path": "icons/ato_text_icons_01/unverified_ico.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_46__resources.assets__2004.png",
+    "extraction": "sprite",
+    "width": 112,
+    "height": 113,
+    "inline_scale": 1.2000000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 123
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "portal_past_big",
+    "index": 27,
+    "path": "icons/ato_text_icons_01/portal_past_big.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_27__resources.assets__2042.png",
+    "extraction": "sprite",
+    "width": 117,
+    "height": 116,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "portal_future_big",
+    "index": 26,
+    "path": "icons/ato_text_icons_01/portal_future_big.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_26__resources.assets__998.png",
+    "extraction": "sprite",
+    "width": 114,
+    "height": 114,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "time_wound_big",
+    "index": 28,
+    "path": "icons/ato_text_icons_01/time_wound_big.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_28__resources.assets__2055.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 118,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "debt",
+    "index": 57,
+    "path": "icons/ato_text_icons_01/debt.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_47__resources.assets__1052.png",
+    "extraction": "sprite",
+    "width": 115,
+    "height": 115,
+    "inline_scale": 1.4500000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -12,
+      "m_HorizontalBearingY": 95,
+      "m_HorizontalAdvance": 116.31999969482422
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "paranoia",
+    "index": 58,
+    "path": "icons/ato_text_icons_01/paranoia.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_48__resources.assets__973.png",
+    "extraction": "sprite",
+    "width": 111,
+    "height": 115,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "adversary",
+    "index": 59,
+    "path": "icons/ato_text_icons_01/adversary.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_49__resources.assets__1966.png",
+    "extraction": "sprite",
+    "width": 117,
+    "height": 117,
+    "inline_scale": 1.399999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 123
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "oasis",
+    "index": 60,
+    "path": "icons/ato_text_icons_01/oasis.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_50__resources.assets__1992.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 118,
+    "inline_scale": 1.2699999809265137,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "black_power_die",
+    "index": 61,
+    "path": "icons/ato_text_icons_01/black_power_die.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_51__resources.assets__1988.png",
+    "extraction": "sprite",
+    "width": 105,
+    "height": 103,
+    "inline_scale": 1.399999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 122
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "siren",
+    "index": 62,
+    "path": "icons/ato_text_icons_01/siren.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_52__resources.assets__2048.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 119,
+    "inline_scale": 1.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "power",
+    "index": 63,
+    "path": "icons/ato_text_icons_01/power.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_53__resources.assets__2049.png",
+    "extraction": "sprite",
+    "width": 46,
+    "height": 120,
+    "inline_scale": 1.25,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -11.079999923706055,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 85
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "uw_city",
+    "index": 64,
+    "path": "icons/ato_text_icons_01/uw_city.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_54__resources.assets__2039.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 119,
+    "inline_scale": 1.2699999809265137,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -3.4000000953674316,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "uw_caves",
+    "index": 65,
+    "path": "icons/ato_text_icons_01/uw_caves.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_55__resources.assets__1020.png",
+    "extraction": "sprite",
+    "width": 104,
+    "height": 108,
+    "inline_scale": 1.2699999809265137,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 95,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "uw_caves_big",
+    "index": 65,
+    "path": "icons/ato_text_icons_01/uw_caves_big.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_55__resources.assets__1020.png",
+    "extraction": "sprite",
+    "width": 104,
+    "height": 108,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 95,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "silver",
+    "index": 66,
+    "path": "icons/ato_text_icons_01/silver.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_56__resources.assets__1995.png",
+    "extraction": "sprite",
+    "width": 118,
+    "height": 95,
+    "inline_scale": 1.350000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 115
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "spiral_01",
+    "index": 67,
+    "path": "icons/ato_text_icons_01/spiral_01.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_57__resources.assets__1024.png",
+    "extraction": "sprite",
+    "width": 111,
+    "height": 116,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 90,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_01",
+    "name": "spiral_02",
+    "index": 68,
+    "path": "icons/ato_text_icons_01/spiral_02.png",
+    "sprite_source": "exported/sprites/ato_text_icons_01_58__resources.assets__1997.png",
+    "extraction": "sprite",
+    "width": 117,
+    "height": 116,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 90,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "aether",
+    "index": 0,
+    "path": "icons/ato_text_icons_02/aether.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_0__resources.assets__997.png",
+    "extraction": "sprite",
+    "width": 95,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -4.199999809265137,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 110.55000305175781
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "anemoi_graves",
+    "index": 1,
+    "path": "icons/ato_text_icons_02/anemoi_graves.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_1__resources.assets__1065.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4.400000095367432,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "armor",
+    "index": 2,
+    "path": "icons/ato_text_icons_02/armor.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_2__resources.assets__2022.png",
+    "extraction": "sprite",
+    "width": 98,
+    "height": 108,
+    "inline_scale": 1.2000000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 107
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "attachments",
+    "index": 3,
+    "path": "icons/ato_text_icons_02/attachments.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_3__resources.assets__1983.png",
+    "extraction": "sprite",
+    "width": 120,
+    "height": 121,
+    "inline_scale": 1.0499999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2.9000000953674316,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "attack_action",
+    "index": 4,
+    "path": "icons/ato_text_icons_02/attack_action.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_4__resources.assets__2031.png",
+    "extraction": "sprite",
+    "width": 109,
+    "height": 108,
+    "inline_scale": 1.2899999618530273,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 108
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "11",
+    "index": 5,
+    "path": "icons/ato_text_icons_02/11.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_5__resources.assets__1059.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "22",
+    "index": 6,
+    "path": "icons/ato_text_icons_02/22.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_6__resources.assets__991.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "33",
+    "index": 7,
+    "path": "icons/ato_text_icons_02/33.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_7__resources.assets__1025.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "333",
+    "index": 8,
+    "path": "icons/ato_text_icons_02/333.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_8__resources.assets__2021.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "444",
+    "index": 9,
+    "path": "icons/ato_text_icons_02/444.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_9__resources.assets__1007.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "555",
+    "index": 10,
+    "path": "icons/ato_text_icons_02/555.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_10__resources.assets__2038.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "5555",
+    "index": 11,
+    "path": "icons/ato_text_icons_02/5555.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_11__resources.assets__1044.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "666",
+    "index": 12,
+    "path": "icons/ato_text_icons_02/666.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_12__resources.assets__2054.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "7777",
+    "index": 13,
+    "path": "icons/ato_text_icons_02/7777.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_13__resources.assets__2052.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "77",
+    "index": 14,
+    "path": "icons/ato_text_icons_02/77.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_14__resources.assets__1971.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "888",
+    "index": 15,
+    "path": "icons/ato_text_icons_02/888.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_15__resources.assets__1048.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "999",
+    "index": 16,
+    "path": "icons/ato_text_icons_02/999.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_16__resources.assets__1012.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "escalation",
+    "index": 17,
+    "path": "icons/ato_text_icons_02/escalation.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_17__resources.assets__2000.png",
+    "extraction": "sprite",
+    "width": 112,
+    "height": 97,
+    "inline_scale": 1.2999999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -11,
+      "m_HorizontalBearingY": 102,
+      "m_HorizontalAdvance": 97.69999694824219
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "evasion_bonus",
+    "index": 18,
+    "path": "icons/ato_text_icons_02/evasion_bonus.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_18__resources.assets__1017.png",
+    "extraction": "sprite",
+    "width": 85,
+    "height": 76,
+    "inline_scale": 1.149999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -24.399999618530273,
+      "m_HorizontalBearingY": 86.9000015258789,
+      "m_HorizontalAdvance": 78.5999984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "fire",
+    "index": 19,
+    "path": "icons/ato_text_icons_02/fire.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_19__resources.assets__1041.png",
+    "extraction": "sprite",
+    "width": 94,
+    "height": 83,
+    "inline_scale": 1.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -15.600000381469727,
+      "m_HorizontalBearingY": 87,
+      "m_HorizontalAdvance": 95.4000015258789
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "goats",
+    "index": 20,
+    "path": "icons/ato_text_icons_02/goats.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_20__resources.assets__1984.png",
+    "extraction": "sprite",
+    "width": 116,
+    "height": 115,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -5,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 117.5
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "gt",
+    "index": 21,
+    "path": "icons/ato_text_icons_02/gt.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_21__resources.assets__1047.png",
+    "extraction": "sprite",
+    "width": 89,
+    "height": 90,
+    "inline_scale": 1.0700000524520874,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -16.799999237060547,
+      "m_HorizontalBearingY": 89.0999984741211,
+      "m_HorizontalAdvance": 90
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "lumbering",
+    "index": 22,
+    "path": "icons/ato_text_icons_02/lumbering.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_22__resources.assets__2058.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -3.4000000953674316,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 117.55000305175781
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "microwave",
+    "index": 23,
+    "path": "icons/ato_text_icons_02/microwave.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_23__resources.assets__1999.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 126,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2.9000000953674316,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "midas",
+    "index": 24,
+    "path": "icons/ato_text_icons_02/midas.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_24__resources.assets__2034.png",
+    "extraction": "sprite",
+    "width": 116,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -0.699999988079071,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 123.06999969482422
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "ok_ukn_dis",
+    "index": 25,
+    "path": "icons/ato_text_icons_02/ok_ukn_dis.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_25__resources.assets__1982.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 1.5,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 127.91999816894531
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "ok",
+    "index": 26,
+    "path": "icons/ato_text_icons_02/ok.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_26__resources.assets__1961.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 3.0999999046325684,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 127.62000274658203
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "one_handed",
+    "index": 27,
+    "path": "icons/ato_text_icons_02/one_handed.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_27__resources.assets__1996.png",
+    "extraction": "sprite",
+    "width": 80,
+    "height": 102,
+    "inline_scale": 1.149999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -14.100000381469727,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 96.5999984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "priority_target",
+    "index": 28,
+    "path": "icons/ato_text_icons_02/priority_target.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_28__resources.assets__1022.png",
+    "extraction": "sprite",
+    "width": 89,
+    "height": 91,
+    "inline_scale": 1.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -21.799999237060547,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 75.5999984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "progress_inverted",
+    "index": 29,
+    "path": "icons/ato_text_icons_02/progress_inverted.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_29__resources.assets__1067.png",
+    "extraction": "sprite",
+    "width": 109,
+    "height": 119,
+    "inline_scale": 1.2000000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -12.5,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 99.19000244140625
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "pygmalion_stone",
+    "index": 30,
+    "path": "icons/ato_text_icons_02/pygmalion_stone.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_30__resources.assets__2057.png",
+    "extraction": "sprite",
+    "width": 80,
+    "height": 113,
+    "inline_scale": 1.149999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -12.5,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 95.0999984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "silver_remnant",
+    "index": 31,
+    "path": "icons/ato_text_icons_02/silver_remnant.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_31__resources.assets__2008.png",
+    "extraction": "sprite",
+    "width": 117,
+    "height": 117,
+    "inline_scale": 1.1299999952316284,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -12.199999809265137,
+      "m_HorizontalBearingY": 102.95999908447266,
+      "m_HorizontalAdvance": 96.9000015258789
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "sluice_gates",
+    "index": 32,
+    "path": "icons/ato_text_icons_02/sluice_gates.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_32__resources.assets__1016.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 80,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "spartan_strongholds",
+    "index": 33,
+    "path": "icons/ato_text_icons_02/spartan_strongholds.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_33__resources.assets__2007.png",
+    "extraction": "sprite",
+    "width": 104,
+    "height": 104,
+    "inline_scale": 1.0499999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -12.600000381469727,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 97.38999938964844
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "speed",
+    "index": 34,
+    "path": "icons/ato_text_icons_02/speed.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_34__resources.assets__978.png",
+    "extraction": "sprite",
+    "width": 80,
+    "height": 80,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -25.799999237060547,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 79.5
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "submerged",
+    "index": 35,
+    "path": "icons/ato_text_icons_02/submerged.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_35__resources.assets__1972.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 3.5999999046325684,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "surfaced",
+    "index": 36,
+    "path": "icons/ato_text_icons_02/surfaced.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_36__resources.assets__2006.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 116,
+    "inline_scale": 1.0499999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 6.699999809265137,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 125.3499984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "temenose",
+    "index": 37,
+    "path": "icons/ato_text_icons_02/temenose.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_37__resources.assets__974.png",
+    "extraction": "sprite",
+    "width": 59,
+    "height": 107,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -26.100000381469727,
+      "m_HorizontalBearingY": 101.0999984741211,
+      "m_HorizontalAdvance": 69.19999694824219
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "three_handed",
+    "index": 38,
+    "path": "icons/ato_text_icons_02/three_handed.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_38__resources.assets__1010.png",
+    "extraction": "sprite",
+    "width": 127,
+    "height": 124,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 1.7000000476837158,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 123.8499984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "timeline_battle",
+    "index": 39,
+    "path": "icons/ato_text_icons_02/timeline_battle.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_39__resources.assets__1963.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 5.900000095367432,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 131.5
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "two_handed",
+    "index": 40,
+    "path": "icons/ato_text_icons_02/two_handed.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_40__resources.assets__1038.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -3.5999999046325684,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 112.31999969482422
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "woo",
+    "index": 41,
+    "path": "icons/ato_text_icons_02/woo.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_41__resources.assets__1960.png",
+    "extraction": "sprite",
+    "width": 93,
+    "height": 96,
+    "inline_scale": 1.5499999523162842,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -7.599999904632568,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 70.41000366210938
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "river",
+    "index": 42,
+    "path": "icons/ato_text_icons_02/river.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_42__resources.assets__1002.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2.200000047683716,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 126.5
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "precision",
+    "index": 43,
+    "path": "icons/ato_text_icons_02/precision.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_43__resources.assets__2046.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 1.7999999523162842,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_1",
+    "index": 44,
+    "path": "icons/ato_text_icons_02/cent_1.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_44__resources.assets__2012.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_2",
+    "index": 45,
+    "path": "icons/ato_text_icons_02/cent_2.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_45__resources.assets__2051.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_3_1",
+    "index": 46,
+    "path": "icons/ato_text_icons_02/cent_3_1.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_46__resources.assets__2047.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_3_2",
+    "index": 47,
+    "path": "icons/ato_text_icons_02/cent_3_2.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_47__resources.assets__2053.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_4_1",
+    "index": 48,
+    "path": "icons/ato_text_icons_02/cent_4_1.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_48__resources.assets__2037.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_4_2",
+    "index": 49,
+    "path": "icons/ato_text_icons_02/cent_4_2.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_49__resources.assets__2033.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_5_1",
+    "index": 50,
+    "path": "icons/ato_text_icons_02/cent_5_1.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_50__resources.assets__1014.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_5_2",
+    "index": 51,
+    "path": "icons/ato_text_icons_02/cent_5_2.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_51__resources.assets__983.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_6_1",
+    "index": 52,
+    "path": "icons/ato_text_icons_02/cent_6_1.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_52__resources.assets__2044.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_6_2",
+    "index": 53,
+    "path": "icons/ato_text_icons_02/cent_6_2.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_53__resources.assets__1042.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_7_2",
+    "index": 54,
+    "path": "icons/ato_text_icons_02/cent_7_2.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_54__resources.assets__2025.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_7_1",
+    "index": 55,
+    "path": "icons/ato_text_icons_02/cent_7_1.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_55__resources.assets__2003.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_8",
+    "index": 56,
+    "path": "icons/ato_text_icons_02/cent_8.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_56__resources.assets__2017.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_9",
+    "index": 57,
+    "path": "icons/ato_text_icons_02/cent_9.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_57__resources.assets__1993.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_0_1",
+    "index": 58,
+    "path": "icons/ato_text_icons_02/cent_0_1.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_58__resources.assets__993.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "cent_0_2",
+    "index": 59,
+    "path": "icons/ato_text_icons_02/cent_0_2.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_59__resources.assets__1030.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "blast_charge",
+    "index": 60,
+    "path": "icons/ato_text_icons_02/blast_charge.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_60__resources.assets__1072.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4.699999809265137,
+      "m_HorizontalBearingY": 112,
+      "m_HorizontalAdvance": 130.75999450683594
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "wounds",
+    "index": 61,
+    "path": "icons/ato_text_icons_02/wounds.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_61__resources.assets__2043.png",
+    "extraction": "sprite",
+    "width": 95,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 105.69999694824219
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "buburden",
+    "index": 62,
+    "path": "icons/ato_text_icons_02/buburden.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_62__resources.assets__2020.png",
+    "extraction": "sprite",
+    "width": 97,
+    "height": 127,
+    "inline_scale": 2.5,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 100,
+      "m_HorizontalAdvance": 103.30000305175781
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "break",
+    "index": 63,
+    "path": "icons/ato_text_icons_02/break.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_63__resources.assets__1969.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 123,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2.5399999618530273,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "chariot_a",
+    "index": 64,
+    "path": "icons/ato_text_icons_02/chariot_a.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_64__resources.assets__1013.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -0.5,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "chariot_b",
+    "index": 65,
+    "path": "icons/ato_text_icons_02/chariot_b.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_65__resources.assets__1029.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 125,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 5.420000076293945,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "escalated",
+    "index": 66,
+    "path": "icons/ato_text_icons_02/escalated.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_66__resources.assets__1058.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 3.7200000286102295,
+      "m_HorizontalBearingY": 107.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "frozen_time",
+    "index": 67,
+    "path": "icons/ato_text_icons_02/frozen_time.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_67__resources.assets__1064.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 108,
+    "inline_scale": 1.25,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -0.4399999976158142,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 123.80000305175781
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "opening",
+    "index": 68,
+    "path": "icons/ato_text_icons_02/opening.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_68__resources.assets__1977.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 119,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 3,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 127.30000305175781
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "positive",
+    "index": 69,
+    "path": "icons/ato_text_icons_02/positive.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_69__resources.assets__1987.png",
+    "extraction": "sprite",
+    "width": 117,
+    "height": 128,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -6.300000190734863,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 110.38999938964844
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "up",
+    "index": 70,
+    "path": "icons/ato_text_icons_02/up.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_70__resources.assets__1019.png",
+    "extraction": "sprite",
+    "width": 77,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -1,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 118.0999984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "right",
+    "index": 71,
+    "path": "icons/ato_text_icons_02/right.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_71__resources.assets__2041.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 77,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 1.100000023841858,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 123.94000244140625
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "left",
+    "index": 72,
+    "path": "icons/ato_text_icons_02/left.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_72__resources.assets__995.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 77,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -1.7999999523162842,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 121.0999984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "down",
+    "index": 73,
+    "path": "icons/ato_text_icons_02/down.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_73__resources.assets__1069.png",
+    "extraction": "sprite",
+    "width": 77,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2.200000047683716,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "any",
+    "index": 74,
+    "path": "icons/ato_text_icons_02/any.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_74__resources.assets__1964.png",
+    "extraction": "sprite",
+    "width": 108,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -5.199999809265137,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 113.6500015258789
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "trespass",
+    "index": 75,
+    "path": "icons/ato_text_icons_02/trespass.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_75__resources.assets__2026.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1.100000023841858,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.4000000059604645,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "minotaur_temple",
+    "index": 76,
+    "path": "icons/ato_text_icons_02/minotaur_temple.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_76__resources.assets__988.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 119.41000366210938
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "edge_marker",
+    "index": 77,
+    "path": "icons/ato_text_icons_02/edge_marker.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_77__resources.assets__2050.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "time_marker",
+    "index": 78,
+    "path": "icons/ato_text_icons_02/time_marker.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_78__resources.assets__2062.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 120
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "blockade",
+    "index": 79,
+    "path": "icons/ato_text_icons_02/blockade.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_79__resources.assets__1023.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -2,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 118.9000015258789
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "city_of_splendor",
+    "index": 80,
+    "path": "icons/ato_text_icons_02/city_of_splendor.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_80__resources.assets__1005.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2.799999952316284,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "hanging_gardens",
+    "index": 81,
+    "path": "icons/ato_text_icons_02/hanging_gardens.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_81__resources.assets__2028.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2.4000000953674316,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "last_one_out",
+    "index": 82,
+    "path": "icons/ato_text_icons_02/last_one_out.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_82__resources.assets__1039.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -9,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "time_s_tickin",
+    "index": 83,
+    "path": "icons/ato_text_icons_02/time_s_tickin.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_83__resources.assets__2032.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -15,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 117.2699966430664
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "A",
+    "index": 84,
+    "path": "icons/ato_text_icons_02/A.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_84__resources.assets__1990.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 1.7999999523162842,
+      "m_HorizontalBearingY": 115,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "echo_token",
+    "index": 85,
+    "path": "icons/ato_text_icons_02/echo_token.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_85__resources.assets__982.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 1.2000000476837158,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 122.0999984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "typchon",
+    "index": 86,
+    "path": "icons/ato_text_icons_02/typchon.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_86__resources.assets__1056.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -2.0999999046325684,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 119.36000061035156
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "red_subreme",
+    "index": 87,
+    "path": "icons/ato_text_icons_02/red_subreme.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_87__resources.assets__1049.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -0.699999988079071,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 117.88999938964844
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "black_subreme",
+    "index": 88,
+    "path": "icons/ato_text_icons_02/black_subreme.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_88__resources.assets__1985.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -1.909999966621399,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 120.0999984741211
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "anemoi_wind_rose",
+    "index": 89,
+    "path": "icons/ato_text_icons_02/anemoi_wind_rose.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_89__resources.assets__2023.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 125
+    }
+  },
+  {
+    "atlas": "ato_text_icons_02",
+    "name": "ato_text_icons_02_90",
+    "index": 90,
+    "path": "icons/ato_text_icons_02/ato_text_icons_02_90.png",
+    "sprite_source": "exported/sprites/ato_text_icons_02_90__resources.assets__2030.png",
+    "extraction": "sprite",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -8.989999771118164,
+      "m_HorizontalBearingY": 116.4000015258789,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "C0058",
+    "index": 91,
+    "path": "icons/ato_text_icons_03/C0058.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_0__resources.assets__2024.png",
+    "extraction": "sprite",
+    "width": 348,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 336.20001220703125
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "C0059",
+    "index": 92,
+    "path": "icons/ato_text_icons_03/C0059.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_1__resources.assets__1976.png",
+    "extraction": "sprite",
+    "width": 346,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 61,
+      "m_HorizontalAdvance": 334.20001220703125
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "0237",
+    "index": 93,
+    "path": "icons/ato_text_icons_03/0237.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_2__resources.assets__1043.png",
+    "extraction": "sprite",
+    "width": 354,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -7,
+      "m_HorizontalBearingY": 61,
+      "m_HorizontalAdvance": 338.6000061035156
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "1252",
+    "index": 94,
+    "path": "icons/ato_text_icons_03/1252.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_3__resources.assets__1986.png",
+    "extraction": "sprite",
+    "width": 339,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "1795",
+    "index": 95,
+    "path": "icons/ato_text_icons_03/1795.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_4__resources.assets__1068.png",
+    "extraction": "sprite",
+    "width": 316,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 61,
+      "m_HorizontalAdvance": 278.1000061035156
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "3123",
+    "index": 96,
+    "path": "icons/ato_text_icons_03/3123.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_5__resources.assets__989.png",
+    "extraction": "sprite",
+    "width": 351,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 67,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "4478",
+    "index": 97,
+    "path": "icons/ato_text_icons_03/4478.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_6__resources.assets__990.png",
+    "extraction": "sprite",
+    "width": 315,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 61,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "5923",
+    "index": 98,
+    "path": "icons/ato_text_icons_03/5923.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_7__resources.assets__1991.png",
+    "extraction": "sprite",
+    "width": 346,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 64,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "C7965",
+    "index": 99,
+    "path": "icons/ato_text_icons_03/C7965.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_8__resources.assets__1033.png",
+    "extraction": "sprite",
+    "width": 352,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 336.70001220703125
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "H10003",
+    "index": 100,
+    "path": "icons/ato_text_icons_03/H10003.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_9__resources.assets__981.png",
+    "extraction": "sprite",
+    "width": 349,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -7,
+      "m_HorizontalBearingY": 61,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "H10047",
+    "index": 101,
+    "path": "icons/ato_text_icons_03/H10047.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_10__resources.assets__987.png",
+    "extraction": "sprite",
+    "width": 348,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "H20001",
+    "index": 102,
+    "path": "icons/ato_text_icons_03/H20001.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_11__resources.assets__2040.png",
+    "extraction": "sprite",
+    "width": 311,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 290
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "H20011",
+    "index": 103,
+    "path": "icons/ato_text_icons_03/H20011.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_12__resources.assets__1994.png",
+    "extraction": "sprite",
+    "width": 342,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 61.5,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "H20054",
+    "index": 104,
+    "path": "icons/ato_text_icons_03/H20054.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_13__resources.assets__999.png",
+    "extraction": "sprite",
+    "width": 305,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 281.8999938964844
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "Cnight_dive",
+    "index": 105,
+    "path": "icons/ato_text_icons_03/Cnight_dive.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_14__resources.assets__1965.png",
+    "extraction": "sprite",
+    "width": 363,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -3.9000000953674316,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 345.5
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "CH40038",
+    "index": 106,
+    "path": "icons/ato_text_icons_03/CH40038.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_15__resources.assets__1026.png",
+    "extraction": "sprite",
+    "width": 331,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": 0.20000000298023224,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 327.5299987792969
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "H40043A",
+    "index": 107,
+    "path": "icons/ato_text_icons_03/H40043A.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_16__resources.assets__2056.png",
+    "extraction": "sprite",
+    "width": 295,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 284.1000061035156
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "H40043B",
+    "index": 108,
+    "path": "icons/ato_text_icons_03/H40043B.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_17__resources.assets__2011.png",
+    "extraction": "sprite",
+    "width": 334,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "CH40047",
+    "index": 109,
+    "path": "icons/ato_text_icons_03/CH40047.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_18__resources.assets__1046.png",
+    "extraction": "sprite",
+    "width": 348,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 335.70001220703125
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "closure",
+    "index": 110,
+    "path": "icons/ato_text_icons_03/closure.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_19__resources.assets__1050.png",
+    "extraction": "sprite",
+    "width": 346,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 64,
+      "m_HorizontalAdvance": 331.4599914550781
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "H70030",
+    "index": 111,
+    "path": "icons/ato_text_icons_03/H70030.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_20__resources.assets__977.png",
+    "extraction": "sprite",
+    "width": 307,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 60,
+      "m_HorizontalAdvance": 263.1000061035156
+    }
+  },
+  {
+    "atlas": "ato_text_icons_03",
+    "name": "0090",
+    "index": 112,
+    "path": "icons/ato_text_icons_03/0090.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren_21__resources.assets__1004.png",
+    "extraction": "sprite",
+    "width": 344,
+    "height": 94,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 372,
+      "m_Height": 93.09091186523438,
+      "m_HorizontalBearingX": -5.409999847412109,
+      "m_HorizontalBearingY": 64,
+      "m_HorizontalAdvance": 339.54998779296875
+    }
+  },
+  {
+    "atlas": "ato_text_icons_04",
+    "name": "corr3271",
+    "index": 0,
+    "path": "icons/ato_text_icons_04/corr3271.png",
+    "sprite_source": "exported/sprites/ato_text_icons_siren kopia_c4 (1)_0__resources.assets__1034.png",
+    "extraction": "sprite",
+    "width": 840,
+    "height": 128,
+    "inline_scale": 1.0499999523162842,
+    "metrics": {
+      "m_Width": 840,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0.00009999999747378752,
+      "m_HorizontalBearingY": 88.47000122070312,
+      "m_HorizontalAdvance": 829.0999755859375
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "gr",
+    "index": 0,
+    "path": "icons/ato_text_icons_05/gr.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 0,
+        "m_Y": 128,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1.059999942779541,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -5,
+      "m_HorizontalBearingY": 103.04000091552734,
+      "m_HorizontalAdvance": 116.87000274658203
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "argo_flame",
+    "index": 1,
+    "path": "icons/ato_text_icons_05/argo_flame.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 124,
+        "m_Y": 128,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1.2000000476837158,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": -10.800000190734863,
+      "m_HorizontalBearingY": 96.23999786376953,
+      "m_HorizontalAdvance": 100.6500015258789
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "city_of_squalor",
+    "index": 2,
+    "path": "icons/ato_text_icons_05/city_of_squalor.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 256,
+        "m_Y": 128,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1.149999976158142,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 2.890000104904175,
+      "m_HorizontalBearingY": 99,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "lab_temple",
+    "index": 3,
+    "path": "icons/ato_text_icons_05/lab_temple.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 384,
+        "m_Y": 128,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4,
+      "m_HorizontalBearingY": 96.30000305175781,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "last_city",
+    "index": 4,
+    "path": "icons/ato_text_icons_05/last_city.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 512,
+        "m_Y": 128,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4,
+      "m_HorizontalBearingY": 105.79000091552734,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "sep_acr",
+    "index": 5,
+    "path": "icons/ato_text_icons_05/sep_acr.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 640,
+        "m_Y": 128,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4,
+      "m_HorizontalBearingY": 105.79000091552734,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "city_bull",
+    "index": 6,
+    "path": "icons/ato_text_icons_05/city_bull.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 768,
+        "m_Y": 128,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4,
+      "m_HorizontalBearingY": 105.79000091552734,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "fated_box",
+    "index": 7,
+    "path": "icons/ato_text_icons_05/fated_box.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 0,
+        "m_Y": 0,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4,
+      "m_HorizontalBearingY": 105.79000091552734,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "white_dice",
+    "index": 8,
+    "path": "icons/ato_text_icons_05/white_dice.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 128,
+        "m_Y": 0,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1.1299999952316284,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4,
+      "m_HorizontalBearingY": 97,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "cloud_ship",
+    "index": 9,
+    "path": "icons/ato_text_icons_05/cloud_ship.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 256,
+        "m_Y": 0,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4,
+      "m_HorizontalBearingY": 105.79000091552734,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_05",
+    "name": "atlantean_capital",
+    "index": 10,
+    "path": "icons/ato_text_icons_05/atlantean_capital.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 171,
+      "rect": {
+        "m_X": 384,
+        "m_Y": 0,
+        "m_Width": 128,
+        "m_Height": 128
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 128,
+    "height": 128,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 4,
+      "m_HorizontalBearingY": 105.79000091552734,
+      "m_HorizontalAdvance": 128
+    }
+  },
+  {
+    "atlas": "ato_text_icons_map",
+    "name": "MapSC4A",
+    "index": 0,
+    "path": "icons/ato_text_icons_map/MapSC4A.png",
+    "sprite_source": {
+      "file": "resources.assets",
+      "texture_id": 515,
+      "rect": {
+        "m_X": 8,
+        "m_Y": 8,
+        "m_Width": 486,
+        "m_Height": 486
+      }
+    },
+    "extraction": "atlas_rect",
+    "width": 486,
+    "height": 486,
+    "inline_scale": 1,
+    "metrics": {
+      "m_Width": 128,
+      "m_Height": 128,
+      "m_HorizontalBearingX": 0,
+      "m_HorizontalBearingY": 105,
+      "m_HorizontalAdvance": 128
+    }
+  }
+]

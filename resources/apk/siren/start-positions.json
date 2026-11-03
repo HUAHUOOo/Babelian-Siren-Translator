@@ -1,0 +1,47 @@
+{
+  "evidence": "SyreniUtills.get_StartPositions, ARM64 six List<Vector2>.Add paths",
+  "values": [
+    {
+      "constant_address": "0x861860",
+      "position": [
+        -0.5998528003692627,
+        -0.47493183612823486
+      ]
+    },
+    {
+      "constant_address": "0x860c30",
+      "position": [
+        -0.699999988079071,
+        0.02676716446876526
+      ]
+    },
+    {
+      "constant_address": "0x860de8",
+      "position": [
+        -0.5342006087303162,
+        0.4693911075592041
+      ]
+    },
+    {
+      "constant_address": "0x861060",
+      "position": [
+        0.5512552261352539,
+        0.5050950646400452
+      ]
+    },
+    {
+      "constant_address": "0x861868",
+      "position": [
+        0.6322423219680786,
+        0.04699554294347763
+      ]
+    },
+    {
+      "constant_address": "0x861160",
+      "position": [
+        0.4767739176750183,
+        -0.46276822686195374
+      ]
+    }
+  ]
+}

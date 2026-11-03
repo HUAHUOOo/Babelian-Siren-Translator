@@ -1,0 +1,1384 @@
+{
+  "version": 1,
+  "source": {
+    "name": "ato_android_2026_09_23_01.apk",
+    "sha256": "4dbb9353e710f508356f633dd5592684f5bea9711b7f75f3f4f302f58ee98bb7",
+    "extracted": "2026-11-02",
+    "published": "2026-11-03",
+    "licenseStatus": "not-verified",
+    "notice": "NOTICE.md"
+  },
+  "counts": {
+    "babelianGlyphs": 58,
+    "recognitionVariants": 580,
+    "sirenGlyphs": 27,
+    "sirenOrderedSegments": 24,
+    "namedIcons": 189
+  },
+  "files": {
+    "babelian/characters.json": {
+      "bytes": 16654,
+      "sha256": "e895b4829096142fa5cd6c25b9e74c7947a9866e98f4e9995d6d4625e6f0c2d0"
+    },
+    "babelian/font-map.json": {
+      "bytes": 10501,
+      "sha256": "717eab3bfbd47f11a26745dc00e778b7393fcbb7d35d662a7fc128fec21aa842"
+    },
+    "babelian/png/U0031.png": {
+      "bytes": 3608,
+      "sha256": "a7238e6839de45acca77361aab1f98e717165cf43e1be9a279ecb37f6b8e1866"
+    },
+    "babelian/png/U0032.png": {
+      "bytes": 3555,
+      "sha256": "679980533035036e0a5d084693b73bc1e76d12f20d2969c441e2f7ced3c5b61b"
+    },
+    "babelian/png/U0033.png": {
+      "bytes": 4252,
+      "sha256": "629b83242007b35353ba66bf2bad326e37a650c1cad33a631677d26f25a48142"
+    },
+    "babelian/png/U0034.png": {
+      "bytes": 3935,
+      "sha256": "81c40501dde061fb9488340d9a269ba2fa364f6592cf90e20147f2c1eb984bef"
+    },
+    "babelian/png/U0035.png": {
+      "bytes": 4624,
+      "sha256": "f78fda6b7b91a2c960e539d1ece22337f4f07f22b5123536f30ad624a7b03ca8"
+    },
+    "babelian/png/U003F.png": {
+      "bytes": 2527,
+      "sha256": "71c6cdb9728459394b44533fd93c1e4f1e27c3161e2f556836dcbe7f310f83a1"
+    },
+    "babelian/png/U0041.png": {
+      "bytes": 3202,
+      "sha256": "4f8905bded3d1ce853030d50e5cbcb77413731f06047bd5f12f3655a82b2f229"
+    },
+    "babelian/png/U0042.png": {
+      "bytes": 6310,
+      "sha256": "98eb281b0f44042adb9368579c51332f79658730ff74798090d01a94b9cb6200"
+    },
+    "babelian/png/U0043.png": {
+      "bytes": 4214,
+      "sha256": "a0f1db182578652a4aa2d15bca90439a0b9d37d5cbce618427aebad877f1a0b1"
+    },
+    "babelian/png/U0044.png": {
+      "bytes": 4735,
+      "sha256": "70c04282e6b98072f36933139497e932921aa79ff2713415ee5d40a8479d9d85"
+    },
+    "babelian/png/U0045.png": {
+      "bytes": 4789,
+      "sha256": "e1e1c647847894725f1f47ff0adb1eadba8c23b3c424dad6a610a86c3876f6e9"
+    },
+    "babelian/png/U0046.png": {
+      "bytes": 3843,
+      "sha256": "f2969d57a30672fb11ef9d1860beee11fd1fc28842542c869d489efd4a06305b"
+    },
+    "babelian/png/U0047.png": {
+      "bytes": 6297,
+      "sha256": "099dc6d1eaf67c55e95377d375bbafb08c0dde6f0a2396eb0dc0facc9cb6c8e6"
+    },
+    "babelian/png/U0048.png": {
+      "bytes": 4583,
+      "sha256": "15031dbb169e9414a6c7faf5d39997e159a56fc8d89261049ca585d77ba2b2bb"
+    },
+    "babelian/png/U0049.png": {
+      "bytes": 4278,
+      "sha256": "becba391949a723cb1b5cea7923aa09f2909a23c9edc9288e621824dd620b2e2"
+    },
+    "babelian/png/U004A.png": {
+      "bytes": 4389,
+      "sha256": "b896b4c83c0cede019349c8b5e9259084ba311568a380bc834bfb574e60ded15"
+    },
+    "babelian/png/U004B.png": {
+      "bytes": 5767,
+      "sha256": "324246acd50518e8df48690363eb34eeeeea4a81d77050320f9cceb8522c8735"
+    },
+    "babelian/png/U004C.png": {
+      "bytes": 3906,
+      "sha256": "48c9f034b2f610bd17b4f8553fb2ed8f71b7ccafa31b68e22d25e47d3d26c892"
+    },
+    "babelian/png/U004D.png": {
+      "bytes": 4843,
+      "sha256": "214500bc039a348e39c5ece4578317925a44090bf5a9bbf6f885b2cfacac742c"
+    },
+    "babelian/png/U004E.png": {
+      "bytes": 4075,
+      "sha256": "860018a0760478117e31d3c94bfe32359f9a33eaed5a2c73dfb54fe346048928"
+    },
+    "babelian/png/U004F.png": {
+      "bytes": 5244,
+      "sha256": "d7ec05112bd6c0d7892da06a11840bc79cee006df821dc6984cb7c44032853eb"
+    },
+    "babelian/png/U0050.png": {
+      "bytes": 5568,
+      "sha256": "0108af2ade31b3acc3175d8b1db4a1a258436b36876383a0fe475bf90eda8080"
+    },
+    "babelian/png/U0051.png": {
+      "bytes": 4629,
+      "sha256": "dffd26718fe7713208e7e5332584467b72aff86063c5e551d8dd19f6b0311d40"
+    },
+    "babelian/png/U0052.png": {
+      "bytes": 5418,
+      "sha256": "9c3ff1b9140781cb623ba4884ac3a0e1a2d758389bb60c338a51c6c2d03edda3"
+    },
+    "babelian/png/U0053.png": {
+      "bytes": 5513,
+      "sha256": "08d791f0929e9085fcf6b926fd1569bfd60fa52bfa5c566776d2afbce63413b0"
+    },
+    "babelian/png/U0054.png": {
+      "bytes": 4626,
+      "sha256": "8e188b1de7149d02117ae3b2f0789f1bc212246eb78795a7050da559be318f6f"
+    },
+    "babelian/png/U0055.png": {
+      "bytes": 5331,
+      "sha256": "009284561a3bb409b88ee39d465f4a38d7e6f78412692589aca7ced759da054e"
+    },
+    "babelian/png/U0056.png": {
+      "bytes": 5485,
+      "sha256": "73f5bda755d8dced73da4470fb4b489758ca7fc5fc214251f3bcf09161443963"
+    },
+    "babelian/png/U0057.png": {
+      "bytes": 5916,
+      "sha256": "c7d043a41f096e48e8d43ae8eb0ab6f13804035bb1d322de182a85745ec69e48"
+    },
+    "babelian/png/U0058.png": {
+      "bytes": 5987,
+      "sha256": "7b7e909b8e79aad8212aa9b2d826cc0b941e09f1b8a213d2c768e84ab4362170"
+    },
+    "babelian/png/U0059.png": {
+      "bytes": 5564,
+      "sha256": "c557c5021512a7a047f34bc24099fcbf7ae3f26ac18a337b4d4fcfe74f5cbd3d"
+    },
+    "babelian/png/U005A.png": {
+      "bytes": 5404,
+      "sha256": "ef4acfb3f92048c25425019984274d15f328f7c7e7efc45e4a2266aad8b822e1"
+    },
+    "babelian/png/U0061.png": {
+      "bytes": 3184,
+      "sha256": "b8fea4f6e1257fa3d1ee508b1a7204359d699f3444f56db25fa60c760bf2832e"
+    },
+    "babelian/png/U0062.png": {
+      "bytes": 6319,
+      "sha256": "c86e049c31d2db06fed61693fb009936e32cda9c454ebe23636f2c8ea5108f33"
+    },
+    "babelian/png/U0063.png": {
+      "bytes": 4111,
+      "sha256": "3c9402ba950190d579b6aea02212741cf556ab1794747e29e56ae5cdd4837bc1"
+    },
+    "babelian/png/U0064.png": {
+      "bytes": 4690,
+      "sha256": "ea89a819f984e600cae29a15bcdc65b14e4e9096703be3430dcd558c30740b36"
+    },
+    "babelian/png/U0065.png": {
+      "bytes": 4802,
+      "sha256": "4798ad6d305fdf58b78e593c530453de16944d8d6b9b584abed931a8a5158e17"
+    },
+    "babelian/png/U0066.png": {
+      "bytes": 3851,
+      "sha256": "0bc6dc3251a38cdfa30d51bdb618a282e6cb8dac1cc89d1082c4b0953d477a75"
+    },
+    "babelian/png/U0067.png": {
+      "bytes": 6233,
+      "sha256": "7dcdc24a5793cabff7c9d1ef215e9fc171c45305f2338deca846467d52c7dd7d"
+    },
+    "babelian/png/U0068.png": {
+      "bytes": 4734,
+      "sha256": "56c4fe2becb326227dd5e7c15451304d84f008fed5e04d5ce7baa44080b1cbba"
+    },
+    "babelian/png/U0069.png": {
+      "bytes": 4289,
+      "sha256": "7e3b1a45c5b3130f7af25118ed451a68dbf619fab8379d85c62a4ae047d7f9e1"
+    },
+    "babelian/png/U006A.png": {
+      "bytes": 4466,
+      "sha256": "aac4499db52961a736314b0efd7d8ccae5aabe55019a7752cee54df964e005c3"
+    },
+    "babelian/png/U006B.png": {
+      "bytes": 5382,
+      "sha256": "d37ce43d5beb2bba23185af508b91cc521528d008b9700d35677489ef43adad2"
+    },
+    "babelian/png/U006C.png": {
+      "bytes": 3926,
+      "sha256": "84bc9dc8d87c15e8a0593b3af78835e8c386ebeb5f1ee88436fafa7885f4c42e"
+    },
+    "babelian/png/U006D.png": {
+      "bytes": 4930,
+      "sha256": "2aed60a088d322353be6dfaf9f721d2dd52f66fc4b71208dd594fa3d9e4d5371"
+    },
+    "babelian/png/U006E.png": {
+      "bytes": 4082,
+      "sha256": "d1f1d6c8dfb302b2bd32de1b556f295411236712fc661587c5f55570a5ee5dbb"
+    },
+    "babelian/png/U006F.png": {
+      "bytes": 5308,
+      "sha256": "158f87a1c5bd7901af27dc0b440a86a2704ff918cd4e902b6ab7027b654b4775"
+    },
+    "babelian/png/U0070.png": {
+      "bytes": 5506,
+      "sha256": "7d85297616b24204c2367c4853d8e57e3fd25733e4c6f4fcd242caded52b5d4f"
+    },
+    "babelian/png/U0071.png": {
+      "bytes": 4693,
+      "sha256": "f04ca1c293d44ac30d8e512cc88ca52b2c638a49f87b81a8ece56eb2561aea75"
+    },
+    "babelian/png/U0072.png": {
+      "bytes": 5351,
+      "sha256": "5a4d98ceae4cfdeaf998c98d0717e91faacc8a0e03b7c729ab866693a12c89ce"
+    },
+    "babelian/png/U0073.png": {
+      "bytes": 5481,
+      "sha256": "14bbc13ce3747e214995a230f8729b26caff7b32ba3398f53e580118f53cc2e8"
+    },
+    "babelian/png/U0074.png": {
+      "bytes": 4662,
+      "sha256": "cce6681fd12a421bafce97fb50937d3eb79e32780f79dc0f634561795b2a43af"
+    },
+    "babelian/png/U0075.png": {
+      "bytes": 4840,
+      "sha256": "27857a60458f5d45b65a81209ce4e241b14c23a10e062986d569da7ecfa43288"
+    },
+    "babelian/png/U0076.png": {
+      "bytes": 5471,
+      "sha256": "ee8668016cdd2f9ce72c5790127953e142e7df1e095c23ed71692e1e43e4113d"
+    },
+    "babelian/png/U0077.png": {
+      "bytes": 5875,
+      "sha256": "d73881e679e64674cbca14cbf38cc24d2e0f673fc6bc95b4067c42c41bfc8249"
+    },
+    "babelian/png/U0078.png": {
+      "bytes": 5931,
+      "sha256": "0fda9fa1c6ba0739310cd7cc32ed728f7980251030ce827c0563a8f492024382"
+    },
+    "babelian/png/U0079.png": {
+      "bytes": 5580,
+      "sha256": "5d8d72ab8821f0821faace03841b6fabf05b0ea0fc875cca1deb4ca37e7f708e"
+    },
+    "babelian/png/U007A.png": {
+      "bytes": 5368,
+      "sha256": "fd48c2da2ea37b11e6bb095438898e8be653c77c75d220c2c00061dbc93d6dc1"
+    },
+    "babelian/svg/U0031.svg": {
+      "bytes": 2755,
+      "sha256": "9507bc5c4250a6a8eaa177c81892a9bdec325be450c4e45fa73e33545e8b75fc"
+    },
+    "babelian/svg/U0032.svg": {
+      "bytes": 3722,
+      "sha256": "f4422a873a3aef4947fb28447eeda617ba086a83963f48a28127196f8be26bc0"
+    },
+    "babelian/svg/U0033.svg": {
+      "bytes": 3749,
+      "sha256": "a31a10141b3f3d6f714d56d5284fb07975dbb256252c63ed8b756b75aaa68f1b"
+    },
+    "babelian/svg/U0034.svg": {
+      "bytes": 3807,
+      "sha256": "a2f1983e3baf2c682ff7bcbb658356bbc961770d292c1eb25e0aa2a7a1c35c25"
+    },
+    "babelian/svg/U0035.svg": {
+      "bytes": 3759,
+      "sha256": "652acde0e7080eb654c9b6af5e9a46d1bef0bcd78882157d3f4043476a1f5525"
+    },
+    "babelian/svg/U003F.svg": {
+      "bytes": 744,
+      "sha256": "79ede167d34a05b550fade904f9239942f242af9f4904287dfbe2ba981d0fa1a"
+    },
+    "babelian/svg/U0041.svg": {
+      "bytes": 1818,
+      "sha256": "d48ea271cafab054436041e272beafc86c5c369f2d74e867624c908516d9a94a"
+    },
+    "babelian/svg/U0042.svg": {
+      "bytes": 4687,
+      "sha256": "b367c4947649f0325d15af97995bfce4128a42d8d2d392e19953b4f8c9d2746f"
+    },
+    "babelian/svg/U0043.svg": {
+      "bytes": 2578,
+      "sha256": "6b253cc6311062cd22a1c22c5f5bb9c38de855b2e5858fbc7cefeab2732de1f2"
+    },
+    "babelian/svg/U0044.svg": {
+      "bytes": 3818,
+      "sha256": "1531de74a82690917d741749bf2f85ff10cc327a34346719d1e7e8fa96a17024"
+    },
+    "babelian/svg/U0045.svg": {
+      "bytes": 3862,
+      "sha256": "476741ce8cb354777f64fe1020d2fb69cd8a80d9ac375906b69dfd4e4cba3ebb"
+    },
+    "babelian/svg/U0046.svg": {
+      "bytes": 2788,
+      "sha256": "dfd26881863a7193461975d324bdb2671ff6cc7edc501c19c0fbdf0c50c5a7ce"
+    },
+    "babelian/svg/U0047.svg": {
+      "bytes": 4699,
+      "sha256": "02b07f28c1ef07457d6226560dc18a84dc4f701827086a457950162d1fcdaadd"
+    },
+    "babelian/svg/U0048.svg": {
+      "bytes": 3680,
+      "sha256": "b976df2545fb13230175551e0bf907f927acb89e5ce6b907147b842f175e5dc7"
+    },
+    "babelian/svg/U0049.svg": {
+      "bytes": 3822,
+      "sha256": "1312c4c2d0c7c25868a45c675af26c192daef831511d3f419b8b64b436b7a2d0"
+    },
+    "babelian/svg/U004A.svg": {
+      "bytes": 3860,
+      "sha256": "c5f2801b84e116f4bac4c895770d576ea4415c82a88fdc975585a6dbc7c4d676"
+    },
+    "babelian/svg/U004B.svg": {
+      "bytes": 4755,
+      "sha256": "3edbc10bb3df257fb6525761bc86c6e40b7b77c454af9da732a8e56bf558da9c"
+    },
+    "babelian/svg/U004C.svg": {
+      "bytes": 2955,
+      "sha256": "0944302964c5063ff3dac7a76ccac88e3687e4e32f51759d62eba9bea96e0bfc"
+    },
+    "babelian/svg/U004D.svg": {
+      "bytes": 3937,
+      "sha256": "be0a6e6bd57edb45217d141a8d2b04fb9059e9a95fb52b5bdd82d075cf8a3f32"
+    },
+    "babelian/svg/U004E.svg": {
+      "bytes": 2882,
+      "sha256": "1b9f973511d6351f6081fd58474d4430a42e9242d733c7d228409cd8c93809a3"
+    },
+    "babelian/svg/U004F.svg": {
+      "bytes": 4829,
+      "sha256": "27cb7799080945d20c5dfbf7cf101d9dce01db775349ab1941ead14d8a3630dc"
+    },
+    "babelian/svg/U0050.svg": {
+      "bytes": 3633,
+      "sha256": "0da076a3d78779cd41f8a9c539185e8363bb2313604cf244b02b46680610d7a6"
+    },
+    "babelian/svg/U0051.svg": {
+      "bytes": 3775,
+      "sha256": "a4b6d2f386b7c6732b2dcba126a04d00d27b8bba43a22fd8f54cf2bd93d9428c"
+    },
+    "babelian/svg/U0052.svg": {
+      "bytes": 3841,
+      "sha256": "8638a8f863f12a63170d4730c93a574b6d034b5a23a0e33ed3590aead9d184d4"
+    },
+    "babelian/svg/U0053.svg": {
+      "bytes": 3680,
+      "sha256": "a4ccf897d872266264eae289834f240395dc743a7ff7574879aa9d001377b5d9"
+    },
+    "babelian/svg/U0054.svg": {
+      "bytes": 2716,
+      "sha256": "8bdf4213a5a9d2e4f170f14eadbd43bc37399ddb7d41cfb96fe7b841b412b595"
+    },
+    "babelian/svg/U0055.svg": {
+      "bytes": 5027,
+      "sha256": "7bc80e7d2acfb11e170161422de41e943657475f91742edef77cf12dda8b64c5"
+    },
+    "babelian/svg/U0056.svg": {
+      "bytes": 5357,
+      "sha256": "41b4634cafb7e02e5f592891dfd892a95c07a59eb5c8df7f2f03067ac0b34bc5"
+    },
+    "babelian/svg/U0057.svg": {
+      "bytes": 6044,
+      "sha256": "c8fef4815f33c1dccae8b9c414a1b9c4d63209807a42bcfb7e074ef455d397d3"
+    },
+    "babelian/svg/U0058.svg": {
+      "bytes": 3575,
+      "sha256": "131ebfde82e24a772e35d9753bda4b6448af44303665ac31c87d87825e8da288"
+    },
+    "babelian/svg/U0059.svg": {
+      "bytes": 3492,
+      "sha256": "ec810e3f8b2139cc1c4dccb751d1b0e89a4473ff951118bb67fe0ba92b02b3f3"
+    },
+    "babelian/svg/U005A.svg": {
+      "bytes": 3745,
+      "sha256": "d9bccc46768ad4604fd739955ed2271c37732540827d0f7de5124b220075ee52"
+    },
+    "babelian/svg/U0061.svg": {
+      "bytes": 1860,
+      "sha256": "c33fbb7a3d66a0c5456bdc60a446c6d06d5ca039d6924cdad522c50671c30ea1"
+    },
+    "babelian/svg/U0062.svg": {
+      "bytes": 4804,
+      "sha256": "42a1163de4944ce2fab31b12fd323334ecdb3b6b17cca87f41d29cc1bb302b05"
+    },
+    "babelian/svg/U0063.svg": {
+      "bytes": 2721,
+      "sha256": "26e65a4b1c58fafa01f606ce742e1abea4cb99b2b9acde05608b4773bfdc917d"
+    },
+    "babelian/svg/U0064.svg": {
+      "bytes": 3667,
+      "sha256": "70649930af0a5867c3389e44ccca48b207e8f6347b337fa889e0e3db3a8311db"
+    },
+    "babelian/svg/U0065.svg": {
+      "bytes": 3805,
+      "sha256": "a5c36033405c4889010faf4c1755018af83d2c145d125c3e931b92de82154c4a"
+    },
+    "babelian/svg/U0066.svg": {
+      "bytes": 2790,
+      "sha256": "bbbb07037f922c10bb9350db05c2959871b0b4f0759862306a3af5f8bdda1822"
+    },
+    "babelian/svg/U0067.svg": {
+      "bytes": 4705,
+      "sha256": "42aeba25e9ed433f4ee423c06dae280b7f1bad58ec07a278b67bd9afd7d7635d"
+    },
+    "babelian/svg/U0068.svg": {
+      "bytes": 3739,
+      "sha256": "f76541936213073a3bdb73d3ff1c8140151967bd329d3ffa04296ec1429bdcbb"
+    },
+    "babelian/svg/U0069.svg": {
+      "bytes": 3835,
+      "sha256": "6287b5b0961f856b91318e50b52b4b87bd6c01f22aacc6c3c4394a584fd698f9"
+    },
+    "babelian/svg/U006A.svg": {
+      "bytes": 3708,
+      "sha256": "108a2c2803a57b281c6905ea398b0b6bb31f49cad42604acd2810e81315f534c"
+    },
+    "babelian/svg/U006B.svg": {
+      "bytes": 4361,
+      "sha256": "7238375ba4beee93b4e8ee8aca99cee89d009b94f009d3c4711eece5148a4c75"
+    },
+    "babelian/svg/U006C.svg": {
+      "bytes": 2829,
+      "sha256": "974272defe065aadd1f170b6417d2bed5414a7a651c7c711fa64ba2f2d54e7a2"
+    },
+    "babelian/svg/U006D.svg": {
+      "bytes": 3869,
+      "sha256": "af99c2cf38d54e22136366f32185d621287574ca6020391cbed0576505830aba"
+    },
+    "babelian/svg/U006E.svg": {
+      "bytes": 2913,
+      "sha256": "6c982dc4e4196cf2f0ad47350e9d7a5cad08695c8f223242d5fc8178aae9e19e"
+    },
+    "babelian/svg/U006F.svg": {
+      "bytes": 4675,
+      "sha256": "01aad54a39554182bdebb54c5b42f6a76a45f5bdd3ce9c011033926232076783"
+    },
+    "babelian/svg/U0070.svg": {
+      "bytes": 3720,
+      "sha256": "522dd83ac45f37de155967c30ef298d1d6c728184f4957cb6ecdbc1dc1d94cd9"
+    },
+    "babelian/svg/U0071.svg": {
+      "bytes": 3751,
+      "sha256": "81dbe664f0bb08a01d556048f9fff522e1d5b5dd5809ab2093539c3703c2486b"
+    },
+    "babelian/svg/U0072.svg": {
+      "bytes": 3787,
+      "sha256": "39a7db2320b47af95a973cbf98b6c95feaf46cd48a6fa9af576a274badb2bcbd"
+    },
+    "babelian/svg/U0073.svg": {
+      "bytes": 3669,
+      "sha256": "6887d36748b35d5bb45b7101d1a28f97560035847b97bba96ec6ff7ca9da2d92"
+    },
+    "babelian/svg/U0074.svg": {
+      "bytes": 2705,
+      "sha256": "abfc6fab372f1828b1aadfab6ced227c7f6608f1879a571da26e7300b59ce8dd"
+    },
+    "babelian/svg/U0075.svg": {
+      "bytes": 5983,
+      "sha256": "c183a0a0bfaf578e01e4bc3013d57172a1ea5449b3acbebf0c3e160cb0518a9a"
+    },
+    "babelian/svg/U0076.svg": {
+      "bytes": 5242,
+      "sha256": "96f459ebc694794666357c4f3ed1f33b4391691a1b8174edf0eb72f7c44a3e64"
+    },
+    "babelian/svg/U0077.svg": {
+      "bytes": 5767,
+      "sha256": "59af5a7fd815a9fed954ff04a2ab248472b23a0fd936c2b921d72525ebde8658"
+    },
+    "babelian/svg/U0078.svg": {
+      "bytes": 3537,
+      "sha256": "404001669dfd35bddfb451b890596da9ead23be1e009657b5dd7021f062669d8"
+    },
+    "babelian/svg/U0079.svg": {
+      "bytes": 3561,
+      "sha256": "19c4f6fa6a71f7d482d87c3c172011e93c361823572db071b86ce81b4269b0c4"
+    },
+    "babelian/svg/U007A.svg": {
+      "bytes": 3794,
+      "sha256": "c637b5c13674b26ee9689432456139c5e732c786da11995bab168de9adc31991"
+    },
+    "babelian/vector-artwork.json": {
+      "bytes": 213702,
+      "sha256": "b09296115d152cdaf9234e697e1006919aec971bf40b85c586a5146adfed25e7"
+    },
+    "babelian/vector-templates.json": {
+      "bytes": 1595235,
+      "sha256": "87a28e25d15336535e14f72005a5f6dc394e7d9ab15c40b764d6f057f1df3462"
+    },
+    "fonts/Babelian_Cypher.ttf": {
+      "bytes": 59268,
+      "sha256": "a4b63764599a4889b023ff2ca1d5200fcd4179d536fd1381655da8737c1acc43"
+    },
+    "icons/ato_text_icons_01/adventure.png": {
+      "bytes": 3512,
+      "sha256": "8cf40bd160e7d15d1e6cd61b695a5cd495e58faec8fe21c3a761b78a7cf863dd"
+    },
+    "icons/ato_text_icons_01/adversary.png": {
+      "bytes": 5127,
+      "sha256": "462f532a74dd1129501f380e3182d9fcc345e7fb041f4b1b8d9f88e7d2c808af"
+    },
+    "icons/ato_text_icons_01/argo_fate.png": {
+      "bytes": 2497,
+      "sha256": "43f67cdeb1a44a81d6ea81edbdccdb137879d7930f4052ba91af9a840806161b"
+    },
+    "icons/ato_text_icons_01/argo_knowledge.png": {
+      "bytes": 2437,
+      "sha256": "e7f7c5cce12bffb9871cf36decc429a51b58a69ec678be21f71008765bbfce54"
+    },
+    "icons/ato_text_icons_01/ariadnes_anchor.png": {
+      "bytes": 7433,
+      "sha256": "d90ec17c67141411d77cf9130760e2b34454ab5fd9f6bf150c674c5f76862311"
+    },
+    "icons/ato_text_icons_01/at_token.png": {
+      "bytes": 5305,
+      "sha256": "154318e93a7295b9f362306665144b9adb31407a82b6be1d9c43b9353a62ed1b"
+    },
+    "icons/ato_text_icons_01/black_power_die.png": {
+      "bytes": 2593,
+      "sha256": "1b1ef87895819d02b43a75603c882f6512f38cba3ddb487172dbf64b7cfaafc8"
+    },
+    "icons/ato_text_icons_01/centimanes_one.png": {
+      "bytes": 617,
+      "sha256": "654baee5a7b3492e5e1e241e64f643934493acb938bbe7d7bd80f30c41845cda"
+    },
+    "icons/ato_text_icons_01/charge.png": {
+      "bytes": 3734,
+      "sha256": "d524ed41ef6ce49265ad188c9504be760c8d930260ea95c474614276b5eb7c70"
+    },
+    "icons/ato_text_icons_01/city.png": {
+      "bytes": 3821,
+      "sha256": "94f988a059a889f24ff8224e9abfa884b8f1b86abc9efae6e88fece8c04f16d2"
+    },
+    "icons/ato_text_icons_01/combat_action.png": {
+      "bytes": 5305,
+      "sha256": "923c43f7b47f5fae1c2aece8e339d53b7fdba5671170e27a764ec218d273c646"
+    },
+    "icons/ato_text_icons_01/crew.png": {
+      "bytes": 2414,
+      "sha256": "5a0c3f9213e58d9265153a232a31fe0c72f7b31a1ba53bb780c64a2582708136"
+    },
+    "icons/ato_text_icons_01/danger.png": {
+      "bytes": 2570,
+      "sha256": "0c496c61e7c6d548e48292501eded9aa75ed8386aa7c87497d51df0b30827129"
+    },
+    "icons/ato_text_icons_01/deadalus_lantern.png": {
+      "bytes": 3626,
+      "sha256": "095c764eea5280d623a49f6cfb12182da9acbaf08c57088e6a19a79eb0ced0c6"
+    },
+    "icons/ato_text_icons_01/debt.png": {
+      "bytes": 4190,
+      "sha256": "c2ec5894bcac5a035931b2dbe6ca37cba9646b6ee0a7f0858e143e8358180664"
+    },
+    "icons/ato_text_icons_01/diolkos.png": {
+      "bytes": 4003,
+      "sha256": "77ac3e82480416ffac9c387a990f50424792c38928120f0984708c82d253038b"
+    },
+    "icons/ato_text_icons_01/doom.png": {
+      "bytes": 4799,
+      "sha256": "af442f08edd1f8a66906f1bb66d47e3711a7e8fb213e73abb49d925459199cda"
+    },
+    "icons/ato_text_icons_01/evasion.png": {
+      "bytes": 3424,
+      "sha256": "ecb03dcdaa14793ec0ab8fb5d24e7b2801219d2003f7fc264638e57358425b73"
+    },
+    "icons/ato_text_icons_01/evasion_reroll.png": {
+      "bytes": 3411,
+      "sha256": "0ffb04da8b13023875408c4d90c3d76b429febabce0f049879b8dc78a5900f29"
+    },
+    "icons/ato_text_icons_01/failed_ico.png": {
+      "bytes": 4366,
+      "sha256": "246baaa38377ad0f8e48304cd032e8ff61bc1b391e78995b41c0b27e74d28f28"
+    },
+    "icons/ato_text_icons_01/fate.png": {
+      "bytes": 2181,
+      "sha256": "e9d199f236975db31e587e0f5cbfd9c7d9d50d7169cb48621191f8ba78a4973b"
+    },
+    "icons/ato_text_icons_01/gear.png": {
+      "bytes": 2592,
+      "sha256": "449262bf73125c2f1e417d51c7a033851effd83d43bffcd73a0ec61d8e96351c"
+    },
+    "icons/ato_text_icons_01/good.png": {
+      "bytes": 2936,
+      "sha256": "3fc1ec8fe653eb01bb6da4b661294351603edaadf241dfb82441119938d3f441"
+    },
+    "icons/ato_text_icons_01/hull.png": {
+      "bytes": 2585,
+      "sha256": "e64319fd61b170b3d766452aa4bfe50c8dc3e2480ede21e45dac4174a7611a8a"
+    },
+    "icons/ato_text_icons_01/movement_action.png": {
+      "bytes": 4970,
+      "sha256": "708b86553b076a9a733f0d90f515c6ce9d8a0c0412cd228dfb2b65d52fe09c4a"
+    },
+    "icons/ato_text_icons_01/oasis.png": {
+      "bytes": 6491,
+      "sha256": "0f7547ee50602e497e2b315cb6207011441171a17db61e5c92c79b8e1f4a2f30"
+    },
+    "icons/ato_text_icons_01/padlock.png": {
+      "bytes": 1695,
+      "sha256": "f32e4e3ce970fd93f88f09c9619fc43d6fdfb25111a69a7f18c7de0953fb868a"
+    },
+    "icons/ato_text_icons_01/paradox.png": {
+      "bytes": 3788,
+      "sha256": "df7ecc444f2808e97b92db5b84d85bc13ae146e1e5e60f8c33acc156fc2a035e"
+    },
+    "icons/ato_text_icons_01/paranoia.png": {
+      "bytes": 2955,
+      "sha256": "c95d5ee75a6ffab067ec2721fe262f6714d6a32005034f9d93675c7e2d70aa4d"
+    },
+    "icons/ato_text_icons_01/portal_future.png": {
+      "bytes": 6208,
+      "sha256": "2ff2aea9f6b5670d2f8508f555d436392fdc3201f9b4e792fb43cddba36d98bd"
+    },
+    "icons/ato_text_icons_01/portal_future_big.png": {
+      "bytes": 6208,
+      "sha256": "2ff2aea9f6b5670d2f8508f555d436392fdc3201f9b4e792fb43cddba36d98bd"
+    },
+    "icons/ato_text_icons_01/portal_past.png": {
+      "bytes": 7557,
+      "sha256": "15aadac3eea01418e1eef8bfc36aa0e4d3677ca192832d654667ec1ac4089811"
+    },
+    "icons/ato_text_icons_01/portal_past_big.png": {
+      "bytes": 7557,
+      "sha256": "15aadac3eea01418e1eef8bfc36aa0e4d3677ca192832d654667ec1ac4089811"
+    },
+    "icons/ato_text_icons_01/potential.png": {
+      "bytes": 2865,
+      "sha256": "cc8e04bcac7c9148c2526fe7f9671a40e907632a32d77ee6a2c97fcc20408940"
+    },
+    "icons/ato_text_icons_01/power.png": {
+      "bytes": 1508,
+      "sha256": "5b2da9927daebcf43a82e7c28ad4a79fe9f5fab5adc85d0e69374959e709bcc4"
+    },
+    "icons/ato_text_icons_01/precision_token.png": {
+      "bytes": 5686,
+      "sha256": "2401e6c2e08b98411ff7c448da5d556683417e8cf8968e13b97301fdbf2c4e97"
+    },
+    "icons/ato_text_icons_01/progress.png": {
+      "bytes": 4733,
+      "sha256": "cb5b56f83ea542f36399b50ce7841182b4f05f64ec07ebcde12136cce4141a84"
+    },
+    "icons/ato_text_icons_01/rage.png": {
+      "bytes": 2767,
+      "sha256": "3e8d867820539c693c79b86f57a4b73f21751c9010a72c67e05c84ec3e8d7e63"
+    },
+    "icons/ato_text_icons_01/reaction.png": {
+      "bytes": 1755,
+      "sha256": "1b8f2fe3921dd5f62fa1045c1f386c226e7e0b37dce597ad30f132c258dfe49d"
+    },
+    "icons/ato_text_icons_01/red_power_die.png": {
+      "bytes": 3244,
+      "sha256": "4db46a55f2c261b29afc0140b015813a06d726ef1118d65b2fb7c819a018ed01"
+    },
+    "icons/ato_text_icons_01/refugee.png": {
+      "bytes": 3546,
+      "sha256": "5d8906e72db0694389651385cdffa6092cc7c3d3060785b30fdbbdf2b407d5ef"
+    },
+    "icons/ato_text_icons_01/river.png": {
+      "bytes": 3823,
+      "sha256": "445742e9cddd47b855b9ca5ac640dd0018ea541b79907abc9c467e4656bbe72c"
+    },
+    "icons/ato_text_icons_01/second_cataract.png": {
+      "bytes": 1604,
+      "sha256": "79db1a4ae7a848266bfacc12b248459bd55f0b74021ff9f9a4a8b749ac13ef3c"
+    },
+    "icons/ato_text_icons_01/silver.png": {
+      "bytes": 3540,
+      "sha256": "d66b59a306f5042ec94afc1874c84377b45d3c1860267448221591890b842225"
+    },
+    "icons/ato_text_icons_01/siren.png": {
+      "bytes": 5803,
+      "sha256": "e5d937f6e24020cd64048d17ef94044622afcb85303b9fb06636ae6bef1caf4a"
+    },
+    "icons/ato_text_icons_01/spiral_01.png": {
+      "bytes": 4102,
+      "sha256": "86983a82f3585995f6e432effccf13fb56619fca0015ab84ca1fd23a1f860c70"
+    },
+    "icons/ato_text_icons_01/spiral_02.png": {
+      "bytes": 4673,
+      "sha256": "b8d5606b5647d47392afd1c7238127a1e3962eba86fd77e5cbd11fd9e26e7194"
+    },
+    "icons/ato_text_icons_01/stranger.png": {
+      "bytes": 2379,
+      "sha256": "f393b6c30f84be8090576ab082610bbb020854ec1d13151f497c1bce2a2a8256"
+    },
+    "icons/ato_text_icons_01/support.png": {
+      "bytes": 3756,
+      "sha256": "ce3382de5289cf07baa13c324bbf1b9e9a002bcd7b4c11ea718c59373d7ca14b"
+    },
+    "icons/ato_text_icons_01/tech_combat.png": {
+      "bytes": 4758,
+      "sha256": "023d614816b579457e6e57c67c87d5672bbf33ea24df9d55b06f4b34978ad6ae"
+    },
+    "icons/ato_text_icons_01/tech_structural.png": {
+      "bytes": 4366,
+      "sha256": "401035c4d429ce59376f64aa7cbe0093d4e4bba88917f987e1c69af8bc98c24e"
+    },
+    "icons/ato_text_icons_01/time_wound.png": {
+      "bytes": 5899,
+      "sha256": "65e4c1518b4ab1d0b4748ff43c024dc096a7039f79c6988b7350d65097b747f6"
+    },
+    "icons/ato_text_icons_01/time_wound_big.png": {
+      "bytes": 5899,
+      "sha256": "65e4c1518b4ab1d0b4748ff43c024dc096a7039f79c6988b7350d65097b747f6"
+    },
+    "icons/ato_text_icons_01/titan.png": {
+      "bytes": 3336,
+      "sha256": "79bd7e4446ab4ec08cf0f54e593e04ca2095d60388a34e3be15cab31f8a74c7d"
+    },
+    "icons/ato_text_icons_01/to_hit_token.png": {
+      "bytes": 5134,
+      "sha256": "8d3c7d5d833099d33e55deb22407080f98f7f44a2c2c1a63cbe559386d92f140"
+    },
+    "icons/ato_text_icons_01/trireme_token.png": {
+      "bytes": 6361,
+      "sha256": "8e95ff3ae2c72fe44c8f13502811316e16ae96345a7c614dc3063f46767a7fb5"
+    },
+    "icons/ato_text_icons_01/unverified_ico.png": {
+      "bytes": 3979,
+      "sha256": "b4362c8d819782e82739a7acc5545df515e9a59c7316c0bd23ac9030ca4d1d58"
+    },
+    "icons/ato_text_icons_01/upstream.png": {
+      "bytes": 2718,
+      "sha256": "5fa22ee8a49cb19862a79418969ee6cda757a17718161581ecd3629b602e055d"
+    },
+    "icons/ato_text_icons_01/uw_caves.png": {
+      "bytes": 3972,
+      "sha256": "855608ff9598a845b3f7041ac61707df8872e853ec4c6f17ca39d85eaab577a4"
+    },
+    "icons/ato_text_icons_01/uw_caves_big.png": {
+      "bytes": 3972,
+      "sha256": "855608ff9598a845b3f7041ac61707df8872e853ec4c6f17ca39d85eaab577a4"
+    },
+    "icons/ato_text_icons_01/uw_city.png": {
+      "bytes": 7045,
+      "sha256": "a01afbd86ce84ca6da28c63466cbc883235bc4c2cf42fb3d31f1e6953af66778"
+    },
+    "icons/ato_text_icons_01/verified_ico.png": {
+      "bytes": 4086,
+      "sha256": "4bce89c476bdf2bf37125ef773d479ab811328ee0d6b59fce26165e39bbcc1ab"
+    },
+    "icons/ato_text_icons_01/workshop.png": {
+      "bytes": 3348,
+      "sha256": "dd5e164ae716444678b748dadad96404394317de2c862047bdf917e819da37ad"
+    },
+    "icons/ato_text_icons_02/11.png": {
+      "bytes": 460,
+      "sha256": "22a3205c860580f3cc38384a9964f35570d94e8b2cc4452483e353d1bda9ed94"
+    },
+    "icons/ato_text_icons_02/22.png": {
+      "bytes": 451,
+      "sha256": "25ea1a83b03b8bc90bb9dacda1eff5e74b37f2862ea609f0a29da78a47390ca6"
+    },
+    "icons/ato_text_icons_02/33.png": {
+      "bytes": 466,
+      "sha256": "848249b4fd3365b197340b1c1ea1302847d14a443990a0120850b2d4cdedc3a1"
+    },
+    "icons/ato_text_icons_02/333.png": {
+      "bytes": 471,
+      "sha256": "3ce8e99ae77feeec60385bdd290f562012ecbc3400bec07ab9e8d61a71cb52c7"
+    },
+    "icons/ato_text_icons_02/444.png": {
+      "bytes": 479,
+      "sha256": "7a70ceed5ef59d580dd9b0079e92d0f9a556a867dd68ac20ea31bbb71a911264"
+    },
+    "icons/ato_text_icons_02/555.png": {
+      "bytes": 472,
+      "sha256": "4b67b6f1458555f0988a895dda86a4ae4d44ee40316d6264e2fbece4d7d6afe1"
+    },
+    "icons/ato_text_icons_02/5555.png": {
+      "bytes": 538,
+      "sha256": "e8e78a585d50847740f9a1dd9f3033541f5318b2cd058eba470ffad3c15c0b9d"
+    },
+    "icons/ato_text_icons_02/666.png": {
+      "bytes": 545,
+      "sha256": "786a0fdbb9c99916e2eed9a3ff1ede3f322026266572a2002bc7f41319305b6d"
+    },
+    "icons/ato_text_icons_02/77.png": {
+      "bytes": 478,
+      "sha256": "90e42fb57bc301990ab9808b9c52c434ebd0bd62b72a2ef9b6afce05d3f7ceb5"
+    },
+    "icons/ato_text_icons_02/7777.png": {
+      "bytes": 502,
+      "sha256": "c328af43cd4568cf47f83ef1d40c0f3fd0d287a9c3f6cedf9f582e1cf8c2d503"
+    },
+    "icons/ato_text_icons_02/888.png": {
+      "bytes": 516,
+      "sha256": "9a59a7851019bff76c8ed4bf6bf5e19bad058b48383ba2c5eb0a64912220c3a6"
+    },
+    "icons/ato_text_icons_02/999.png": {
+      "bytes": 556,
+      "sha256": "e9bda96290cd2336371b3505f9518b8d1ef3e63ea3dc9a9623cdbdbdc6bdd118"
+    },
+    "icons/ato_text_icons_02/A.png": {
+      "bytes": 3586,
+      "sha256": "d2a590a91e32133d8451a2fd397066f51854b7699b02b064915744f756b6c848"
+    },
+    "icons/ato_text_icons_02/aether.png": {
+      "bytes": 4381,
+      "sha256": "114efa5c4b07fa8d60ebb6cef729d3a474754163b2aadad9f2a3a3e745287507"
+    },
+    "icons/ato_text_icons_02/anemoi_graves.png": {
+      "bytes": 6377,
+      "sha256": "8cd37451fcc021b3ec1523d516f338de8613910db422bc8aa5f86308ee886a0c"
+    },
+    "icons/ato_text_icons_02/anemoi_wind_rose.png": {
+      "bytes": 7345,
+      "sha256": "51b7ea41c15241099b242ba8e33044f252edb58cf6790d64f7d46378adb55a9c"
+    },
+    "icons/ato_text_icons_02/any.png": {
+      "bytes": 3451,
+      "sha256": "573e672b1335e7953e6142514a184f1d37c00b91c5c446257cf0da06da6e87a4"
+    },
+    "icons/ato_text_icons_02/armor.png": {
+      "bytes": 3193,
+      "sha256": "9180c2fc77e9a24d8adafdc70fc45366a45b197b8d02b7db9e095b8ce626c7fe"
+    },
+    "icons/ato_text_icons_02/ato_text_icons_02_90.png": {
+      "bytes": 8673,
+      "sha256": "54190b8df8be54f90ac669f11759d1ad19be1f47f19b8149cee03b384359e169"
+    },
+    "icons/ato_text_icons_02/attachments.png": {
+      "bytes": 4350,
+      "sha256": "e584083114234477ca29ed5bcb4ed5d9ef4f143c368bf528ae589202c1107080"
+    },
+    "icons/ato_text_icons_02/attack_action.png": {
+      "bytes": 4686,
+      "sha256": "bf6aff16b469377387ed1f4dc8ec178162cf9d3e900cebd4fdedb980c32e1e9a"
+    },
+    "icons/ato_text_icons_02/black_subreme.png": {
+      "bytes": 15141,
+      "sha256": "fd92b3ee0296d3af82f92ce762d95dafd371a1eed17c6fab71ffdc2098937e50"
+    },
+    "icons/ato_text_icons_02/blast_charge.png": {
+      "bytes": 18165,
+      "sha256": "f5f02630fd8d85608eca2dc1145504b6257471f12e494c043500c5c2b5998df6"
+    },
+    "icons/ato_text_icons_02/blockade.png": {
+      "bytes": 9382,
+      "sha256": "ae1f224b93853ea9595de8f10092379339dfd1d47a002cc0b900c5c710bc0a80"
+    },
+    "icons/ato_text_icons_02/break.png": {
+      "bytes": 4977,
+      "sha256": "ca70b59f6ddf0fb8b9597ca0593135a4d97c7528c385a540b021efeaaba1de45"
+    },
+    "icons/ato_text_icons_02/buburden.png": {
+      "bytes": 14207,
+      "sha256": "791fd6f295b28b990cfac016eb17a537f5964b0f369dc80eb351816e2cc1b082"
+    },
+    "icons/ato_text_icons_02/cent_0_1.png": {
+      "bytes": 472,
+      "sha256": "5405186580ab3e97f158fa53dcbd50bc82ce0f04ccca70988396e423a36978b1"
+    },
+    "icons/ato_text_icons_02/cent_0_2.png": {
+      "bytes": 774,
+      "sha256": "4094a81b4fe33fdf9b9c873ce695f74df5d0b8896eae05262ee076b50229c129"
+    },
+    "icons/ato_text_icons_02/cent_1.png": {
+      "bytes": 941,
+      "sha256": "7a1885e8216321fb86566c74b44931aefed9304ba196d11978ef3fd691fbcc57"
+    },
+    "icons/ato_text_icons_02/cent_2.png": {
+      "bytes": 708,
+      "sha256": "b1e00102f2ac58a6400a643f868c3ea354e4ad437e95a69bf4de9b688cf09223"
+    },
+    "icons/ato_text_icons_02/cent_3_1.png": {
+      "bytes": 803,
+      "sha256": "7d047fbe993a19782bb8721d87e9b2ba10bec12a9aec28f139a00cf7a599d93e"
+    },
+    "icons/ato_text_icons_02/cent_3_2.png": {
+      "bytes": 823,
+      "sha256": "700596e919378e62a6fd89ce95fc1759389dd76606330a1943926597ffdc564b"
+    },
+    "icons/ato_text_icons_02/cent_4_1.png": {
+      "bytes": 816,
+      "sha256": "3637513333757c1b54b3b48a59c0d4b1a2bbddb60809d6e54bb48cdef9abdf92"
+    },
+    "icons/ato_text_icons_02/cent_4_2.png": {
+      "bytes": 978,
+      "sha256": "08dfa52a18b38b003b8293e940bad87309ed959098d6a0fa9861e1b9c580317f"
+    },
+    "icons/ato_text_icons_02/cent_5_1.png": {
+      "bytes": 653,
+      "sha256": "5f496ed06e25fc480530b66889d5f4d71ccd80161365d073806814435ab6e76d"
+    },
+    "icons/ato_text_icons_02/cent_5_2.png": {
+      "bytes": 746,
+      "sha256": "32dc88d60e350e39acebf5ddb608c06e41b95f3c6a671d99f1f86831fac9bf00"
+    },
+    "icons/ato_text_icons_02/cent_6_1.png": {
+      "bytes": 890,
+      "sha256": "c3d49f58cfe759c52049666d9b7871ef2ae8255d4badc9687cdfdab091ff5f34"
+    },
+    "icons/ato_text_icons_02/cent_6_2.png": {
+      "bytes": 744,
+      "sha256": "800f7c1931bfd4f230746dc8c4b0b5b05e7ee8c5212061663e482a0008a7b1af"
+    },
+    "icons/ato_text_icons_02/cent_7_1.png": {
+      "bytes": 764,
+      "sha256": "73a44fb8bf0a810f00a1f09ec9fcf3423f92a585b62471b626198a262eb145ce"
+    },
+    "icons/ato_text_icons_02/cent_7_2.png": {
+      "bytes": 842,
+      "sha256": "8c7c74bd03db83ba3db33dc5afd3bfbc4198c494192ed456c9d8c7ca34e7aabe"
+    },
+    "icons/ato_text_icons_02/cent_8.png": {
+      "bytes": 728,
+      "sha256": "7ff430a1ab2c345fb6832004cefe8d78026e94f4625e1892cc1436b883ba21b6"
+    },
+    "icons/ato_text_icons_02/cent_9.png": {
+      "bytes": 731,
+      "sha256": "27ed58d3ff6527a8ef68e8bd88faeb33734f9215e380c6bdfe2ed73cc2da5d88"
+    },
+    "icons/ato_text_icons_02/chariot_a.png": {
+      "bytes": 6538,
+      "sha256": "1f2bb455d9d357937a95e565794a8a25f78bdf0dab90854bf7a4f7d7aa83a5dc"
+    },
+    "icons/ato_text_icons_02/chariot_b.png": {
+      "bytes": 5789,
+      "sha256": "b00a3c8c8518e36a1de7749f6b23b09d94b67a1644394e39b8e3525fdfc8b68a"
+    },
+    "icons/ato_text_icons_02/city_of_splendor.png": {
+      "bytes": 16776,
+      "sha256": "3fa22cc8ee4b9dbb48335ac99a2176d9e31518dc26133d5a2960bcd46c635e67"
+    },
+    "icons/ato_text_icons_02/down.png": {
+      "bytes": 2434,
+      "sha256": "0b415cecbdea2af559cddceb7212c64fea0b706f47a56b582ca16a4d276a071a"
+    },
+    "icons/ato_text_icons_02/echo_token.png": {
+      "bytes": 18461,
+      "sha256": "176d0fa73feb5f5579ada4b4965bc6d802d0f82fc0b5567f86509954264f392e"
+    },
+    "icons/ato_text_icons_02/edge_marker.png": {
+      "bytes": 13747,
+      "sha256": "aa89af6efc3e38af497a0e29a9f134336f8d6918c5ad543d4f0c5d4aaa5052b0"
+    },
+    "icons/ato_text_icons_02/escalated.png": {
+      "bytes": 5877,
+      "sha256": "9a573563f577db636684e3433b70aa640ed1de005a7fead1b70be447438b3a60"
+    },
+    "icons/ato_text_icons_02/escalation.png": {
+      "bytes": 2597,
+      "sha256": "a7c76426a11cdbae10bc723db0b08addbb6e5eb9928172450ad6d20d46493903"
+    },
+    "icons/ato_text_icons_02/evasion_bonus.png": {
+      "bytes": 2380,
+      "sha256": "cbe979096684bcecff39ad9a151b5108065a864c6863e7a7a3abcccb3c9c3f30"
+    },
+    "icons/ato_text_icons_02/fire.png": {
+      "bytes": 5842,
+      "sha256": "5b9265442fd29de462573f6d594b7bf86d61c2002081e6f6415061fb2d297fce"
+    },
+    "icons/ato_text_icons_02/frozen_time.png": {
+      "bytes": 4727,
+      "sha256": "2cb11bc45905f75ed41cf7ba26adcfcc84e97d3b01b961ba4f9ae1df4129b8a1"
+    },
+    "icons/ato_text_icons_02/goats.png": {
+      "bytes": 4127,
+      "sha256": "862e7761386c581ed9b8f340f58bb199f8b7fab8a2ba684a88abdc156bf7098b"
+    },
+    "icons/ato_text_icons_02/gt.png": {
+      "bytes": 2848,
+      "sha256": "8bad17512d9b020365a32b4b4c7722698c4df9724b024957a32e5126ec0cd575"
+    },
+    "icons/ato_text_icons_02/hanging_gardens.png": {
+      "bytes": 18001,
+      "sha256": "1748aefba2e8e865d04b0a4fc3693f1864b38a73a6d72429e45522eeea47a1f1"
+    },
+    "icons/ato_text_icons_02/last_one_out.png": {
+      "bytes": 6371,
+      "sha256": "daf6c25de041c7cbf543a59267b07047ff5b889e69399cd965344f381f7d2c7f"
+    },
+    "icons/ato_text_icons_02/left.png": {
+      "bytes": 2168,
+      "sha256": "5af2f01ecc069e4af7d90c9da29c82fc5d0704dffc37b21795547348bb45e341"
+    },
+    "icons/ato_text_icons_02/lumbering.png": {
+      "bytes": 4633,
+      "sha256": "f906b9be9c2f02e8ddeade6c0a501cacdddaaad96d08c74aac8ff78aefb0cfcc"
+    },
+    "icons/ato_text_icons_02/microwave.png": {
+      "bytes": 8941,
+      "sha256": "e93fb0eda357c71700fcfa74256ae3a46aa0bcfaa1999c6a0c060216b2a7c528"
+    },
+    "icons/ato_text_icons_02/midas.png": {
+      "bytes": 5457,
+      "sha256": "56f91b7841de30d63d932184f89830052c4d8bc5b9743d441dfc186f3186bc53"
+    },
+    "icons/ato_text_icons_02/minotaur_temple.png": {
+      "bytes": 5560,
+      "sha256": "d6e64e390c224d73ead770eef28d69ca6c6946a1baa695d8381ca97a5e0372a2"
+    },
+    "icons/ato_text_icons_02/ok.png": {
+      "bytes": 9065,
+      "sha256": "7ad4a38ad5419587b93d5f122c4030fffe2de47b94aba447091cdfc146a1ae9e"
+    },
+    "icons/ato_text_icons_02/ok_ukn_dis.png": {
+      "bytes": 12884,
+      "sha256": "ec357554323ec71e922a4d8d8c200ddd61f725d8edbc9386f6a3db4d194aef8f"
+    },
+    "icons/ato_text_icons_02/one_handed.png": {
+      "bytes": 2781,
+      "sha256": "b9b62a739e7b29cb18ffc130cac86de9584ec88dfc8103a5016ee56505275c79"
+    },
+    "icons/ato_text_icons_02/opening.png": {
+      "bytes": 4640,
+      "sha256": "6505818be08ec6709dd516f191a07e47efcd2f4e4d0eae8b1fd72b7aaa85b58f"
+    },
+    "icons/ato_text_icons_02/positive.png": {
+      "bytes": 2950,
+      "sha256": "2866d1b4e9a82606bd55a54004c1172015f62f818493f2a23a3e442f26613942"
+    },
+    "icons/ato_text_icons_02/precision.png": {
+      "bytes": 6178,
+      "sha256": "858d3857e2314a0944cea1b16915d501aae7d70d10f442302dd188f1b9bdcf68"
+    },
+    "icons/ato_text_icons_02/priority_target.png": {
+      "bytes": 6759,
+      "sha256": "bfb79ea41ac0d08d8848a8414322a66e6b87998300d09367b11f181e99699efc"
+    },
+    "icons/ato_text_icons_02/progress_inverted.png": {
+      "bytes": 5273,
+      "sha256": "bb9cdac36fb4bf5e5d9e0d43f70d6e63c592fb165392da7af49f77bbd5ac756c"
+    },
+    "icons/ato_text_icons_02/pygmalion_stone.png": {
+      "bytes": 2882,
+      "sha256": "caf7a3645f6f227fb705463dc13ba6afa87d267b4c8d84154b8b2787385bfaf5"
+    },
+    "icons/ato_text_icons_02/red_subreme.png": {
+      "bytes": 17162,
+      "sha256": "97c5da70aa1f46baffade20308e84025bd9b5b86b79e52215b07a8dede6e2653"
+    },
+    "icons/ato_text_icons_02/right.png": {
+      "bytes": 2221,
+      "sha256": "f74046301fd0d355d69d7b61a9158e394cd32062d3fdcb831f8f9287a07fd138"
+    },
+    "icons/ato_text_icons_02/river.png": {
+      "bytes": 4407,
+      "sha256": "374702c25849f04c3c7045e7f15667327cf5f396a01360694f219d2101561d50"
+    },
+    "icons/ato_text_icons_02/silver_remnant.png": {
+      "bytes": 15167,
+      "sha256": "1027141be4873f261012609d2d93b9268320cd91f03bc1259d5d1113cbd7af61"
+    },
+    "icons/ato_text_icons_02/sluice_gates.png": {
+      "bytes": 2115,
+      "sha256": "6424208bbd6e7c408f7ba56412fa703dd1571a61dd558c532656c9b1949eae23"
+    },
+    "icons/ato_text_icons_02/spartan_strongholds.png": {
+      "bytes": 4085,
+      "sha256": "c2ad23aeda42b922817970985893e7e4684fbadd02a1939678aad4be89fafeaf"
+    },
+    "icons/ato_text_icons_02/speed.png": {
+      "bytes": 2272,
+      "sha256": "598e0b99c67a353e055c5528282ea991ffcb9826bf4aa41138c750e38edd62f4"
+    },
+    "icons/ato_text_icons_02/submerged.png": {
+      "bytes": 5029,
+      "sha256": "7bf233187ecb507cfaa238bbc34813ddc581e2c1ab3d2e0bbd48beb0722e22b1"
+    },
+    "icons/ato_text_icons_02/surfaced.png": {
+      "bytes": 4345,
+      "sha256": "7c021176557e92161c817852f9501b9c13baaa5089f35f234559f59bc46a4480"
+    },
+    "icons/ato_text_icons_02/temenose.png": {
+      "bytes": 6571,
+      "sha256": "b210e6f9f4db1521f28afbff780d4ddfaabf91e1373044c5ba6e3b5271aa4024"
+    },
+    "icons/ato_text_icons_02/three_handed.png": {
+      "bytes": 4888,
+      "sha256": "640d987d866ac1c28de65cef90ee25315ab234147e59a7c9d980a52394f5bf31"
+    },
+    "icons/ato_text_icons_02/time_marker.png": {
+      "bytes": 13032,
+      "sha256": "d0b42c89257e976f42ff2533361e27cac00c599db1837da52ac63d2c86a86540"
+    },
+    "icons/ato_text_icons_02/time_s_tickin.png": {
+      "bytes": 6821,
+      "sha256": "d730c77a8df6a6fafac017f23f1af38fdd4a80f08998f7024c23125ab04a1e9b"
+    },
+    "icons/ato_text_icons_02/timeline_battle.png": {
+      "bytes": 3548,
+      "sha256": "a1837d833e3aa1d2f594f7f73f6d957235593fa4dbcb4d42240353162160f39b"
+    },
+    "icons/ato_text_icons_02/trespass.png": {
+      "bytes": 5494,
+      "sha256": "b64f2813ff13477bbc83a80295be7e8df7d9c10dccbe864f312c19ea1eefa1e4"
+    },
+    "icons/ato_text_icons_02/two_handed.png": {
+      "bytes": 3163,
+      "sha256": "886a6e9e0e0103f16ef2bf16b8741911560e443bfcdfacf88bffba6a6b6dc4b6"
+    },
+    "icons/ato_text_icons_02/typchon.png": {
+      "bytes": 12505,
+      "sha256": "da761c825269154b3fcb8495108e74d13c34a7dd3a9474d75af6a01c4770c4db"
+    },
+    "icons/ato_text_icons_02/up.png": {
+      "bytes": 2350,
+      "sha256": "6d49a2737ced95c015e4d64ea515c5a91dab6e047677dfb4e2675368d60c7621"
+    },
+    "icons/ato_text_icons_02/woo.png": {
+      "bytes": 3478,
+      "sha256": "a311b602d5eec5ab5989673bcd565c15ce6ccdf6f185ec46116e66f9b97a9a38"
+    },
+    "icons/ato_text_icons_02/wounds.png": {
+      "bytes": 3695,
+      "sha256": "30e42d1a88e9687bc4ff5835258a9764561577b381cd3ddd46b0a5d45be0716a"
+    },
+    "icons/ato_text_icons_03/0090.png": {
+      "bytes": 25376,
+      "sha256": "7c7d2bffee2494e1fdf7d6ea86c4f9014288fe8dc0c9767a429e683d7d722612"
+    },
+    "icons/ato_text_icons_03/0237.png": {
+      "bytes": 27266,
+      "sha256": "f700a755c23341b6f644aa5831622e6c11542e4a6d63d2899c8e2e280d7b4c7f"
+    },
+    "icons/ato_text_icons_03/1252.png": {
+      "bytes": 24333,
+      "sha256": "1345397c3675a204c7cabca64fe839d4597196084c1a82cc50c58d933e9dfcd9"
+    },
+    "icons/ato_text_icons_03/1795.png": {
+      "bytes": 11538,
+      "sha256": "a36047e7a3b7a6443def5b629e60ce1d128c2a29b57537286fc85095f62851e2"
+    },
+    "icons/ato_text_icons_03/3123.png": {
+      "bytes": 26571,
+      "sha256": "769e3c29db51308c5bcf1e5677f94068b66d06afd077cec0e5abf939651fb6b9"
+    },
+    "icons/ato_text_icons_03/4478.png": {
+      "bytes": 7085,
+      "sha256": "a0c4fc23fe80de848cfd657bc70e3303fd61107d7cdc878ca6fc4e886e75213f"
+    },
+    "icons/ato_text_icons_03/5923.png": {
+      "bytes": 25723,
+      "sha256": "1df48bed137b094e55901ee2b65e53dd3546087a59b45001bedb010006a93414"
+    },
+    "icons/ato_text_icons_03/C0058.png": {
+      "bytes": 21042,
+      "sha256": "c6d5a0f607ac0992f5fd2c164d0fe811fe10f32e145ecb0decdacbe0e7b5aabb"
+    },
+    "icons/ato_text_icons_03/C0059.png": {
+      "bytes": 20645,
+      "sha256": "d84a01ba4cd28691d8f6853312cf0f5b30cf82a2261f6f7dbb0934fdcdde1bac"
+    },
+    "icons/ato_text_icons_03/C7965.png": {
+      "bytes": 19631,
+      "sha256": "b14ffa8c738d6f74a72a79e0d1b28a6422dd816ab273216ab82e44c99293c62c"
+    },
+    "icons/ato_text_icons_03/CH40038.png": {
+      "bytes": 18676,
+      "sha256": "6584cf11673a3a28b8e1787b66fd1f2fa05301a620be0c2ae2fbb1bb8742cd08"
+    },
+    "icons/ato_text_icons_03/CH40047.png": {
+      "bytes": 21173,
+      "sha256": "3903747e7f3fe8b62796a31989665da6b8b381906b5c51cfd52c0da6e616c2cb"
+    },
+    "icons/ato_text_icons_03/Cnight_dive.png": {
+      "bytes": 20302,
+      "sha256": "c2ab0b5da65f1a19353d698884ff448fb9930e6d796edcc2b7de191b19ac5d9c"
+    },
+    "icons/ato_text_icons_03/H10003.png": {
+      "bytes": 29182,
+      "sha256": "d7a078a3d3e0fb3c9443ae0f0f1784cfaa5b4406fcf2fdc8473b4b8cf516ab55"
+    },
+    "icons/ato_text_icons_03/H10047.png": {
+      "bytes": 24680,
+      "sha256": "460e45e4f570cfad82cead087d25a9e807d58ec0588eb5f9533da727db2800c0"
+    },
+    "icons/ato_text_icons_03/H20001.png": {
+      "bytes": 6784,
+      "sha256": "632a6df4534ea76e7dabba8e0806010a986104eda692cd11b234c76f1ee11a0d"
+    },
+    "icons/ato_text_icons_03/H20011.png": {
+      "bytes": 25529,
+      "sha256": "9ef8537b0d0a074b77657822c82f06c2b051abbde68988c3d765b83fd82146ab"
+    },
+    "icons/ato_text_icons_03/H20054.png": {
+      "bytes": 8505,
+      "sha256": "d450f070ecd791e972a6f4b14d71909dc31671cba5dcf8ee9f9c63bd216857e5"
+    },
+    "icons/ato_text_icons_03/H40043A.png": {
+      "bytes": 8122,
+      "sha256": "7859e31b9da42b81d5a7ddbfcf41739ffb21a260d48dc03264ce26b5da183477"
+    },
+    "icons/ato_text_icons_03/H40043B.png": {
+      "bytes": 23449,
+      "sha256": "678058ed8ae71e7ee698bd23423286b6392fcc42384ce8fd931a2994ade7a42f"
+    },
+    "icons/ato_text_icons_03/H70030.png": {
+      "bytes": 6721,
+      "sha256": "fed565367cb7e04c05680db78a19c721d624bc52d5a1a34eb817d12450b50d51"
+    },
+    "icons/ato_text_icons_03/closure.png": {
+      "bytes": 25784,
+      "sha256": "f5ca512f89f9c417d76843bff7351a6244f846c6627df6e2189967a2f515549b"
+    },
+    "icons/ato_text_icons_04/corr3271.png": {
+      "bytes": 40409,
+      "sha256": "1c59f7ba1dd2864bfd3698ae254d0a89ac8ba51e8ce68a049d37bc559f7992f0"
+    },
+    "icons/ato_text_icons_05/argo_flame.png": {
+      "bytes": 17140,
+      "sha256": "f8f61af1cbaf57c2f5ad8309b6d13a8e1135bcf72b492099fb57f4cc4da9586c"
+    },
+    "icons/ato_text_icons_05/atlantean_capital.png": {
+      "bytes": 15600,
+      "sha256": "2637849a6ba13e827167a6a46e3dd84c1f3344defb465a398728111bc498ba6f"
+    },
+    "icons/ato_text_icons_05/city_bull.png": {
+      "bytes": 14232,
+      "sha256": "63455dd1d07128e8cfee10fddc43afbf0e1d95eb2cbd784a00eb3207a67d10fb"
+    },
+    "icons/ato_text_icons_05/city_of_squalor.png": {
+      "bytes": 14884,
+      "sha256": "ede01961b220e755c8d2538d8d618f7452131e3319b1a8a94e8d0ec2e83f5cef"
+    },
+    "icons/ato_text_icons_05/cloud_ship.png": {
+      "bytes": 15256,
+      "sha256": "7cb0e40ac0ae508d20e8e81eb5876e1038b0fa68a27ea79a9c89f2320b9f7a63"
+    },
+    "icons/ato_text_icons_05/fated_box.png": {
+      "bytes": 2202,
+      "sha256": "8edd715605fa3be16c506da3816e425b35b8191b99704f3538920e1006a90826"
+    },
+    "icons/ato_text_icons_05/gr.png": {
+      "bytes": 12641,
+      "sha256": "ca306855ceb96ef2e78b15d79ef3f8d063d1391c0b7f3ae04e7399c4c6b05468"
+    },
+    "icons/ato_text_icons_05/lab_temple.png": {
+      "bytes": 14896,
+      "sha256": "bdc160ccdcf793eaeddb51d91e9c3e8e7e1fb4cb79825657feadc6ee9854882c"
+    },
+    "icons/ato_text_icons_05/last_city.png": {
+      "bytes": 15028,
+      "sha256": "1e01445cf43263193c49e34239899bd69bb9b9f33abe6354f4db847d8045c340"
+    },
+    "icons/ato_text_icons_05/sep_acr.png": {
+      "bytes": 12932,
+      "sha256": "29803098f0555b868917f28d6d0652e2a6f15c836ccca7e8e567a8a5610da0aa"
+    },
+    "icons/ato_text_icons_05/white_dice.png": {
+      "bytes": 6380,
+      "sha256": "1d2e93d57302e75f290ba28da2debaed54b018a11fe7900fa800e4401d2b325a"
+    },
+    "icons/ato_text_icons_map/MapSC4A.png": {
+      "bytes": 283047,
+      "sha256": "fbff0ebfa9a373665f5617d48fac18d170ef7acdbbc1ca0cf39a941716b78e01"
+    },
+    "icons/index.json": {
+      "bytes": 99225,
+      "sha256": "4bc5ba2bd5eca9aefb762cec0ce0478eb88dea237f9e3eec70e2cd3bb7ce9133"
+    },
+    "siren/geometry-and-order.json": {
+      "bytes": 367886,
+      "sha256": "6f773dfc806ec11e86f78e53e7d9501df02b03595f7c54dab82e1e6f495424a9"
+    },
+    "siren/glyph-00.png": {
+      "bytes": 8845,
+      "sha256": "23f4c5458f8cf2e70dbd9cb8a9f4ce6eca6dcacde08acdf89dde590952eb6bac"
+    },
+    "siren/glyph-01.png": {
+      "bytes": 8994,
+      "sha256": "5edd6fb5ff9a271a4f9799e959f738655a8ef87ac28017b70ef98f5f0aaeb63d"
+    },
+    "siren/glyph-02.png": {
+      "bytes": 8999,
+      "sha256": "eeb170e44c22e417b53faf7ad493bce691cb0bb4db13f41cfbac66e0974e4c39"
+    },
+    "siren/glyph-03.png": {
+      "bytes": 8692,
+      "sha256": "4b11f1b02955a7bdc9cde526b542da3817ba73ada02a05b13b27ca46906275e7"
+    },
+    "siren/glyph-04.png": {
+      "bytes": 10512,
+      "sha256": "cdc85f8a4077ca23fde964e4af99259aac4bba1029f5ab54365e32af73073e8b"
+    },
+    "siren/glyph-05.png": {
+      "bytes": 10518,
+      "sha256": "518deb7ff62dfc0d7aace1e94d3b14bae48da5d3ef27eb9d6af0dfbbc53bfbe0"
+    },
+    "siren/glyph-06.png": {
+      "bytes": 12033,
+      "sha256": "aac64f792954abbf6076e9e1e2ca38603bee076b70595978586b4e5197e1cfe4"
+    },
+    "siren/glyph-07.png": {
+      "bytes": 12587,
+      "sha256": "baee07e986d6229c41f532040b5822cb8d0d23ce3aeadb94cb5b9db1c674db6b"
+    },
+    "siren/glyph-08.png": {
+      "bytes": 13394,
+      "sha256": "1a4edd0c8374b0635bb0ff1ce21a9a6edb4af4c31c0364c8b5df2bf9fa6ef682"
+    },
+    "siren/glyph-09.png": {
+      "bytes": 13611,
+      "sha256": "fa951d790eae013c000d00459d8d587361e415ede66be3a2f55af3d45414bcf7"
+    },
+    "siren/glyph-10.png": {
+      "bytes": 14169,
+      "sha256": "d90dbd4eded0d07fff299247a481da7841a9141f32a7a9124cab9928b7801b59"
+    },
+    "siren/glyph-11.png": {
+      "bytes": 15162,
+      "sha256": "05bc00a9262aae2bafc92b247fe81afe4c919dd85d06fdb02e17c5c63dc2c283"
+    },
+    "siren/glyph-12.png": {
+      "bytes": 14951,
+      "sha256": "05eb691bf17840592cd25b867427566420ffc43cedfbf5d7f22e04b6f6682d65"
+    },
+    "siren/glyph-13.png": {
+      "bytes": 15549,
+      "sha256": "db2055f30c278ae7ad17cc0c69dd86661a6f029c5723f85c4075cd06e98093db"
+    },
+    "siren/glyph-14.png": {
+      "bytes": 14811,
+      "sha256": "c9042196643c49dbc10478dd4fe0b91d62a10065a0f259373426344594a38df4"
+    },
+    "siren/glyph-15.png": {
+      "bytes": 13740,
+      "sha256": "63ff4d957c4188043d7ae04a37046beb76460b9a06ef35b04bc798e98859e45f"
+    },
+    "siren/glyph-16.png": {
+      "bytes": 13626,
+      "sha256": "29f911f7af9e46c3a5dbfddb3679892f59e463ade6ad120af811908d03262230"
+    },
+    "siren/glyph-17.png": {
+      "bytes": 13333,
+      "sha256": "df201018b93a60815ac1111e38224aa8495bec1bb7d9a591797b91084a8ce89d"
+    },
+    "siren/glyph-18.png": {
+      "bytes": 12442,
+      "sha256": "4c5167922bf819574ea1521762d415007854d24b4d4fc5a445ca5f98564c65c2"
+    },
+    "siren/glyph-19.png": {
+      "bytes": 11685,
+      "sha256": "6f348c7f3993e08b1a729047e3957dab8928b883db752c922023bced290199ae"
+    },
+    "siren/glyph-20.png": {
+      "bytes": 10779,
+      "sha256": "64efea01188ff0662e706c058f121aacf956068598cd88b8db09ff1309e0867c"
+    },
+    "siren/glyph-21.png": {
+      "bytes": 9898,
+      "sha256": "38a5535bbef9b965ff3c089c80822abe9e7b368b61aba8565657cd1e1c3ff375"
+    },
+    "siren/glyph-22.png": {
+      "bytes": 8863,
+      "sha256": "b649cc58e469d09589fdcd7e416b480be9836e2ccf08388fbf91790df6e98062"
+    },
+    "siren/glyph-23.png": {
+      "bytes": 8921,
+      "sha256": "e4122102027f08b92e5793d5196ff7339dca50cd8ed10b8dac5b56933cbb87ce"
+    },
+    "siren/glyph-24.png": {
+      "bytes": 8945,
+      "sha256": "492be905ea1d982af8666e4d124eb3988eda0df1462094c1ea6601aa1e39ed7b"
+    },
+    "siren/glyph-25.png": {
+      "bytes": 9057,
+      "sha256": "3e888ca1f9ac1eaecb3daa76fbc5a7fbe85bbf2392dcacb0a51374154cd2b414"
+    },
+    "siren/main.png": {
+      "bytes": 81579,
+      "sha256": "4a1329eb72df60521008711cb368aea19cefc179dd89dfcfc0649184121a0e26"
+    },
+    "siren/recovered-rules.json": {
+      "bytes": 1756,
+      "sha256": "8819ed2278ad24a730bc7dc583d45c02ee3f28fa3e2c048977238a7b1b4aa8c6"
+    },
+    "siren/start-positions.json": {
+      "bytes": 917,
+      "sha256": "614b574562817d6474a0b21144ba451b2d4cf905a89c4800019c0763b716d324"
+    }
+  }
+}

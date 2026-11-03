@@ -155,16 +155,25 @@
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const dx=x-fit.cx,dy=y-fit.cy;ink[y*w+x]=sample(template,(dx*c+dy*s)*scale+template.width*template.pivotX,(-dx*s+dy*c)*scale+template.height*template.pivotY);}
   return {width:w,height:h,ink};
  }
- function support(bitmap,pts,fit,baseMask=null,negativePts=null){
+ function support(bitmap,pts,fit,baseMask=null,negativePts=null,minimum=null){
   const c=Math.cos(rad(fit.rotation))*fit.size,s=Math.sin(rad(fit.rotation))*fit.size,w=bitmap.width,h=bitmap.height,a=bitmap.ink,b=baseMask?.ink;
-  let sum=0,unique=0,un=0,visible=0;
+  const count=pts.length/2;let sum=0,unique=0,un=0,visible=0;
   for(let i=0;i<pts.length;i+=2){
    const x=Math.round(fit.cx+pts[i]*c-pts[i+1]*s),y=Math.round(fit.cy+pts[i]*s+pts[i+1]*c);
    if(x<0||x>=w||y<0||y>=h)continue;
    const j=y*w+x,v=a[j];visible++;sum+=v;
    if(!b||b[j]<.25){unique+=v;un++;}
+   // Coarse letters only, with ink proven in [0,1]. Give every remaining
+   // sample perfect independent ink: if even that upper bound cannot pass
+   // the existing gates, stop. Survivors retain the original arithmetic.
+   if(minimum!==null&&(i+2)%32===0){
+    const remaining=count-(i+2)/2,maxUnique=un+remaining;
+    const fullMax=(sum+remaining)/count,uniqueMax=maxUnique?(unique+remaining)/maxUnique:0;
+    const upper=b?(fullMax*.25+uniqueMax*.75)*Math.min(1,maxUnique/count/.40):fullMax;
+    if(upper<minimum-1e-12||maxUnique/count<.35-1e-12||(visible+remaining)/count<.95-1e-12)return null;
+   }
   }
-  const count=pts.length/2,full=sum/count,uniqueFraction=un/count,uniqueScore=un?unique/un:0;
+  const full=sum/count,uniqueFraction=un/count,uniqueScore=un?unique/un:0;
   let score=baseMask?(full*.25+uniqueScore*.75)*Math.min(1,uniqueFraction/.40):full,negativeInk=0;
   if(negativePts?.length&&full>.5){
    for(let i=0;i<negativePts.length;i+=2){const x=Math.round(fit.cx+negativePts[i]*c-negativePts[i+1]*s),y=Math.round(fit.cy+negativePts[i]*s+negativePts[i+1]*c);if(x>=0&&x<w&&y>=0&&y<h)negativeInk+=a[y*w+x];}
@@ -295,13 +304,16 @@
    // Small screenshot strokes can fall between four-pixel seed centres.
    // Denser starts retain the same per-letter proposal and refinement budgets.
    for(let cy=y0;cy<=y1;cy+=2)for(let cx=x0;cx<=x1;cx+=2)if(containsLocator(baseSmall,{x:cx,y:cy}))locations.push({cx,cy,edge:!strictLocator(baseSmall,{x:cx,y:cy})});
+   // Opt-out supports exact regression comparisons. Unbounded custom inputs
+   // keep full evaluation; only this letter stage uses the early-out bound.
+   const coarseGate=options.coarsePruning===false||target.ink.some(v=>!Number.isFinite(v)||v<0||v>1)?null:.69;
    for(let li=0;li<letterNames.length;li++){
     const letter=letterNames[li],pts=letters[letter].points(64),top=[],edgeTop=[];
     for(const {cx,cy,edge} of locations){
      const bearing=Math.atan2(cy-baseSmall.cy,cx-baseSmall.cx)*180/Math.PI-90;
      for(const ratio of [.94,1,1.06])for(const delta of [-25,-10,0,10,25]){
-      const f={cx,cy,size:defaultSize*ratio,rotation:normalize(bearing+delta),delta},m=support(target,pts,f,baseSmallMask);
-      if(m.score>.69&&m.uniqueFraction>.35&&m.visible>.95)insertTop(edge?edgeTop:top,{...f,...m,letter},8,defaultSize*.30);
+      const f={cx,cy,size:defaultSize*ratio,rotation:normalize(bearing+delta),delta},m=support(target,pts,f,baseSmallMask,null,coarseGate);
+      if(m&&m.score>.69&&m.uniqueFraction>.35&&m.visible>.95)insertTop(edge?edgeTop:top,{...f,...m,letter},8,defaultSize*.30);
      }
     }
     proposals.push(...top,...edgeTop);progress(options,'letters-coarse',(li+1)/letterNames.length);

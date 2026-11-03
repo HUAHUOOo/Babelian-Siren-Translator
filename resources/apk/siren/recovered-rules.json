@@ -1,0 +1,46 @@
+{
+  "status": "Static reconstruction from native calls/fields; not a tested replacement implementation",
+  "unity": "2022.3.62f2",
+  "metadata": 31,
+  "methods": [
+    {
+      "name": "SyreniGlyphUI.UpdateData",
+      "address": "0x165a4ac",
+      "confirmed": [
+        "Stores local Z rotation in degrees",
+        "Normalizes local X/Y by parent RectTransform width/height",
+        "Calls TryGetIntersection(index, angle, normalized position)",
+        "Stores returned score and hasScore=true"
+      ]
+    },
+    {
+      "name": "SyreniUtills.TryGetIntersection",
+      "address": "0x15a0adc",
+      "confirmed": [
+        "Applies requested position/rotation to the selected collider",
+        "Calls Collider2D.OverlapCollider",
+        "Uses the minimum index of overlapping items in mainColliders",
+        "No main hit -> score=positive infinity and false",
+        "For segment i>0, score=i+Physics2D.Distance(previousMainCollider,glyphCollider).distance/100",
+        "Segment i=0 calls Dist helper and divides by 100"
+      ],
+      "unverified": [
+        "Full Unity physics equivalence in JavaScript",
+        "Coordinate transforms and scale in a new renderer",
+        "Exact interpretation of the Dist helper branch at segment 0"
+      ]
+    },
+    {
+      "name": "SyreniFullGlyphUI.UpdateTranslation",
+      "address": "0x1649984",
+      "confirmed": [
+        "Filters items where hasScore and score is not positive infinity",
+        "OrderBy score ascending",
+        "Looks up index through TranslationData.TryGetSirenLetter",
+        "Joins mapped characters; unknown mapping uses the app unknown marker"
+      ]
+    }
+  ],
+  "native_start_positions": "siren/start-positions.json",
+  "geometry": "siren/geometry-and-order.json"
+}
