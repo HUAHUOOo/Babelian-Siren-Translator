@@ -17,6 +17,7 @@
     "screenshotPersistence": false
   },
   "features": [
+    "siren-stroke-width-first-contact",
     "siren-progressive-group-preview",
     "siren-exact-memory-cache",
     "siren-read-only-reconstruction-difference",

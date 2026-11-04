@@ -41,32 +41,66 @@
     function project(points,point){
       let best=null;for(const p of points){const distance=Math.hypot(p.x-point.x,p.y-point.y);if(!best||distance<best.distance)best={...p,distance};}return best;
     }
+    function earlierStrokeContact(points,group,item,before){
+      const baseMask=masks.base,glyph=letters[item.letter],mask=masks[item.letter];
+      if(!baseMask?.alpha||!glyph||!mask)return null;
+      const size=group.baseSize??500,radius=size*.006,minSpan=Math.max(.5,size*.004),angle=rad(item.rotation),c=Math.cos(angle),s=Math.sin(angle),scale=glyph.width/item.size;
+      const baseAngle=rad(group.baseRotation??0),bc=Math.cos(baseAngle),bs=Math.sin(baseAngle),baseScale=base.width/size;
+      // Only a narrow normal section of the actual base ink is admissible:
+      // this is not an inflated letter box or an unconditional proximity hit.
+      const offsets=[0,-.25,.25,-.5,.5,-.75,.75,-1,1];let lo=0,hi=0,run=null;
+      const valid=()=>run&&run.count>=4&&run.end-run.at>=minSpan;
+      for(let k=0;k<points.length;k++){
+        const p=points[k];if(p.at>=before)break;
+        while(lo<k&&points[lo].at<p.at-radius)lo++;
+        hi=Math.max(hi,k);while(hi<points.length-1&&points[hi].at<p.at+radius)hi++;
+        const dx=points[hi].x-points[lo].x,dy=points[hi].y-points[lo].y,length=Math.hypot(dx,dy);let contact=null;
+        if(length>1e-9)for(const offset of offsets){
+          const x=p.x-dy/length*radius*offset,y=p.y+dx/length*radius*offset,bx=x-group.cx,by=y-group.cy;
+          if(sampleMask(baseMask,(bx*bc+by*bs)*baseScale+base.width*base.pivotX,(-bx*bs+by*bc)*baseScale+base.height*base.pivotY)<128)continue;
+          const gx=x-item.x,gy=y-item.y;
+          if(sampleMask(mask,(gx*c+gy*s)*scale+glyph.width*glyph.pivotX,(-gx*s+gy*c)*scale+glyph.height*glyph.pivotY)>=128){contact={x,y,at:p.at};break;}
+        }
+        if(contact){if(!run)run={...contact,end:p.at,count:1,method:'stroke-width'};else{run.end=p.at;run.count++;}}
+        else if(run){if(valid())return run;run=null;}
+      }
+      return valid()?run:null;
+    }
     function analyze(group,review=false){
       const signature=JSON.stringify([group.cx,group.cy,group.baseSize,group.baseRotation,group.items,review]),old=cache.get(group);
       if(old?.signature===signature)return old.result;
       const points=basePoints(group),total=points.at(-1)?.at||1;
       const items=group.items.map(item=>{
-        let hits=[],reason='';
+        let hits=[],reason='',pose=null;
         if(review){
           if(item.contact){const match=project(points,item.contact);if(match&&match.distance<=12)hits=[{...match,end:match.at,manual:true}];else reason='标记未落在对齐后的大螺旋路径上';}
-          else if(item.fit&&(item.letter||item.fit.candidates?.[0])){hits=crossings(points,{...item,letter:item.letter||item.fit.candidates[0].letter,rotation:item.fit.rotation});if(!hits.length)reason='拟合字形没有可靠交点，请人工复核';}
-          else if((item.manualAdded||item.rotationMode)&&item.letter){hits=crossings(points,{...item,rotation:C.rotationFor(group,item)});if(!hits.length)reason='人工调整字形尚未与大螺旋相交，请调整或标记交点';}
+          else if(item.fit&&(item.letter||item.fit.candidates?.[0])){pose={...item,letter:item.letter||item.fit.candidates[0].letter,rotation:item.fit.rotation};hits=crossings(points,pose);if(!hits.length)reason='拟合字形没有可靠交点，请人工复核';}
+          else if((item.manualAdded||item.rotationMode)&&item.letter){pose={...item,rotation:C.rotationFor(group,item)};hits=crossings(points,pose);if(!hits.length)reason='人工调整字形尚未与大螺旋相交，请调整或标记交点';}
           else reason='请确认字母并标记该小螺旋的最内侧交点';
         }else {hits=crossings(points,{...item,rotation:C.rotationFor(group,item)});if(!hits.length)reason=item.letter?'未与大螺旋相交':'尚未选择字母，无法判断交点';}
         // Screenshot fits can have a stable glyph identity but an unstable first
         // contact. Probe neighbouring positions without moving the stored pose.
-        // This is advisory only: retain the nominal crossings and reading order.
-        let orderSensitive=false;
-        if(review&&item.fit&&!item.contact&&!item.positionLocked&&item.rotationMode!=='manual'&&hits.length){
+        // Probe first; stable nominal contacts retain their exact old metrics.
+        let unstable=false;
+        if(review&&pose&&!item.contact&&hits.length){
           const displacement=(group.baseSize??500)*.006;
           const jumpThreshold=(group.baseSize??500)*.25;
-          const pose={...item,letter:item.letter||item.fit.candidates?.[0]?.letter,rotation:item.fit.rotation};
           for(const [dx,dy] of [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]){
             const first=crossings(points,{...pose,x:pose.x+dx*displacement,y:pose.y+dy*displacement})[0];
-            if(!first||Math.abs(first.at-hits[0].at)>jumpThreshold){orderSensitive=true;break;}
+            if(!first||Math.abs(first.at-hits[0].at)>jumpThreshold){unstable=true;break;}
           }
         }
-        return {id:item.id,first:hits[0]||null,hits,at:hits[0]?.at??null,total,reason,orderSensitive};
+        const orderSensitive=!!(unstable&&item.fit&&!item.positionLocked&&item.rotationMode!=='manual');
+        let contactRecovered=false;
+        // A lock changes editability, not physical contact. The same pose keeps
+        // its reading after locking or switching to an explicit manual angle.
+        if(unstable){
+          const early=earlierStrokeContact(points,group,pose,hits[0].at-(group.baseSize??500)*.25);
+          if(early){hits=[early,...hits];contactRecovered=true;}
+        }
+        const metric={id:item.id,first:hits[0]||null,hits,at:hits[0]?.at??null,total,reason,orderSensitive};
+        if(contactRecovered)metric.contactRecovered=true;
+        return metric;
       });
       const result={items,points,total};cache.set(group,{signature,result});return result;
     }

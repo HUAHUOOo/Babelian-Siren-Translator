@@ -226,6 +226,7 @@ globalThis.SirenUI={mount({assets,path,wordData,notify}){
     const current=item(),group=g(),entries=group?row(group):[],index=entries.findIndex(e=>e.item.id===itemId),metric=entries[index],locked=!!current?.positionLocked,groupLocked=group?.items.some(i=>i.positionLocked);
     $('siren-selection').textContent=current?(metric.at===null?'未定位':((entries.some(e=>e.at===null)?'已定位相对':'')+'第'+(index+1)+'项'))+'：'+(current.letter||'待确认')+'。'+(metric.reason||('首交点在大螺旋路径 '+(metric.at/metric.total*100).toFixed(1)+'% 处，'+(mode==='review'?(current.contact?'人工标记。':'基于拟合笔画，需复核。'):'共 '+metric.hits.length+' 处相交。'))):'先添加或选择一个小螺旋。';
     if(metric?.orderSensitive)$('siren-selection').textContent+=' 读序对细微移动敏感，请核对最内侧交点。';
+    if(metric?.contactRecovered)$('siren-selection').textContent+=' 已按大螺旋实际笔画宽度恢复靠内接触，仍建议对照原图复核。';
     $('siren-key-add').checked=!current;$('siren-key-replace').checked=!!current;$('siren-key-replace').disabled=!current;
     for(const name of ['radius','angle','rotation']){
       const el=$('siren-'+name);el.disabled=!current||locked;
