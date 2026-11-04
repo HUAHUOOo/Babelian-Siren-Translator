@@ -307,9 +307,8 @@
   __IMAGE_ASSIST_JS__
   __TEXT_LOCATOR_JS__
   __BABELIAN_DEEP_JS__
-  __GLYPH_SAMPLES_JS__
   __OCR_CORRECTION_JS__
-  __OCR_WORK_JS__
+  __OCR_CONTEXT_JS__
   __TRANSLATION_JS__
   globalThis.BabelianDomainTerms=__DOMAIN_TERMS__;
   __TEXT_FORMAT_JS__
@@ -319,6 +318,7 @@
   const BABELIAN_ENGLISH_WORDS=__ENGLISH_WORD_DATA__;
   __OCR_UI_JS__
   __SIREN_CORE_JS__
+  __SIREN_MEMORY_JS__
   __SIREN_FORMAT_JS__
   __SIREN_INTERSECTIONS_JS__
   __SIREN_STRIP_JS__
@@ -755,8 +755,9 @@
   input.setSelectionRange(selection.start,selection.end);
   makeKeyboard(); render();
   __MAPPING_EDITOR_JS__
-  window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,notify});
-  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,displayGlyphs:DISPLAY_GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,getMapping:()=>mappingApi.snapshot().workingMap,
+  const sharedFormatter=BabelianTextFormat.create(BABELIAN_ENGLISH_WORDS);
+  window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,textFormatter:sharedFormatter,notify});
+  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,displayGlyphs:DISPLAY_GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,textFormatter:sharedFormatter,getMapping:()=>mappingApi.snapshot().workingMap,
     editMapping:glyph=>{switchTool('mapping');selectGlyph(glyph);$('mapping-value').focus();},
     append:payload=>{
       if(!payload.text)return;

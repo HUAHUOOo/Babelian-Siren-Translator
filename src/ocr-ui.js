@@ -36,14 +36,14 @@ globalThis.BabelianOCRUI={
     const distance=item=>Math.abs((item.rect.left+item.rect.right)/2-center);
     return location(candidates.filter(item=>gap(item)<=nearest+1).reduce((best,item)=>distance(item)<distance(best)?item:best));
   },
-  mount({glyphs,displayGlyphs=glyphs,wordData,getMapping,editMapping,append,notify}){
+  mount({glyphs,displayGlyphs=glyphs,wordData,textFormatter,getMapping,editMapping,append,notify}){
   const $=id=>document.getElementById(id),OCR=BabelianOCR,Work=BabelianOCRWork,ids=Object.keys(glyphs);
   const panel=$('panel-decode'),preview=$('ocr-preview'),ctx=preview.getContext('2d');
   let source=null,crop=null,result=null,resultImage=null,selected=null,drag=null,rebox=null;
   let templatesPromise=null,templates=null,prepared=null,worker=null,job=0,loading=0,busy=false;
   let deepSuggestion=null,splitToken=null,reviewContext=null;
   let located=[],locationArea=null;
-  const formatter=BabelianTextFormat.create(wordData),formattedDraft=BabelianTextFormat.createDraft(formatter);
+  const formatter=textFormatter||BabelianTextFormat.create(wordData),formattedDraft=BabelianTextFormat.createDraft(formatter);
   const translation=BabelianTranslation.createSession(BabelianTranslation.createClient(),renderTranslation);
   const label=id=>'G'+String(ids.indexOf(id)+1).padStart(2,'0');
   const mapping=()=>getMapping();

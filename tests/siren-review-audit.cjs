@@ -62,6 +62,7 @@ const events=new Map(),nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,
 scope.$=node;scope.stage=node('stage');scope.groupIndex=0;scope.itemId=null;scope.scanBusy=false;scope.drag=null;scope.reviewFocus=null;scope.centerMode=false;
 scope.g=()=>scope.docs.review.groups[scope.groupIndex];scope.item=()=>scope.g().items.find(item=>item.id===scope.itemId);
 scope.selectItem=id=>{scope.itemId=id;scope.reviewFocus=null;};scope.clearMissing=()=>{scope.missing=null;};scope.render=()=>{};scope.renderPending=()=>{};
+scope.setReviewOpen=()=>{};scope.resetViewport=()=>{};scope.linkItem=()=>{};
 vm.runInContext(slice("  $('siren-next-pending').addEventListener",'  function renderSource(){'),scope);
 const before=JSON.stringify(scope.docs.review),next=events.get('siren-next-pending:click');
 assert.equal(scope.pendingEntries().length,6);const ids=[];

@@ -17,6 +17,13 @@
     "screenshotPersistence": false
   },
   "features": [
+    "bounded-undo-and-reclaimed-crop-cache",
+    "incremental-siren-review-rendering",
+    "shared-immutable-word-formatter",
+    "siren-result-first-collapsed-review",
+    "siren-bidirectional-source-tracing",
+    "siren-read-only-zoom-pan",
+    "siren-contact-magnifier",
     "siren-stroke-width-first-contact",
     "siren-progressive-group-preview",
     "siren-exact-memory-cache",
@@ -71,10 +78,8 @@
     "siren-paired-two-row-keyboard",
     "siren-manual-deep-region",
     "babelian-manual-deep-candidates",
-    "explicit-local-correction-samples",
     "babelian-original-neighbor-context",
-    "babelian-correction-undo-redo",
-    "babelian-explicit-recognition-work"
+    "source-only-legacy-work-and-sample-utilities"
   ],
   "siren": {
     "alphabet": "A-Z",
@@ -130,6 +135,8 @@
     "api/campaign-state.php"
   ],
   "babelianRecognitionWork": {
+    "bundledInPage": false,
+    "sourceUtility": "src/ocr-work.js",
     "format": "ato-babelian-recognition-work",
     "version": 1,
     "maxBytes": 7340032,
@@ -140,6 +147,8 @@
     "historyMaxSteps": 40
   },
   "correctionSamples": {
+    "bundledInPage": false,
+    "sourceUtility": "src/glyph-samples.js",
     "format": "ato-glyph-samples",
     "version": 1,
     "persistence": "memory-and-explicit-json-export",

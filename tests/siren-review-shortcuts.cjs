@@ -17,6 +17,8 @@ document={activeElement:null,getElementById:id=>{assert(nodes.has(id),id);return
 class ImageDouble{set src(value){this.value=value;Object.assign(this,value.startsWith('blob:')?sourceDimensions:{width:600,height:600});queueMicrotask(()=>this.onload?.());}}
 const geometry={analyze:group=>({items:group.items.map(i=>({id:i.id,at:i.x<50?null:i.x,total:600,hits:[],orderSensitive:i.y<50,reason:'synthetic metric'}))}),basePoints:()=>[],arrange:()=>true};
 const scope={console,document,Image:ImageDouble,SirenCore:C,SirenIntersections:{prepare:()=>geometry},SirenStrip:{},SirenRecognition:{createRecognitionBoundary:()=>()=>true,workerSource:()=>''},SirenScan:{create:()=>({cancel(){cancels++;},async run(payload,options){lastPayload=payload;scanGroup=options?.onGroup;scanCalls++;return typeof scanReply==='function'?scanReply(payload):scanReply;}})},BabelianTextFormat:F,SirenFormat:require('../src/siren-format.js'),BabelianTranslation:{...T,createClient:()=>async()=>''},BabelianHost:{download:async(blob)=>downloads.push(blob)},confirm:()=>confirmReply,window:{addEventListener:(k,f)=>events.set(k,f)},navigator:{clipboard:{}},Blob,URL,DataView,Uint8Array,atob,setTimeout,clearTimeout};
+scope.SirenReview=require('../src/siren-review.js');
+scope.SirenMemory=require('../src/siren-memory.js');
 vm.createContext(scope);vm.runInContext(fs.readFileSync(require.resolve('../src/siren-ui.js'),'utf8'),scope);
 const el=id=>nodes.get('siren-'+id),click=id=>el(id).click(),snapshot=()=>JSON.stringify(ui.snapshot()),lastArc=()=>el('source-canvas').ctx.arcs.at(-1),approx=(a,b)=>assert(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 const ui=scope.SirenUI.mount({assets,path:[],wordData:'a b c',notify(){}});

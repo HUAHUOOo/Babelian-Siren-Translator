@@ -32,6 +32,8 @@ const scope={console,document,Image:ImageDouble,SirenCore:C,SirenIntersections:I
  navigator:{clipboard:{writeText:async()=>{}}},Blob,URL,DataView,Uint8Array,atob,Math,JSON,Promise,setTimeout,clearTimeout};
 scope.SirenRecognition.createRecognitionBoundary=createLocatorBoundary;
 scope.SirenFormat=require('../src/siren-format.js');
+scope.SirenReview=require('../src/siren-review.js');
+scope.SirenMemory=require('../src/siren-memory.js');
 vm.createContext(scope);vm.runInContext(fs.readFileSync(require.resolve('../src/siren-ui.js'),'utf8'),scope);
 const el=id=>nodes.get('siren-'+id),click=id=>el(id).click();
 async function key(index){if(el('key-replace').checked)return el('stage').fire('keydown',{key:index<13?String.fromCharCode(65+index):String.fromCharCode(90-(index-13))});if(el('keyboard-panel').hidden)await click('open-add');return el('keyboard').children[index].click();}
@@ -81,16 +83,18 @@ function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDe
  const savedManual=C.create('review');C.addGroup(savedManual).image=png;
  el('work-file').files=[{size:200,text:async()=>JSON.stringify(savedManual)}];await el('work-file').fire('change');
  assert.equal(ui.snapshot().groups.length,1);assert(!nodes.has('siren-center'));assert.equal(ui.snapshot().groups[0].cx,300);assert.equal(ui.snapshot().groups[0].cy,300);
+ await click('review-toggle');await click('edit-mode'); // Explicitly enter editing; view gestures are now non-mutating.
  await el('stage').fire('pointerdown',{clientX:400,clientY:300}); // inner small center
  assert.equal(el('raw').value,'');assert(el('key-add').checked);await key(0);assert.equal(el('raw').value,'A');assert(ui.snapshot().groups[0].items[0].manualAdded);assert(el('manual-overlap').textContent.includes('80.0%'));assert(overlapCalls>0);await el('stage').fire('pointerdown',{clientX:400,clientY:300});await el('stage').fire('pointerup');assert(el('key-replace').checked);
- const points=real.geometry.basePoints(ui.snapshot().groups[0]);if(el('precision-panel').hidden)await click('precision-toggle');await click('contact');await el('stage').fire('pointerdown',{clientX:points[1000].x,clientY:points[1000].y});assert.equal(el('raw').value,'A');
- await el('stage').fire('pointerdown',{clientX:300,clientY:450});assert(el('key-add').checked);await key(2);await el('stage').fire('pointerdown',{clientX:300,clientY:450});await el('stage').fire('pointerup');assert(el('key-replace').checked);await click('contact');await el('stage').fire('pointerdown',{clientX:points[2000].x,clientY:points[2000].y});assert.equal(el('raw').value,'AC');
+ const points=real.geometry.basePoints(ui.snapshot().groups[0]);if(el('precision-panel').hidden)await click('precision-toggle');await click('contact');await el('stage').fire('pointerdown',{clientX:points[1000].x,clientY:points[1000].y});await el('stage').fire('pointerup');assert.equal(el('raw').value,'A');
+ await el('stage').fire('pointerdown',{clientX:300,clientY:450});assert(el('key-add').checked);await key(2);await el('stage').fire('pointerdown',{clientX:300,clientY:450});await el('stage').fire('pointerup');assert(el('key-replace').checked);await click('contact');await el('stage').fire('pointerdown',{clientX:points[2000].x,clientY:points[2000].y});await el('stage').fire('pointerup');assert.equal(el('raw').value,'AC');
  const beforeCenterClick=JSON.stringify(ui.snapshot());await el('stage').fire('pointerdown',{clientX:310,clientY:320});await el('stage').fire('pointerup');assert.equal(JSON.stringify(ui.snapshot()),beforeCenterClick,'Plain canvas clicks cannot change the large spiral center');assert.equal(el('raw').value,'AC');
  await click('save');assert(warns(),'Saving review must not mark generate revision saved');
  const reviewFile=downloads.at(-1);assert.equal(JSON.parse(await reviewFile.blob.text()).mode,'review');
  el('work-file').files=[{size:10,text:async()=>'{"format":"bad"}'}];const old=C.read(ui.snapshot()).text;await el('work-file').fire('change');assert.equal(C.read(ui.snapshot()).text,old);assert.equal(el('tools').disabled,false);
  el('work-file').files=[{size:reviewFile.blob.size,text:()=>reviewFile.blob.text()}];await el('work-file').fire('change');assert.equal(el('raw').value,'AC');
  const preserved=JSON.stringify(ui.snapshot());ui.pause();ui.refresh();assert.equal(JSON.stringify(ui.snapshot()),preserved);
+ await click('edit-mode');
  // A new unlocated glyph preserves known letters but does not disable suggestions.
  await click('format');const completeDraft=el('formatted').value;
  await el('stage').fire('pointerdown',{clientX:10,clientY:10});await key(1);
@@ -104,6 +108,7 @@ function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDe
  await documentEvents.get('paste')({clipboardData:{items:[{kind:'string',type:'text/plain'}]},preventDefault(){throw Error('Text paste was consumed');}});
  const count=ui.snapshot().groups.length;await click('auto-scan');assert.equal(ui.snapshot().groups.length,count+1);assert.equal(scanPayload.operation,'detect');assert.equal(scanPayload.templates.base.pivotY,assets.base.pivotY);assert(el('scan-status').textContent.includes('待确认'));
  const auto=ui.snapshot().groups.at(-1);assert.equal(auto.items.length,4);assert(auto.items[0].fit);assert.equal(auto.items[0].letter,null);
+ await click('review-toggle');await click('edit-mode');
  assert.deepEqual(scanPayload.templates.path,real.path);assert.equal(scanPayload.image.width,600);assert.equal(scanPayload.image.height,600);
  const inside=createLocatorBoundary(assets.base,real.path);assert(auto.items.every(i=>inside(auto,i)&&i.fit.candidates.every(c=>inside(auto,c))));
  assert(auto.items.some(i=>i.letter==='E'),'Near-boundary E must also survive the UI filter');
@@ -130,6 +135,7 @@ function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDe
  // A cancelled/hidden or stale response cannot overwrite any work.
  let release;scanDelay=new Promise(r=>release=r);const oldState=JSON.stringify(ui.snapshot()),pending=click('auto-scan');await click('scan-cancel');release([]);await pending;assert.equal(JSON.stringify(ui.snapshot()),oldState);scanDelay=null;
  await click('mode-generate');await paste();assert.equal(consumed,1);await click('mode-review');
+ await click('review-toggle');await click('edit-mode');
  const corrected=ui.snapshot().groups.at(-1).items[0];await el('stage').fire('pointerdown',{clientX:corrected.x,clientY:corrected.y});await el('stage').fire('pointerup');await key(15);assert(el('keyboard-panel').hidden);
  await el('stage').fire('pointerdown',{clientX:corrected.x,clientY:corrected.y});await el('stage').fire('pointermove',{clientX:20,clientY:20});await el('stage').fire('pointerup');await click('reset-position');assert.equal(ui.snapshot().groups.at(-1).items[0].letter,'X');assert(!ui.snapshot().groups.at(-1).items[0].fit,'Reset cannot attach the old letter score to a manually corrected letter');
  assert.equal(el('keyboard').children.map(b=>b.children[1].textContent).join(''),'ABCDEFGHIJKLMZYXWVUTSRQPON');

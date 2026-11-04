@@ -3,7 +3,7 @@
   'use strict';
   const units=Object.fromEntries('zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split(' ').map((w,i)=>[w,i]));
   const tens=Object.assign(Object.create(null),{twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90}),scales=Object.assign(Object.create(null),{thousand:1000,million:1000000,billion:1000000000});
-  function numbers(text){
+  function numbers(text,trace=null){
     const words=[...text.matchAll(/[A-Za-z]+/g)].map(m=>({word:m[0].toLowerCase(),start:m.index,end:m.index+m[0].length}));
     const linked=(a,b)=>!!words[a]&&!!words[b]&&/^[\s-]+$/.test(text.slice(words[a].end,words[b].start));
     function low(i){
@@ -32,12 +32,14 @@
       }
     }
     let out='',cursor=0,previousNumber=false;
+    function append(value,start,end,atomic=false){const at=out.length;out+=value;if(value&&trace)trace.push({start:at,end:out.length,sourceStart:start,sourceEnd:end,atomic});}
     for(let i=0;i<words.length;){
       const number=cardinal(i);if(!number){i++;continue;}
       const start=words[i].start,end=words[number.end-1].end,gap=text.slice(cursor,start);
-      out+=(previousNumber&&/^[\s-]+$/.test(gap)?'':gap)+String(number.value);cursor=end;i=number.end;previousNumber=true;
+      if(!(previousNumber&&/^[\s-]+$/.test(gap)))append(gap,cursor,start);
+      append(String(number.value),start,end,true);cursor=end;i=number.end;previousNumber=true;
     }
-    return out+text.slice(cursor);
+    append(text.slice(cursor),cursor,text.length);return out;
   }
   function createDraft(formatter,B){
     const draft=B.createDraft(formatter);let cache=null;
@@ -45,9 +47,9 @@
       const signature=JSON.stringify([payload,options]);if(cache?.signature===signature)return cache.args;
       // The first pass validates every original letter before changing presentation.
       const segmented=formatter.suggest(payload,{...options,punctuate:false});
-      const args=[{text:numbers(segmented.text),spans:[]},{...options,sirenSourceKey:JSON.stringify(payload)}];cache={signature,args};return args;
+      const args=[{text:numbers(segmented.text),spans:[]},{...options,sirenSourceKey:JSON.stringify(payload)}];cache={signature,args,segmented:segmented.text};return args;
     }
-    return {...draft,generate:(p,o)=>draft.generate(...prepare(p,o)),update:(p,o)=>draft.update(...prepare(p,o)),clear:()=>{cache=null;draft.clear();}};
+    return {...draft,segmented:()=>cache?.segmented??'',generate:(p,o)=>draft.generate(...prepare(p,o)),update:(p,o)=>draft.update(...prepare(p,o)),clear:()=>{cache=null;draft.clear();}};
   }
   return {numbers,createDraft};
 });

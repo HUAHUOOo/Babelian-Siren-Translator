@@ -1,12 +1,11 @@
 /* Explicit local OCR work files and bounded correction history. No storage,
    network, mapping writes, or recognition/semantic inference. */
 (function(root,factory){
-  if(typeof module==='object'&&module.exports)module.exports=factory();
-  else root.BabelianOCRWork=factory();
-})(typeof globalThis!=='undefined'?globalThis:this,function(){
+  if(typeof module==='object'&&module.exports)module.exports=factory(require('./ocr-context.js'));
+  else root.BabelianOCRWork=factory(root.BabelianOCRContext);
+})(typeof globalThis!=='undefined'?globalThis:this,function(Context){
   'use strict';
   const FORMAT='ato-babelian-recognition-work',VERSION=1,MAX_BYTES=7*1024*1024;
-  const copy=v=>JSON.parse(JSON.stringify(v));
   const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
   const int=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
   const score=n=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=1.000001;
@@ -14,13 +13,7 @@
     if(!plain(b)||!int(b.x,0,width-1)||!int(b.y,0,height-1)||!int(b.width,1,width-b.x)||!int(b.height,1,height-b.y))throw Error('识别框超出图片或坐标不正确。');
     return {x:b.x,y:b.y,width:b.width,height:b.height};
   }
-  function context(result,position){
-    const row=result?.lines[position?.line],current=row?.tokens[position?.token];if(!current)return null;
-    const tokens=row.tokens.slice(Math.max(0,position.token-1),position.token+2),boxes=tokens.map(t=>t.box);
-    const pad=Math.max(3,Math.round(current.box.height*.12)),x=Math.max(0,Math.min(...boxes.map(b=>b.x))-pad),y=Math.max(0,Math.min(...boxes.map(b=>b.y))-pad);
-    const right=Math.min(result.width,Math.max(...boxes.map(b=>b.x+b.width))+pad),bottom=Math.min(result.height,Math.max(...boxes.map(b=>b.y+b.height))+pad);
-    return {box:{x,y,width:right-x,height:bottom-y},selected:{...current.box},neighbors:tokens.length-1};
-  }
+  const context=Context.context;
   function history({limit=40,maxBytes=12*1024*1024}={}){
     let undo=[],redo=[];
     const bytes=e=>2*(e.before.length+e.after.length);

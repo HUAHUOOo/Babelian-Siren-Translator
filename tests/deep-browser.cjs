@@ -1,6 +1,9 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{pathToFileURL}=require('node:url');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'..'),F=require(root+'/tests/siren-fixture.cjs'),C=require(root+'/src/siren-core.js');
+// Work import deliberately issues fresh UI IDs. Compare every persisted field,
+// including images/fit/reset/locks, without treating fresh IDs or key order as edits.
+const content=json=>{const doc=JSON.parse(json);for(const g of doc.groups){delete g.id;for(const t of g.items){delete t.id;t.rotationMode??='auto';}}return doc;};
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
  try{
@@ -16,7 +19,7 @@ const root=path.resolve(__dirname,'..'),F=require(root+'/tests/siren-fixture.cjs
   group.image=await page.evaluate(async({group,pose,base,letter})=>{const cv=document.createElement('canvas');cv.width=cv.height=600;const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,600,600);for(const [a,p] of [[base,{x:group.cx,y:group.cy,size:group.baseSize,rotation:group.baseRotation}],[letter,pose]]){const img=new Image();img.src=a.src;await img.decode();const h=p.size*a.height/a.width;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rotation*Math.PI/180);ctx.drawImage(img,-p.size*a.pivotX,-h*a.pivotY,p.size,h);ctx.restore();}return cv.toDataURL();},{group,pose,base:F.assets.base,letter:F.assets.letters.A});
   t.letter=null;t.fit={rotation:pose.rotation,score:.9,candidates:[{letter:'A',x:t.x,y:t.y,size:t.size,rotation:pose.rotation,score:.9}]};
   await page.locator('#siren-mode-review').click();await page.locator('#siren-work-file').setInputFiles({name:'synthetic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});await page.waitForFunction(()=>window.BABELIAN_APP.siren.snapshot().groups.length===1);
-  await page.locator('#siren-items button').first().click();const before=await page.evaluate(()=>JSON.stringify(window.BABELIAN_APP.siren.snapshot()));await page.locator('#siren-deep-toggle').click();await page.locator('#siren-deep-run').click();await page.waitForFunction(()=>!document.getElementById('siren-deep-run').disabled,{},{timeout:60000});
+  await page.locator('#siren-review-toggle').click();await page.locator('#siren-items button').first().click();const before=await page.evaluate(()=>JSON.stringify(window.BABELIAN_APP.siren.snapshot()));await page.locator('#siren-group-more summary').click();await page.locator('#siren-deep-toggle').click();await page.locator('#siren-deep-run').click();await page.waitForFunction(()=>!document.getElementById('siren-deep-run').disabled,{},{timeout:60000});
   assert((await page.locator('#siren-deep-candidates button').count())>0);assert.equal(await page.evaluate(()=>JSON.stringify(window.BABELIAN_APP.siren.snapshot())),before);
   await page.locator('#siren-deep-candidates button').first().click();assert.equal(await page.evaluate(()=>JSON.stringify(window.BABELIAN_APP.siren.snapshot())),before);await page.locator('#siren-deep-apply').click();assert.equal((await page.evaluate(()=>window.BABELIAN_APP.siren.snapshot())).groups[0].items[0].letter,'A');
   assert.equal(await page.locator('#siren-add-sample,#siren-samples').count(),0);
@@ -30,15 +33,15 @@ const root=path.resolve(__dirname,'..'),F=require(root+'/tests/siren-fixture.cjs
   const keptOCR=await page.locator('#ocr-output').inputValue(),keptSiren=await page.evaluate(()=>JSON.stringify(window.BABELIAN_APP.siren.snapshot())),keptStorage=await page.evaluate(()=>JSON.stringify({...localStorage}));
   assert((await page.evaluate(()=>BABELIAN_APP.ocr.snapshot())).result.lines[0].tokens[0].manual);
   await page.locator('#language-back').click();await page.locator('#language-open-siren-translate').click();
-  assert.equal(await page.evaluate(()=>JSON.stringify(BABELIAN_APP.siren.snapshot())),keptSiren);
+  assert.deepEqual(content(await page.evaluate(()=>JSON.stringify(BABELIAN_APP.siren.snapshot()))),content(keptSiren));
   assert(!(await page.locator('#host-status').isVisible()));assert(!(await page.locator('#host-bar').isVisible()));
   const event=page.waitForEvent('download');await page.locator('#siren-save').click();const saved=JSON.parse(fs.readFileSync(await (await event).path(),'utf8'));
   await page.locator('#siren-work-file').setInputFiles({name:'retained-siren-work.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(saved))});
   await page.waitForFunction(()=>document.getElementById('siren-work-file').value==='');
-  assert.equal(await page.evaluate(()=>JSON.stringify(BABELIAN_APP.siren.snapshot())),keptSiren);
+  assert.deepEqual(content(await page.evaluate(()=>JSON.stringify(BABELIAN_APP.siren.snapshot()))),content(keptSiren));
   await page.locator('#language-back').click();assert(!(await page.locator('#host-bar').isVisible()));await page.locator('#language-open-babelian-translate').click();
   assert.equal(await page.locator('#ocr-output').inputValue(),keptOCR);assert.equal(await page.locator('.ocr-token').count(),1);
-  assert.equal(await page.evaluate(()=>JSON.stringify({...localStorage})),keptStorage);assert(!(await page.locator('#host-status').isVisible()));assert(await page.locator('#host-bar').isVisible(),'workspace backup actions remain');
+  assert.equal(await page.evaluate(()=>JSON.stringify({...localStorage})),keptStorage);assert(!(await page.locator('#host-status').isVisible()));assert(!(await page.locator('#host-bar').isVisible()),'Standalone backup card stays hidden as requested');
   assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);console.log('PASS isolated headless browser: paired keyboard desktop/mobile, actual deep worker/preview/confirmation, retained Siren work save/load, removed Babelian work/sample/history controls, language/storage isolation, empty standalone status strip hidden, no remote requests/JS errors.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
