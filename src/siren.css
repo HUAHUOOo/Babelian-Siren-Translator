@@ -48,7 +48,6 @@
     .siren-selection-bar {display:flex;align-items:center;flex-wrap:wrap;gap:10px;max-width:760px;margin:14px auto 0;min-width:0}
     .siren-items {display:flex;flex-wrap:nowrap;gap:8px;min-height:45px;min-width:0;overflow-x:auto;flex:0 1 auto}
     .siren-items button {border:1px solid var(--line);border-radius:0;background:var(--panel);min-width:46px;flex:none;white-space:nowrap;padding:8px;color:var(--ink)}
-    #siren-precision-toggle {flex:none;white-space:nowrap}
     /* Manual additions and destructive actions keep their purple/red signals. */
     #siren-delete-recognized {flex:none;white-space:nowrap;color:#9c3445;border:1px solid #bc7984;background:#fff5f5;border-radius:0;padding:9px 12px}
     #siren-manual-overlap {max-width:760px;margin:10px auto 0;color:#8b229f}

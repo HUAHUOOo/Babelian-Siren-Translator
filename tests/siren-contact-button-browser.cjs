@@ -7,7 +7,7 @@ const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAA
   const page=await browser.newPage({viewport:{width,height:960}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('dialog',d=>d.accept());await page.route(/^https?:/,r=>r.abort());
   await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);await page.evaluate(()=>BABELIAN_APP.siren.ready);await page.locator('#language-open-siren-translate').click();
   const doc=C.create('review'),g=C.addGroup(doc);g.image=png;C.add(g,'A',{x:300,y:440});
-  await page.locator('#siren-work-file').setInputFiles({name:'contact-work.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});await page.locator('#siren-review-toggle').click();await page.locator('#siren-items button').first().click();await page.locator('#siren-precision-toggle').click();
+  await page.locator('#siren-work-file').setInputFiles({name:'contact-work.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(doc))});await page.locator('#siren-review-toggle').click();await page.locator('#siren-items button').first().click();
   const contact=page.locator('#siren-contact'),popup=page.locator('#siren-precision-panel');await contact.scrollIntoViewIfNeeded();assert.equal(await contact.count(),1);
   const view=await contact.evaluate(n=>{const b=n.getBoundingClientRect(),r=document.querySelector('label[for="siren-radius"]').getBoundingClientRect(),s=getComputedStyle(n);return {above:b.bottom<=r.top,background:s.backgroundColor,color:s.color,accent:getComputedStyle(document.body).getPropertyValue('--accent-strong').trim()};});
   assert(view.above);assert.equal(view.color,'rgb(255, 255, 255)');assert.equal(view.background,'rgb(4, 27, 46)');

@@ -46,7 +46,7 @@ function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDe
  for(const id of ['add-sample','samples','new-item','delete-item','unknown','strip-panel','strip','use-crop','crop-x','crop-y','crop-width','crop-height'])assert(!el(id),'Removed UI '+id);
  assert(el('source-canvas').listeners.has('pointerdown'),'Narrow missing-group rescan accepts an explicit source ROI');assert(el('missing-panel').hidden);assert(el('missing-run').disabled);
  assert(el('batch-panel').hidden);assert(el('precision-panel').hidden);assert(el('key-add').checked);assert(el('key-replace').disabled);
- await click('precision-toggle');assert(!el('precision-panel').hidden);await click('precision-toggle');assert(el('precision-panel').hidden);
+ assert(!el('precision-toggle'),'Precision opens directly from a glyph, not a separate button');
  await key(0);await key(1);assert.equal(el('raw').value,real.read(ui.snapshot()).text);assert(warns());
  assert.equal(ui.snapshot().groups[0].items.length,2);assert(el('key-add').checked,'Adding a letter must allow another addition');
  let first=ui.snapshot().groups[0].items[0],before=el('raw').value;await el('stage').fire('pointerdown',{clientX:first.x,clientY:first.y});await el('stage').fire('pointermove',{clientX:520,clientY:50});
@@ -86,7 +86,7 @@ function warns(){let prevented=false;windowEvents.get('beforeunload')({preventDe
  await click('review-toggle');await click('edit-mode'); // Explicitly enter editing; view gestures are now non-mutating.
  await el('stage').fire('pointerdown',{clientX:400,clientY:300}); // inner small center
  assert.equal(el('raw').value,'');assert(el('key-add').checked);await key(0);assert.equal(el('raw').value,'A');assert(ui.snapshot().groups[0].items[0].manualAdded);assert(el('manual-overlap').textContent.includes('80.0%'));assert(overlapCalls>0);await el('stage').fire('pointerdown',{clientX:400,clientY:300});await el('stage').fire('pointerup');assert(el('key-replace').checked);
- const points=real.geometry.basePoints(ui.snapshot().groups[0]);if(el('precision-panel').hidden)await click('precision-toggle');await click('contact');await el('stage').fire('pointerdown',{clientX:points[1000].x,clientY:points[1000].y});await el('stage').fire('pointerup');assert.equal(el('raw').value,'A');
+ const points=real.geometry.basePoints(ui.snapshot().groups[0]);if(el('precision-panel').hidden)await el('items').children[0].click();await click('contact');await el('stage').fire('pointerdown',{clientX:points[1000].x,clientY:points[1000].y});await el('stage').fire('pointerup');assert.equal(el('raw').value,'A');
  await el('stage').fire('pointerdown',{clientX:300,clientY:450});assert(el('key-add').checked);await key(2);await el('stage').fire('pointerdown',{clientX:300,clientY:450});await el('stage').fire('pointerup');assert(el('key-replace').checked);await click('contact');await el('stage').fire('pointerdown',{clientX:points[2000].x,clientY:points[2000].y});await el('stage').fire('pointerup');assert.equal(el('raw').value,'AC');
  const beforeCenterClick=JSON.stringify(ui.snapshot());await el('stage').fire('pointerdown',{clientX:310,clientY:320});await el('stage').fire('pointerup');assert.equal(JSON.stringify(ui.snapshot()),beforeCenterClick,'Plain canvas clicks cannot change the large spiral center');assert.equal(el('raw').value,'AC');
  await click('save');assert(warns(),'Saving review must not mark generate revision saved');

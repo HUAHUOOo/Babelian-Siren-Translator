@@ -17,6 +17,7 @@
     "screenshotPersistence": false
   },
   "features": [
+    "siren-direct-glyph-precision",
     "bounded-undo-and-reclaimed-crop-cache",
     "incremental-siren-review-rendering",
     "shared-immutable-word-formatter",
@@ -106,6 +107,7 @@
     "exportLayout": "single-horizontal-ink-cropped-strip",
     "stripGap": 6,
     "precisionDefault": "collapsed",
+    "precisionActivation": "glyph-or-letter-click-not-drag",
     "precisionSliders": true,
     "glyphRotationMode": "auto-or-manual",
     "formatUnlocatedItems": true,

@@ -35,7 +35,7 @@ for(const id of ['english-input','panel-write','panel-mapping','panel-decode'])a
 assert.equal(at('panel-siren').parent,at('language-babelian').parent);assert.equal(at('language-home').parent,at('language-babelian').parent);
 assert(!byId.has('tab-siren'));assert(!byId.has('siren-base-rotation'));assert(!byId.has('siren-size'));
 for(const id of ['siren-new-item','siren-delete-item','siren-unknown','siren-strip-panel','siren-strip'])assert(!byId.has(id),'Removed '+id);
-assert.equal(at('siren-items').parent,at('siren-selection-bar'));assert.equal(at('siren-precision-toggle').parent,at('siren-selection-bar'));assert(at('siren-stage').index<at('siren-selection-bar').index);
+assert.equal(at('siren-items').parent,at('siren-selection-bar'));assert(!byId.has('siren-precision-toggle'));assert(at('siren-stage').index<at('siren-selection-bar').index);
 assert(inside('siren-contact','siren-precision-panel'));assert(inside('siren-selection','siren-precision-panel'));assert.equal(at('siren-stage').parent,at('siren-stage-wrap'));assert.equal(at('siren-stage-wrap').parent,at('siren-selection-bar').parent);
 const css=fs.readFileSync(require.resolve('../src/siren.css'),'utf8');
 assert(/\.siren-group-toolbar\s*\{[^}]*flex-direction:column/.test(css));assert(/\.siren-groups\s*\{[^}]*flex-wrap:nowrap;gap:0/.test(css));assert(/\.siren-groups canvas\s*\{[^}]*width:80px;height:80px/.test(css));

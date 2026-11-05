@@ -9,7 +9,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   let deep=null,missing=null,reviewFocus=null;
   let demoIndex=0,demoTimer=null,demoSignature='';
   let scanPreview=null,differenceSignature='';
-  let reviewOpen=false,sourceExpanded=false,viewMode='view',zoom=1,viewGesture=null,contactGesture=null;
+  let reviewOpen=false,sourceExpanded=false,viewMode='view',zoom=1,viewGesture=null,contactGesture=null,precisionOrigin='stage';
   let located=[],locationGroupId=null,rawProjection=null,formattedProjection=null;
   const sourceRegions=new Map();let sourcePaintKey='';
   const keyboardImages=[];
@@ -76,7 +76,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     wrap.setAttribute('data-interaction',review?viewMode:'edit');
     $('siren-view-overlay').hidden=!review;$('siren-view-overlay').disabled=!item()?.letter;
     $('siren-view-overlay').setAttribute('aria-pressed',String($('siren-overlay').checked));
-    $('siren-view-status').textContent=contactMode?'标记交点：在原图按住并微调准星，松手记录；Esc 取消。':!review||viewMode==='edit'?'调整模式：拖动会移动字形；放大只影响显示。':'查看模式：点击选中字形，放大后拖动画面；不会移动字形。';
+    $('siren-view-status').textContent=contactMode?'标记交点：在原图按住并微调准星，松手记录；Esc 取消。':!review||viewMode==='edit'?'调整模式：点击小螺旋可打开精确调节，拖动会移动字形；放大只影响显示。':'查看模式：点击小螺旋可打开精确调节，放大后拖动画面；不会移动字形。';
     $('siren-item-prev').disabled=!g()?.items.length;$('siren-item-next').disabled=!g()?.items.length;
   }
   function setZoom(value){
@@ -87,18 +87,24 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   }
   function resetViewport(){zoom=1;clearViewGesture();$('siren-stage-wrap').scrollLeft=0;$('siren-stage-wrap').scrollTop=0;}
   function showKeyboard(open){$('siren-keyboard-panel').hidden=!open;$('siren-open-add').setAttribute('aria-expanded',String(open&&!itemId));}
-  function setPrecisionOpen(open,{focus=false}={}){
-    const popup=$('siren-precision-panel'),trigger=$('siren-precision-toggle');
-    if(open&&(!ready||loadingImport||scanBusy||sourceLoading||drag))return;
+  function setPrecisionOpen(open,{focus=false,origin}={}){
+    const popup=$('siren-precision-panel');
+    if(open&&(!ready||loadingImport||scanBusy||sourceLoading||drag||!item()))return;
+    if(open&&origin)precisionOrigin=origin;
     if(open&&mode==='review')reviewOpen=true;
     const restoreFocus=!open&&(focus||popup.contains(document.activeElement));
-    popup.hidden=!open;trigger.setAttribute('aria-expanded',String(open));$('panel-siren').classList.toggle('siren-precision-active',open);
+    popup.hidden=!open;$('panel-siren').classList.toggle('siren-precision-active',open);
     if(!open){precisionEdit=null;contactMode=false;clearViewGesture();}
     if(ready)render();
     if(open&&focus){
       $('siren-precision-close').focus({preventScroll:true});
       if(window.matchMedia?.('(max-width:1000px)').matches)stage.scrollIntoView?.({block:'start'});
-    }else if(restoreFocus)trigger.focus({preventScroll:true});
+    }else if(restoreFocus){
+      // Item buttons are rebuilt on render; restore to the current live button.
+      const selected=Array.from($('siren-items').children).find(b=>b.getAttribute('aria-pressed')==='true');
+      const target=mode==='review'&&!reviewOpen?$('siren-review-toggle'):precisionOrigin==='items'&&selected?selected:stage;
+      target.focus({preventScroll:true});
+    }
   }
   function closePrecisionKey(event){
     if(event.key!=='Escape'||event.defaultPrevented||$('panel-siren').hidden||$('siren-precision-panel').hidden)return false;
@@ -112,7 +118,6 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   }
   function scanControls(refreshEntry=true){
     if(scanBusy||loadingImport||sourceLoading)stopDemo(true);
-    $('siren-precision-toggle').disabled=!ready||loadingImport||scanBusy||sourceLoading;
     $('siren-auto-scan').disabled=!source||!ready||scanBusy||sourceLoading;
     $('siren-missing-toggle').disabled=!source||!ready||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
     $('siren-missing-run').disabled=!missing?.region||!!missing?.drag||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
@@ -335,7 +340,11 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     $('siren-undo').disabled=!history[mode].length;
     $('siren-group-label').textContent=group?'第'+(groupIndex+1)+'组 · '+group.items.length+'/6':'请先载入图片并自动匹配';
     $('siren-items').replaceChildren();
-    if(group)entries.forEach((e,n)=>{const b=button((e.at===null?'未定位':n+1)+' '+(e.item.letter||'?')+(e.item.manualAdded?' · 人工':'')+(e.item.positionLocked?' · 锁定':''),()=>{selectItem(e.item.id);renderFields();linkItem();draw();},e.item.id===itemId);if(e.item.manualAdded)b.className='siren-manual-item';$('siren-items').append(b);});
+    if(group)entries.forEach((e,n)=>{
+      const selected=e.item.id===itemId,b=button((e.at===null?'未定位':n+1)+' '+(e.item.letter||'?')+(e.item.manualAdded?' · 人工':'')+(e.item.positionLocked?' · 锁定':''),()=>{selectItem(e.item.id);renderFields();linkItem();draw();setPrecisionOpen(true,{focus:true,origin:'items'});},selected);
+      b.setAttribute('aria-haspopup','dialog');b.setAttribute('aria-controls','siren-precision-panel');b.setAttribute('aria-expanded',String(selected&&!$('siren-precision-panel').hidden));
+      if(e.item.manualAdded)b.className='siren-manual-item';$('siren-items').append(b);
+    });
     renderKeyboardAngle();renderMatch();renderOverlap();renderPending();renderSource();renderViewport();
   }
   function renderMatch(){
@@ -426,16 +435,16 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     if(mode==='review'&&viewMode==='view'){
       const wrap=$('siren-stage-wrap');
       if(hit){selectItem(hit.id);renderFields();linkItem();}else{selectItem();clearLocation();renderFields();draw();}
-      viewGesture={id:event.pointerId,x:event.clientX,y:event.clientY,left:wrap.scrollLeft||0,top:wrap.scrollTop||0};stage.setPointerCapture(event.pointerId);return;
+      viewGesture={id:event.pointerId,x:event.clientX,y:event.clientY,left:wrap.scrollLeft||0,top:wrap.scrollTop||0,group:g(),token:hit,moved:false,pan:true};stage.setPointerCapture(event.pointerId);return;
     }
     if(!hit){selectItem(null,!$('siren-keyboard-panel').hidden);clearLocation();pendingPoint=p;keyboardPoint=p;renderFields();draw();note('');return;}
     selectItem(hit.id);keyboardPoint=p;
-    if(hit.positionLocked){renderFields();linkItem();draw();return;}
+    if(hit.positionLocked){viewGesture={id:event.pointerId,x:event.clientX,y:event.clientY,group:g(),token:hit,moved:false,pan:false};stage.setPointerCapture(event.pointerId);renderFields();linkItem();draw();return;}
     drag={id:event.pointerId,start:p,offset:{x:hit.x-p.x,y:hit.y-p.y},saved:false,analysis:geometry.analyze(g(),mode==='review')};stage.setPointerCapture(event.pointerId);renderFields();linkItem();draw();
   });
   stage.addEventListener('pointermove',event=>{
     if(contactMode){const p=point(event,stage);if(contactGesture?.id===event.pointerId)contactGesture.point=p;drawLens(p);return;}
-    if(viewGesture?.id===event.pointerId){const wrap=$('siren-stage-wrap');wrap.scrollLeft=viewGesture.left+viewGesture.x-event.clientX;wrap.scrollTop=viewGesture.top+viewGesture.y-event.clientY;return;}
+    if(viewGesture?.id===event.pointerId){const gesture=viewGesture;if(Math.hypot(event.clientX-gesture.x,event.clientY-gesture.y)>5)gesture.moved=true;if(gesture.pan&&gesture.moved){const wrap=$('siren-stage-wrap');wrap.scrollLeft=gesture.left+gesture.x-event.clientX;wrap.scrollTop=gesture.top+gesture.y-event.clientY;}return;}
     if(deep?.drag){if(deep.drag.id===event.pointerId){updateDeepRegion(point(event,stage));draw();}return;}
     if(!drag||drag.id!==event.pointerId||!item()||item().positionLocked)return;const p=point(event,stage);
     if(!drag.saved&&Math.hypot(p.x-drag.start.x,p.y-drag.start.y)<2)return;
@@ -453,12 +462,17 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
       if(!match||match.distance>12){note('标记离参考路径过远，尚未保存；请先对齐路径或重新标记。');return;}
       remember();item().contact={x:p.x,y:p.y};contactMode=false;changed();note('已记录人工首交点，并重新计算语序；可撤销。');return;
     }
-    if(viewGesture?.id===event.pointerId){viewGesture=null;return;}
+    if(viewGesture?.id===event.pointerId){
+      const gesture=viewGesture;viewGesture=null;
+      const moved=gesture.moved||Number.isFinite(event.clientX)&&Number.isFinite(event.clientY)&&Math.hypot(event.clientX-gesture.x,event.clientY-gesture.y)>5;
+      if(event.type==='pointerup'&&!moved&&g()===gesture.group&&item()===gesture.token&&gesture.token)setPrecisionOpen(true,{focus:true,origin:'stage'});
+      return;
+    }
     if(deep?.drag?.id===event.pointerId){if(event.type==='pointerup'){if(Number.isFinite(event.clientX)&&Number.isFinite(event.clientY))updateDeepRegion(point(event,stage));}else deep.region=null;deep.drag=null;if(deep.region&&(deep.region.width<2||deep.region.height<2))deep.region=null;$('siren-deep-status').textContent=deep.region?'已框选中心范围，点击开始识别。':'请拖出至少2×2的框。';scanControls();draw();return;}if(drag&&event.pointerId===drag.id){
     if(event.type==='pointerup'&&Number.isFinite(event.clientX)&&Number.isFinite(event.clientY)&&item()){
       const p=point(event,stage);if(drag.saved||Math.hypot(p.x-drag.start.x,p.y-drag.start.y)>=2){if(!drag.saved){remember();drag.saved=true;}C.move(g(),item(),{x:p.x+drag.offset.x,y:p.y+drag.offset.y});}
     }
-    const moved=drag.saved;drag=null;if(moved){changed();note('');}else render();
+    const moved=drag.saved;drag=null;if(moved){changed();note('');}else if(event.type==='pointerup')setPrecisionOpen(true,{focus:true,origin:'stage'});else render();
   }}
   stage.addEventListener('pointerup',finishDrag);stage.addEventListener('pointercancel',finishDrag);stage.addEventListener('lostpointercapture',finishDrag);
   stage.addEventListener('pointerleave',()=>{if(!contactGesture)$('siren-contact-lens').hidden=true;});
@@ -474,7 +488,6 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   $('siren-keyboard-close').addEventListener('click',()=>showKeyboard(false));
   $('siren-position-lock').addEventListener('click',()=>{if(!item()||drag)return;remember();item().positionLocked=!item().positionLocked;precisionEdit=null;contactMode=false;showKeyboard(false);changed();});
   $('siren-reset-position').addEventListener('click',()=>{if(!item()||item().positionLocked||!C.canReset(g(),item())||drag)return;remember();C.resetPosition(g(),item());keyboardPoint={x:item().x,y:item().y};showKeyboard(false);changed();note('已恢复识别位置。');});
-  $('siren-precision-toggle').addEventListener('click',()=>setPrecisionOpen($('siren-precision-panel').hidden,{focus:true}));
   $('siren-precision-close').addEventListener('click',()=>setPrecisionOpen(false,{focus:true}));
   $('siren-precision-done').addEventListener('click',()=>setPrecisionOpen(false,{focus:true}));
   $('siren-review-toggle').addEventListener('click',()=>setReviewOpen(!reviewOpen));
@@ -490,11 +503,11 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   $('siren-item-prev').addEventListener('click',()=>moveSelection(-1));$('siren-item-next').addEventListener('click',()=>moveSelection(1));
   for(const [id,formatted] of [['siren-raw',false],['siren-formatted',true]])$(id).addEventListener('click',()=>locateText($(id),formatted));
   $('siren-location-close').addEventListener('click',()=>{clearLocation();draw();});
-  $('siren-location-review').addEventListener('click',()=>{if(!located.length||scanBusy)return;focusReferences(located,locationGroupId);setReviewOpen(true);setPrecisionOpen(true,{focus:true});});
+  $('siren-location-review').addEventListener('click',()=>{if(!located.length||scanBusy)return;focusReferences(located,locationGroupId);setReviewOpen(true);setPrecisionOpen(true,{focus:true,origin:'stage'});});
   $('siren-location-preview').addEventListener('click',event=>{
     if(scanBusy||loadingImport)return;const group=doc().groups.find(g=>g.id===locationGroupId);if(!group)return;
     const p=point(event,$('siren-location-preview')),token=group.items.map(i=>({i,d:Math.hypot(i.x-p.x,i.y-p.y)})).filter(v=>v.d<Math.max(24,v.i.size*.45)).sort((a,b)=>a.d-b.d)[0]?.i;
-    if(token){focusReferences([{groupId:group.id,itemId:token.id}]);linkItem();}
+    if(token){focusReferences([{groupId:group.id,itemId:token.id}]);linkItem();setPrecisionOpen(true,{focus:true,origin:'stage'});}
   });
   document.addEventListener('click',event=>{
     if($('panel-siren').hidden||$('siren-precision-panel').hidden||drag)return;

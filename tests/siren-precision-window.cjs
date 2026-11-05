@@ -42,8 +42,9 @@ const ui=scope.SirenUI.mount({assets,path:[],wordData:'a b c',notify(){}});
 async function loadDoc(value){el('work-file').files=[{size:100,text:async()=>JSON.stringify(value)}];await el('work-file').fire('change');}
 async function loadSource(){el('image-file').files=[Object.assign(new Blob(['synthetic source'],{type:'image/png'}),{name:'synthetic.png'})];await el('image-file').fire('change');}
 function dirty(){let yes=false;for(const fn of windowEvents.get('beforeunload')||[])fn({preventDefault(){yes=true;}});return yes;}
-function assertOpen(open){assert.equal(el('precision-panel').hidden,!open);assert.equal(el('precision-toggle').getAttribute('aria-expanded'),String(open));}
-async function open(){if(el('precision-panel').hidden)await click('precision-toggle');assertOpen(true);}
+const selectedButton=()=>el('items').children.find(b=>b.getAttribute('aria-pressed')==='true');
+function assertOpen(open){assert.equal(el('precision-panel').hidden,!open);if(selectedButton())assert.equal(selectedButton().getAttribute('aria-expanded'),String(open));}
+async function open(){if(el('precision-panel').hidden)await (selectedButton()||el('items').children[0]).click();assertOpen(true);}
 async function edit(name,value,type='change'){el(name).value=String(value);await el(name).fire(type);}
 function fixture(mode='generate'){
  const work=C.create(mode);work.groups=[];const a=C.addGroup(work),b=C.addGroup(work);a.image=b.image=mode==='review'?png:null;
@@ -53,16 +54,16 @@ function fixture(mode='generate'){
 (async()=>{
  await ui.ready;nodes.get('panel-siren').hidden=false;
  // Scope is the screenshot's existing control set, with one live DOM instance.
- const popup=el('precision-panel');assert.equal(popup.getAttribute('role'),'dialog');assert.notEqual(popup.getAttribute('aria-modal'),'true');assert(popup.getAttribute('aria-labelledby'));assert.match(markup,/>精确调节<\/button>/);
+ const popup=el('precision-panel');assert.equal(popup.getAttribute('role'),'dialog');assert.notEqual(popup.getAttribute('aria-modal'),'true');assert(popup.getAttribute('aria-labelledby'));assert(!nodes.has('siren-precision-toggle'));
  for(const id of ['radius','radius-slider','angle','angle-slider','rotation','rotation-slider','rotation-mode','base-size','base-size-slider','guides','path','overlay','contact','stage-hint','match-review','match-status','match-candidates','position-lock','reset-position'])assert(popup.contains(el(id)),id+' must be in popup');
- for(const id of ['items','precision-toggle','delete-recognized','open-add'])assert(!popup.contains(el(id)),id+' must remain in editor');
+ for(const id of ['items','delete-recognized','open-add'])assert(!popup.contains(el(id)),id+' must remain in editor');
  for(const id of ['center','open-replace'])assert(!nodes.has('siren-'+id),id+' must be removed');
  assert(!/centerMode|siren-center|siren-open-replace/.test(fs.readFileSync(require.resolve('../src/siren-ui.js'),'utf8')),'Removed controls have no orphan state or handlers');
- assertOpen(false);const empty=snapshot();await open();assert(el('radius').disabled);assert(!el('base-size').disabled);await click('precision-close');assertOpen(false);assert.equal(document.activeElement,el('precision-toggle'));assert.equal(snapshot(),empty);assert(!dirty());
+ assertOpen(false);const empty=snapshot();assert.equal(el('items').children.length,0);assert(el('radius').disabled);assert.equal(snapshot(),empty);assert(!dirty());
  await loadDoc(fixture());await el('items').children[0].click();await click('save');const initial=snapshot();assert(!dirty());
- for(let i=0;i<12;i++){await open();assert.equal(el('radius').value,'100');await click(i%2?'precision-close':'precision-toggle');assertOpen(false);}assert.equal(snapshot(),initial);assert(!dirty(),'Popup toggles cannot create work edits');
+ for(let i=0;i<12;i++){await open();assert.equal(el('radius').value,'100');await click(i%2?'precision-close':'precision-done');assertOpen(false);assert.equal(document.activeElement,selectedButton());}assert.equal(snapshot(),initial);assert(!dirty(),'Popup opening/closing cannot create work edits');
  await open();await el('stage').fire('keydown',{key:'Escape'});assertOpen(false);assert.equal(el('radius').value,'100','Stage Escape must close without dropping selection');assert.equal(snapshot(),initial);assert(!dirty());
- await open();await el('radius').fire('keydown',{key:'Escape'});assertOpen(false);assert.equal(document.activeElement,el('precision-toggle'));assert.equal(snapshot(),initial);
+ await open();await el('radius').fire('keydown',{key:'Escape'});assertOpen(false);assert.equal(document.activeElement,selectedButton());assert.equal(snapshot(),initial);
  await open();await popup.fire('click');assertOpen(true);await el('stage').fire('click');assertOpen(true);await el('radius').fire('click');assertOpen(true);await body.fire('click');assertOpen(false);assert.equal(snapshot(),initial);assert(!dirty());
  // Changing item/group updates the same open controls, without changing work.
  await open();await el('items').children[1].click();assertOpen(true);assert.equal(el('radius').value,'82.5');await el('groups').children[1].click();assertOpen(true);assert(el('radius').disabled);await el('items').children[0].click();assert.equal(el('radius').value,'156.2');assert.equal(snapshot(),initial);

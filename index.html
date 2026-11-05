@@ -371,7 +371,6 @@
     .siren-selection-bar {display:flex;align-items:center;flex-wrap:wrap;gap:10px;max-width:760px;margin:14px auto 0;min-width:0}
     .siren-items {display:flex;flex-wrap:nowrap;gap:8px;min-height:45px;min-width:0;overflow-x:auto;flex:0 1 auto}
     .siren-items button {border:1px solid var(--line);border-radius:0;background:var(--panel);min-width:46px;flex:none;white-space:nowrap;padding:8px;color:var(--ink)}
-    #siren-precision-toggle {flex:none;white-space:nowrap}
     /* Manual additions and destructive actions keep their purple/red signals. */
     #siren-delete-recognized {flex:none;white-space:nowrap;color:#9c3445;border:1px solid #bc7984;background:#fff5f5;border-radius:0;padding:9px 12px}
     #siren-manual-overlap {max-width:760px;margin:10px auto 0;color:#8b229f}
@@ -861,13 +860,13 @@ body[data-tool$="-translate"] .translation-input-help { font:14px/1.8 var(--font
           <div class="siren-card siren-editor-card">
             <div class="siren-actions"><strong id="siren-group-label">第1组</strong><button type="button" id="siren-undo" class="secondary">撤销</button><details id="siren-group-more" class="siren-more"><summary>更多操作</summary><div class="siren-actions"><button type="button" id="siren-group-prev" class="text-button">将此组向前移</button><button type="button" id="siren-group-next" class="text-button">将此组向后移</button><button type="button" id="siren-fit-group" class="secondary" hidden>重新识别此组</button><button type="button" id="siren-delete-group" class="text-button siren-danger">删除整组</button><button type="button" id="siren-deep-toggle" class="secondary" hidden aria-expanded="false">疑难区域深度识别</button><button type="button" id="siren-delete-recognized" class="secondary" hidden disabled>删除所选小螺旋</button></div></details></div>
             <div id="siren-view-tools" class="siren-actions" aria-label="查看与调节画布"><button id="siren-view-mode" type="button" class="secondary" aria-pressed="true">查看</button><button id="siren-edit-mode" type="button" class="secondary" aria-pressed="false">调整</button><span class="siren-view-divider" aria-hidden="true"></span><button id="siren-zoom-fit" type="button" class="secondary" aria-pressed="true">适应窗口</button><button id="siren-zoom-2" type="button" class="secondary" aria-pressed="false">2倍</button><button id="siren-zoom-4" type="button" class="secondary" aria-pressed="false">4倍</button><button id="siren-view-overlay" type="button" class="secondary" aria-pressed="false">叠加所选模板</button></div>
-            <p id="siren-view-status" class="siren-note" role="status">查看模式：点击选中字形，放大后拖动画面；不会移动字形。</p>
-            <div id="siren-stage-wrap" class="siren-stage-wrap"><canvas id="siren-stage" width="1200" height="1200" tabindex="0" aria-label="塞壬语复核画布；查看模式可选择或平移，调整模式才移动字形"></canvas></div>
+            <p id="siren-view-status" class="siren-note" role="status">查看模式：点击小螺旋可打开精确调节，放大后拖动画面；不会移动字形。</p>
+            <div id="siren-stage-wrap" class="siren-stage-wrap"><canvas id="siren-stage" width="1200" height="1200" tabindex="0" aria-label="塞壬语复核画布；点击小螺旋打开精确调节，查看模式可平移，调整模式才移动字形"></canvas></div>
             <div id="siren-contact-lens" class="siren-contact-lens" hidden><canvas id="siren-contact-lens-canvas" width="300" height="300" aria-label="交点原图放大镜与准星"></canvas><span>移动准星后松手，记录交点；Esc 取消</span></div>
             <details id="siren-reading-demo" class="siren-reading-demo"><summary>查看读序演示</summary><p class="siren-note">只演示当前细像素首交点顺序，不移动字形、不确认候选。未定位项不加入编号。</p><div class="siren-actions"><button id="siren-reading-prev" type="button" class="secondary">上一步</button><button id="siren-reading-play" type="button" class="secondary">播放</button><button id="siren-reading-next" type="button" class="secondary">下一步</button></div><label for="siren-reading-step" class="siren-note">读取步骤</label><input id="siren-reading-step" type="range" min="1" max="1" value="1" step="1"><p id="siren-reading-status" class="siren-note" role="status" aria-live="polite"></p></details>
             <details id="siren-difference" class="siren-reading-demo" hidden><summary>整组重建／差异对照</summary><p class="siren-note">红色：原图中未被当前模板解释的笔画；蓝色：模板比原图多出的笔画。差异也可能来自噪声、缩放、灰边或邻组笔画，不代表字母错误或正确率。本功能不修改字形、位置、确认状态或读序。</p><p id="siren-difference-status" class="siren-note" role="status"></p><div id="siren-difference-images" class="siren-difference-images"><figure><canvas id="siren-difference-source" width="600" height="600" aria-label="当前组的原始裁片"></canvas><figcaption>原图裁片</figcaption></figure><figure><canvas id="siren-difference-rebuilt" width="600" height="600" aria-label="按当前所有字形和位置重建"></canvas><figcaption>整组重建</figcaption></figure><figure><canvas id="siren-difference-map" width="600" height="600" aria-label="红色为未解释笔画，蓝色为模板多出笔画"></canvas><figcaption>像素差异：红为未解释，蓝为多出</figcaption></figure></div></details>
             <div id="siren-deep-panel" hidden><p class="siren-note">在画布拖框圈住一个小螺旋的中心；笔画可超出框外。点击候选预览叠加，再确认采用。</p><div class="siren-actions"><button type="button" id="siren-deep-run" class="secondary" disabled>开始深度识别</button><button type="button" id="siren-deep-apply" class="secondary" disabled>采用所选候选</button><button type="button" id="siren-deep-close" class="text-button">关闭 / 取消</button></div><p id="siren-deep-status" class="siren-note" role="status"></p><div id="siren-deep-candidates" class="siren-actions"></div></div>
-            <div id="siren-selection-bar" class="siren-selection-bar"><div id="siren-items" class="siren-items" aria-label="小螺旋，按首交点排序"></div><button type="button" id="siren-precision-toggle" class="secondary" aria-expanded="false" aria-controls="siren-precision-panel">精确调节</button><button type="button" id="siren-open-add" class="secondary" aria-controls="siren-keyboard-panel" aria-expanded="false">新增小螺旋</button></div>
+            <div id="siren-selection-bar" class="siren-selection-bar"><div id="siren-items" class="siren-items" aria-label="小螺旋，按首交点排序；点击字母打开精确调节"></div><button type="button" id="siren-open-add" class="secondary" aria-controls="siren-keyboard-panel" aria-expanded="false">新增小螺旋</button></div>
             <p id="siren-manual-overlap" class="siren-note" role="status" hidden></p>
             <div id="siren-precision-panel" class="siren-precision" role="dialog" aria-modal="false" aria-labelledby="siren-precision-heading" aria-describedby="siren-selection" hidden>
               <div class="siren-precision-header"><div class="siren-precision-heading"><h3 id="siren-precision-heading">精确调节</h3><button type="button" id="siren-precision-close" class="text-button" aria-label="关闭精确调节窗口">关闭</button></div><p id="siren-selection" class="siren-note">先添加或选择一个小螺旋。</p></div>
@@ -4591,7 +4590,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   let deep=null,missing=null,reviewFocus=null;
   let demoIndex=0,demoTimer=null,demoSignature='';
   let scanPreview=null,differenceSignature='';
-  let reviewOpen=false,sourceExpanded=false,viewMode='view',zoom=1,viewGesture=null,contactGesture=null;
+  let reviewOpen=false,sourceExpanded=false,viewMode='view',zoom=1,viewGesture=null,contactGesture=null,precisionOrigin='stage';
   let located=[],locationGroupId=null,rawProjection=null,formattedProjection=null;
   const sourceRegions=new Map();let sourcePaintKey='';
   const keyboardImages=[];
@@ -4658,7 +4657,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     wrap.setAttribute('data-interaction',review?viewMode:'edit');
     $('siren-view-overlay').hidden=!review;$('siren-view-overlay').disabled=!item()?.letter;
     $('siren-view-overlay').setAttribute('aria-pressed',String($('siren-overlay').checked));
-    $('siren-view-status').textContent=contactMode?'标记交点：在原图按住并微调准星，松手记录；Esc 取消。':!review||viewMode==='edit'?'调整模式：拖动会移动字形；放大只影响显示。':'查看模式：点击选中字形，放大后拖动画面；不会移动字形。';
+    $('siren-view-status').textContent=contactMode?'标记交点：在原图按住并微调准星，松手记录；Esc 取消。':!review||viewMode==='edit'?'调整模式：点击小螺旋可打开精确调节，拖动会移动字形；放大只影响显示。':'查看模式：点击小螺旋可打开精确调节，放大后拖动画面；不会移动字形。';
     $('siren-item-prev').disabled=!g()?.items.length;$('siren-item-next').disabled=!g()?.items.length;
   }
   function setZoom(value){
@@ -4669,18 +4668,24 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   }
   function resetViewport(){zoom=1;clearViewGesture();$('siren-stage-wrap').scrollLeft=0;$('siren-stage-wrap').scrollTop=0;}
   function showKeyboard(open){$('siren-keyboard-panel').hidden=!open;$('siren-open-add').setAttribute('aria-expanded',String(open&&!itemId));}
-  function setPrecisionOpen(open,{focus=false}={}){
-    const popup=$('siren-precision-panel'),trigger=$('siren-precision-toggle');
-    if(open&&(!ready||loadingImport||scanBusy||sourceLoading||drag))return;
+  function setPrecisionOpen(open,{focus=false,origin}={}){
+    const popup=$('siren-precision-panel');
+    if(open&&(!ready||loadingImport||scanBusy||sourceLoading||drag||!item()))return;
+    if(open&&origin)precisionOrigin=origin;
     if(open&&mode==='review')reviewOpen=true;
     const restoreFocus=!open&&(focus||popup.contains(document.activeElement));
-    popup.hidden=!open;trigger.setAttribute('aria-expanded',String(open));$('panel-siren').classList.toggle('siren-precision-active',open);
+    popup.hidden=!open;$('panel-siren').classList.toggle('siren-precision-active',open);
     if(!open){precisionEdit=null;contactMode=false;clearViewGesture();}
     if(ready)render();
     if(open&&focus){
       $('siren-precision-close').focus({preventScroll:true});
       if(window.matchMedia?.('(max-width:1000px)').matches)stage.scrollIntoView?.({block:'start'});
-    }else if(restoreFocus)trigger.focus({preventScroll:true});
+    }else if(restoreFocus){
+      // Item buttons are rebuilt on render; restore to the current live button.
+      const selected=Array.from($('siren-items').children).find(b=>b.getAttribute('aria-pressed')==='true');
+      const target=mode==='review'&&!reviewOpen?$('siren-review-toggle'):precisionOrigin==='items'&&selected?selected:stage;
+      target.focus({preventScroll:true});
+    }
   }
   function closePrecisionKey(event){
     if(event.key!=='Escape'||event.defaultPrevented||$('panel-siren').hidden||$('siren-precision-panel').hidden)return false;
@@ -4694,7 +4699,6 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   }
   function scanControls(refreshEntry=true){
     if(scanBusy||loadingImport||sourceLoading)stopDemo(true);
-    $('siren-precision-toggle').disabled=!ready||loadingImport||scanBusy||sourceLoading;
     $('siren-auto-scan').disabled=!source||!ready||scanBusy||sourceLoading;
     $('siren-missing-toggle').disabled=!source||!ready||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
     $('siren-missing-run').disabled=!missing?.region||!!missing?.drag||scanBusy||sourceLoading||loadingImport||doc().groups.length>=50;
@@ -4917,7 +4921,11 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     $('siren-undo').disabled=!history[mode].length;
     $('siren-group-label').textContent=group?'第'+(groupIndex+1)+'组 · '+group.items.length+'/6':'请先载入图片并自动匹配';
     $('siren-items').replaceChildren();
-    if(group)entries.forEach((e,n)=>{const b=button((e.at===null?'未定位':n+1)+' '+(e.item.letter||'?')+(e.item.manualAdded?' · 人工':'')+(e.item.positionLocked?' · 锁定':''),()=>{selectItem(e.item.id);renderFields();linkItem();draw();},e.item.id===itemId);if(e.item.manualAdded)b.className='siren-manual-item';$('siren-items').append(b);});
+    if(group)entries.forEach((e,n)=>{
+      const selected=e.item.id===itemId,b=button((e.at===null?'未定位':n+1)+' '+(e.item.letter||'?')+(e.item.manualAdded?' · 人工':'')+(e.item.positionLocked?' · 锁定':''),()=>{selectItem(e.item.id);renderFields();linkItem();draw();setPrecisionOpen(true,{focus:true,origin:'items'});},selected);
+      b.setAttribute('aria-haspopup','dialog');b.setAttribute('aria-controls','siren-precision-panel');b.setAttribute('aria-expanded',String(selected&&!$('siren-precision-panel').hidden));
+      if(e.item.manualAdded)b.className='siren-manual-item';$('siren-items').append(b);
+    });
     renderKeyboardAngle();renderMatch();renderOverlap();renderPending();renderSource();renderViewport();
   }
   function renderMatch(){
@@ -5008,16 +5016,16 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     if(mode==='review'&&viewMode==='view'){
       const wrap=$('siren-stage-wrap');
       if(hit){selectItem(hit.id);renderFields();linkItem();}else{selectItem();clearLocation();renderFields();draw();}
-      viewGesture={id:event.pointerId,x:event.clientX,y:event.clientY,left:wrap.scrollLeft||0,top:wrap.scrollTop||0};stage.setPointerCapture(event.pointerId);return;
+      viewGesture={id:event.pointerId,x:event.clientX,y:event.clientY,left:wrap.scrollLeft||0,top:wrap.scrollTop||0,group:g(),token:hit,moved:false,pan:true};stage.setPointerCapture(event.pointerId);return;
     }
     if(!hit){selectItem(null,!$('siren-keyboard-panel').hidden);clearLocation();pendingPoint=p;keyboardPoint=p;renderFields();draw();note('');return;}
     selectItem(hit.id);keyboardPoint=p;
-    if(hit.positionLocked){renderFields();linkItem();draw();return;}
+    if(hit.positionLocked){viewGesture={id:event.pointerId,x:event.clientX,y:event.clientY,group:g(),token:hit,moved:false,pan:false};stage.setPointerCapture(event.pointerId);renderFields();linkItem();draw();return;}
     drag={id:event.pointerId,start:p,offset:{x:hit.x-p.x,y:hit.y-p.y},saved:false,analysis:geometry.analyze(g(),mode==='review')};stage.setPointerCapture(event.pointerId);renderFields();linkItem();draw();
   });
   stage.addEventListener('pointermove',event=>{
     if(contactMode){const p=point(event,stage);if(contactGesture?.id===event.pointerId)contactGesture.point=p;drawLens(p);return;}
-    if(viewGesture?.id===event.pointerId){const wrap=$('siren-stage-wrap');wrap.scrollLeft=viewGesture.left+viewGesture.x-event.clientX;wrap.scrollTop=viewGesture.top+viewGesture.y-event.clientY;return;}
+    if(viewGesture?.id===event.pointerId){const gesture=viewGesture;if(Math.hypot(event.clientX-gesture.x,event.clientY-gesture.y)>5)gesture.moved=true;if(gesture.pan&&gesture.moved){const wrap=$('siren-stage-wrap');wrap.scrollLeft=gesture.left+gesture.x-event.clientX;wrap.scrollTop=gesture.top+gesture.y-event.clientY;}return;}
     if(deep?.drag){if(deep.drag.id===event.pointerId){updateDeepRegion(point(event,stage));draw();}return;}
     if(!drag||drag.id!==event.pointerId||!item()||item().positionLocked)return;const p=point(event,stage);
     if(!drag.saved&&Math.hypot(p.x-drag.start.x,p.y-drag.start.y)<2)return;
@@ -5035,12 +5043,17 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
       if(!match||match.distance>12){note('标记离参考路径过远，尚未保存；请先对齐路径或重新标记。');return;}
       remember();item().contact={x:p.x,y:p.y};contactMode=false;changed();note('已记录人工首交点，并重新计算语序；可撤销。');return;
     }
-    if(viewGesture?.id===event.pointerId){viewGesture=null;return;}
+    if(viewGesture?.id===event.pointerId){
+      const gesture=viewGesture;viewGesture=null;
+      const moved=gesture.moved||Number.isFinite(event.clientX)&&Number.isFinite(event.clientY)&&Math.hypot(event.clientX-gesture.x,event.clientY-gesture.y)>5;
+      if(event.type==='pointerup'&&!moved&&g()===gesture.group&&item()===gesture.token&&gesture.token)setPrecisionOpen(true,{focus:true,origin:'stage'});
+      return;
+    }
     if(deep?.drag?.id===event.pointerId){if(event.type==='pointerup'){if(Number.isFinite(event.clientX)&&Number.isFinite(event.clientY))updateDeepRegion(point(event,stage));}else deep.region=null;deep.drag=null;if(deep.region&&(deep.region.width<2||deep.region.height<2))deep.region=null;$('siren-deep-status').textContent=deep.region?'已框选中心范围，点击开始识别。':'请拖出至少2×2的框。';scanControls();draw();return;}if(drag&&event.pointerId===drag.id){
     if(event.type==='pointerup'&&Number.isFinite(event.clientX)&&Number.isFinite(event.clientY)&&item()){
       const p=point(event,stage);if(drag.saved||Math.hypot(p.x-drag.start.x,p.y-drag.start.y)>=2){if(!drag.saved){remember();drag.saved=true;}C.move(g(),item(),{x:p.x+drag.offset.x,y:p.y+drag.offset.y});}
     }
-    const moved=drag.saved;drag=null;if(moved){changed();note('');}else render();
+    const moved=drag.saved;drag=null;if(moved){changed();note('');}else if(event.type==='pointerup')setPrecisionOpen(true,{focus:true,origin:'stage'});else render();
   }}
   stage.addEventListener('pointerup',finishDrag);stage.addEventListener('pointercancel',finishDrag);stage.addEventListener('lostpointercapture',finishDrag);
   stage.addEventListener('pointerleave',()=>{if(!contactGesture)$('siren-contact-lens').hidden=true;});
@@ -5056,7 +5069,6 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   $('siren-keyboard-close').addEventListener('click',()=>showKeyboard(false));
   $('siren-position-lock').addEventListener('click',()=>{if(!item()||drag)return;remember();item().positionLocked=!item().positionLocked;precisionEdit=null;contactMode=false;showKeyboard(false);changed();});
   $('siren-reset-position').addEventListener('click',()=>{if(!item()||item().positionLocked||!C.canReset(g(),item())||drag)return;remember();C.resetPosition(g(),item());keyboardPoint={x:item().x,y:item().y};showKeyboard(false);changed();note('已恢复识别位置。');});
-  $('siren-precision-toggle').addEventListener('click',()=>setPrecisionOpen($('siren-precision-panel').hidden,{focus:true}));
   $('siren-precision-close').addEventListener('click',()=>setPrecisionOpen(false,{focus:true}));
   $('siren-precision-done').addEventListener('click',()=>setPrecisionOpen(false,{focus:true}));
   $('siren-review-toggle').addEventListener('click',()=>setReviewOpen(!reviewOpen));
@@ -5072,11 +5084,11 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   $('siren-item-prev').addEventListener('click',()=>moveSelection(-1));$('siren-item-next').addEventListener('click',()=>moveSelection(1));
   for(const [id,formatted] of [['siren-raw',false],['siren-formatted',true]])$(id).addEventListener('click',()=>locateText($(id),formatted));
   $('siren-location-close').addEventListener('click',()=>{clearLocation();draw();});
-  $('siren-location-review').addEventListener('click',()=>{if(!located.length||scanBusy)return;focusReferences(located,locationGroupId);setReviewOpen(true);setPrecisionOpen(true,{focus:true});});
+  $('siren-location-review').addEventListener('click',()=>{if(!located.length||scanBusy)return;focusReferences(located,locationGroupId);setReviewOpen(true);setPrecisionOpen(true,{focus:true,origin:'stage'});});
   $('siren-location-preview').addEventListener('click',event=>{
     if(scanBusy||loadingImport)return;const group=doc().groups.find(g=>g.id===locationGroupId);if(!group)return;
     const p=point(event,$('siren-location-preview')),token=group.items.map(i=>({i,d:Math.hypot(i.x-p.x,i.y-p.y)})).filter(v=>v.d<Math.max(24,v.i.size*.45)).sort((a,b)=>a.d-b.d)[0]?.i;
-    if(token){focusReferences([{groupId:group.id,itemId:token.id}]);linkItem();}
+    if(token){focusReferences([{groupId:group.id,itemId:token.id}]);linkItem();setPrecisionOpen(true,{focus:true,origin:'stage'});}
   });
   document.addEventListener('click',event=>{
     if($('panel-siren').hidden||$('siren-precision-panel').hidden||drag)return;

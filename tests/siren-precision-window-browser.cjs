@@ -14,15 +14,15 @@ const semantic=json=>{const doc=JSON.parse(json);for(const g of doc.groups)for(c
   page.on('pageerror',error=>errors.push(String(error)));page.on('dialog',dialog=>dialog.accept());await page.route(/^https?:/,route=>{requests.push(route.request().url());return route.abort();});
   await page.addInitScript(()=>{let api;Object.defineProperty(window,'SirenScan',{configurable:true,get:()=>api,set(value){api={...value,create:()=>({cancel(){},run:async()=>[]})};}});});
   await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);await page.waitForFunction(()=>window.BABELIAN_APP?.siren);await page.evaluate(()=>BABELIAN_APP.siren.ready);await page.locator('#language-open-siren').click();
-  const popup=page.locator('#siren-precision-panel'),trigger=page.locator('#siren-precision-toggle'),close=page.locator('#siren-precision-close');
+  const popup=page.locator('#siren-precision-panel'),selectedButton=page.locator('#siren-items button[aria-pressed=true]'),close=page.locator('#siren-precision-close');
   const snapshot=()=>page.evaluate(()=>JSON.stringify(BABELIAN_APP.siren.snapshot()));
-  const assertOpen=async open=>{assert.equal(await popup.isVisible(),open);assert.equal(await trigger.getAttribute('aria-expanded'),String(open));assert.equal(await page.locator('#panel-siren').evaluate(el=>el.classList.contains('siren-precision-active')),open);};
-  const open=async()=>{if(!(await popup.isVisible()))await trigger.click();await assertOpen(true);};
+  const assertOpen=async open=>{assert.equal(await popup.isVisible(),open);if(await selectedButton.count())assert.equal(await selectedButton.getAttribute('aria-expanded'),String(open));assert.equal(await page.locator('#panel-siren').evaluate(el=>el.classList.contains('siren-precision-active')),open);};
+  const open=async()=>{if(!(await popup.isVisible()))await ((await selectedButton.count())?selectedButton:page.locator('#siren-items button').first()).click();await assertOpen(true);};
   const load=async work=>page.locator('#siren-work-file').setInputFiles({name:'synthetic-work.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(work))});
   const work=C.fromText('ABCDEFG');work.groups.forEach(group=>assert(fixture.geometry.arrange(group)));await load(work);await page.locator('#siren-items button').first().click();const initial=await snapshot();
-  assert.equal(await trigger.innerText(),'精确调节');assert.equal(await popup.count(),1);assert.equal(await popup.getAttribute('aria-modal'),'false');await assertOpen(false);
+  assert.equal(await page.locator('#siren-precision-toggle').count(),0);assert.equal(await popup.count(),1);assert.equal(await popup.getAttribute('aria-modal'),'false');await assertOpen(true);await close.click();await assertOpen(false);
   for(const id of ['match-review','match-status','match-candidates','position-lock','reset-position'])assert.equal(await popup.locator('#siren-'+id).count(),1);for(const id of ['center','open-replace'])assert.equal(await page.locator('#siren-'+id).count(),0);
-  for(let i=0;i<6;i++){await open();await close.click();await assertOpen(false);assert.equal(await page.evaluate(()=>document.activeElement.id),'siren-precision-toggle');}assert.equal(await snapshot(),initial);
+  for(let i=0;i<6;i++){await open();await close.click();await assertOpen(false);assert(await selectedButton.evaluate(el=>el===document.activeElement));}assert.equal(await snapshot(),initial);
   await open();assert.equal(await page.evaluate(()=>document.activeElement.id),'siren-precision-close');
   // A fixed, scrollable editor remains on screen without a backdrop or page overflow.
   const layout=await popup.evaluate(el=>{const r=el.getBoundingClientRect(),body=el.querySelector('.siren-precision-body');return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,position:getComputedStyle(el).position,overflow:getComputedStyle(body).overflowY,bodyHeight:body.clientHeight,bodyScrollHeight:body.scrollHeight};});
