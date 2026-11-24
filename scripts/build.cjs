@@ -13,12 +13,16 @@ const domainTerms=JSON.parse(read('domain-terms.json'));
 const dictionary=fs.readFileSync(path.join(root,'src/english-words.txt.gz'));
 if(crypto.createHash('sha256').update(dictionary).digest('hex')!==JSON.parse(read('english-words-source.json')).sha256)throw Error('English vocabulary checksum mismatch');
 const wordData=zlib.gunzipSync(dictionary).toString('utf8').trim().split(/\s+/).filter(w=>/^[a-z]{2,32}$/.test(w)||w==='a'||w==='i').join(' ');
+const stripProvenance=siren=>{
+ const clean=({provenance,...rest})=>rest;
+ return {...siren,base:clean(siren.base),letters:Object.fromEntries(Object.entries(siren.letters).map(([k,v])=>[k,clean(v)]))};
+};
 function htmlFor(mode,glyphs,parts,siren){
  let html=read('template.html');
  const replacements={
   '__BABELIAN_GLYPHS__':JSON.stringify(glyphs),
   '__BABELIAN_PARTS__':JSON.stringify(parts),
-  '__SIREN_ASSETS__':JSON.stringify(siren),
+  '__SIREN_ASSETS__':JSON.stringify(stripProvenance(siren)),
   '__SIREN_CORE_JS__':read('siren-core.js'),
   '__SIREN_FORMAT_JS__':read('siren-format.js')+'\n'+read('siren-review.js'),
   '__SIREN_INTERSECTIONS_JS__':read('siren-intersections.js'),

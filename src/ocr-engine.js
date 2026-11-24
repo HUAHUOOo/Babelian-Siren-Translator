@@ -3,7 +3,7 @@
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
   else root.BabelianOCR=api;
-  api.workerSource=()=>`const OCR=(${factory.toString()})();onmessage=async e=>{try{const r=await OCR.recognize(e.data.image,e.data.templates,e.data.options,p=>postMessage({progress:p}));postMessage({result:r});}catch(e){postMessage({error:e.message});}};`;
+  api.workerSource=()=>`const OCR=(${factory.toString()})();let cachedTemplates=null,cachedVector=null;onmessage=async e=>{try{const d=e.data;if(d.templates!==undefined)cachedTemplates=d.templates;if(d.options&&d.options.vectorProfile!==undefined)cachedVector=d.options.vectorProfile;const opts=d.options||{};const runOpts=opts.vectorProfile!==undefined||!cachedVector?opts:{...opts,vectorProfile:cachedVector};const r=await OCR.recognize(d.image,d.templates??cachedTemplates,runOpts,p=>postMessage({progress:p}));postMessage({result:r});}catch(e){postMessage({error:e.message});}};`;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
   const SIZE=32;
@@ -33,8 +33,7 @@
     }
     return threshold;
   }
-  function binarize(image,options={}){
-    const {gray,hist}=grayImage(image),{width,height}=image;
+  function binarizeGray(gray,hist,width,height,options={}){
     const threshold=options.threshold==null?otsu(hist,gray.length):Math.max(0,Math.min(254,Number(options.threshold)));
     let polarity=options.polarity||'auto';
     if(polarity==='auto'){
@@ -43,9 +42,14 @@
       polarity=light>=total/2?'dark':'light';
     }
     const data=new Uint8Array(gray.length);let count=0;
-    for(let i=0;i<data.length;i++){data[i]=Number(polarity==='light'?gray[i]>threshold:gray[i]<=threshold);count+=data[i];}
+    if(polarity==='light'){for(let i=0;i<data.length;i++){const v=gray[i]>threshold?1:0;data[i]=v;count+=v;}}
+    else{for(let i=0;i<data.length;i++){const v=gray[i]<=threshold?1:0;data[i]=v;count+=v;}}
     if(count===data.length||count===0)return {width,height,data:new Uint8Array(data.length),threshold,polarity};
     return {width,height,data,threshold,polarity};
+  }
+  function binarize(image,options={}){
+    const {gray,hist}=grayImage(image);
+    return binarizeGray(gray,hist,image.width,image.height,options);
   }
   // Precompute coordinates, not pixels. Keep the four subpixel samples and
   // >=2 vote bit-for-bit identical at both descriptor resolutions. Avoid a
@@ -185,43 +189,59 @@
     return out;
   }
   function componentCuts(mask,box){
-    const {width,height}=box,seen=new Uint8Array(width*height),queue=new Int32Array(width*height),cuts=new Set();
-    const ink=i=>mask.data[(box.y+Math.floor(i/width))*mask.width+box.x+i%width];
-    for(let start=0;start<seen.length;start++){
-      if(seen[start]||!ink(start))continue;
-      let head=0,tail=1,left=width,right=-1,top=height,bottom=-1;queue[0]=start;seen[start]=1;
-      while(head<tail){
-        const i=queue[head++],x=i%width,y=Math.floor(i/width);
-        left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);
-        for(let yy=Math.max(0,y-1);yy<=Math.min(height-1,y+1);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(width-1,x+1);xx++){
-          const next=yy*width+xx;
-          if(!seen[next]&&ink(next)){seen[next]=1;queue[tail++]=next;}
+    const {width,height}=box,seen=new Uint8Array(width*height),qx=new Int32Array(width*height),qy=new Int32Array(width*height),cuts=new Set();
+    const mw=mask.width,md=mask.data,bx=box.x,by=box.y;
+    for(let sy=0;sy<height;sy++){
+      const rowOff=(by+sy)*mw+bx,seenRow=sy*width;
+      for(let sx=0;sx<width;sx++){
+        const start=seenRow+sx;
+        if(seen[start]||!md[rowOff+sx])continue;
+        let head=0,tail=1,left=width,right=-1,top=height,bottom=-1;qx[0]=sx;qy[0]=sy;seen[start]=1;
+        while(head<tail){
+          const x=qx[head],y=qy[head++];
+          if(x<left)left=x;if(x>right)right=x;if(y<top)top=y;if(y>bottom)bottom=y;
+          const y0=y>0?y-1:0,y1=y+1<height?y+1:height-1,x0=x>0?x-1:0,x1=x+1<width?x+1:width-1;
+          for(let yy=y0;yy<=y1;yy++){
+            const mRow=(by+yy)*mw+bx,sRow=yy*width;
+            for(let xx=x0;xx<=x1;xx++){
+              const next=sRow+xx;
+              if(!seen[next]&&md[mRow+xx]){seen[next]=1;qx[tail]=xx;qy[tail++]=yy;}
+            }
+          }
         }
+        if(tail>=3&&bottom-top+1>=Math.max(3,height*.12)){cuts.add(bx+left);cuts.add(bx+right+1);}
       }
-      if(tail>=3&&bottom-top+1>=Math.max(3,height*.12)){cuts.add(box.x+left);cuts.add(box.x+right+1);}
     }
     return [...cuts].sort((a,b)=>a-b);
   }
   function recognizeLine(mask,box,templates,touching=false){
     const atoms=atomsFor(mask,box,touching),n=atoms.length;
     if(n>1400)throw Error('单行内容过多，请分段框选。');
+    const atomBoxes=atoms.map(a=>bounds(mask,a.start,box.y,a.end,box.y+box.height));
     const costs=new Float64Array(n+1).fill(Infinity),back=Array(n+1),edges=[];costs[0]=0;
     for(let i=0;i<n;i++){
       if(!Number.isFinite(costs[i]))continue;
+      let bLeft=Infinity,bTop=Infinity,bRight=-1,bBottom=-1;
       for(let j=i;j<Math.min(n,i+(touching==='reference-grid'?Math.ceil(box.height*1.9/(box.height>48?2:1)):touching==='components'?28:14));j++){
         if(j>i&&atoms[j].start-atoms[j-1].end>box.height*.4)break;
+        const ab=atomBoxes[j];
+        if(ab){
+          if(ab.x<bLeft)bLeft=ab.x;if(ab.y<bTop)bTop=ab.y;
+          const r=ab.x+ab.width-1,bt=ab.y+ab.height-1;
+          if(r>bRight)bRight=r;if(bt>bBottom)bBottom=bt;
+        }
         const x=atoms[i].start,width=atoms[j].end-x;
+        const candidateBox=bRight<bLeft?null:{x:bLeft,y:bTop,width:bRight-bLeft+1,height:bBottom-bTop+1};
         if(width>box.height*1.9){
           // An isolated wide fragment is not a legal glyph, but must still
           // have an unknown edge. Otherwise one bad fragment aborts the line.
           if(j===i){
-            const candidateBox=bounds(mask,x,box.y,x+width,box.y+box.height),unknown=costs[i]+.65*width/box.height+.04;
+            const unknown=costs[i]+.65*width/box.height+.04;
             edges.push({from:i,to:i+1,cost:unknown-costs[i]});
             if(unknown<costs[i+1]){costs[i+1]=unknown;back[i+1]={previous:i,token:{box:candidateBox,candidates:[],id:null,score:0,certain:false,manual:false}};}
           }
           break;
         }
-        const candidateBox=bounds(mask,x,box.y,x+width,box.y+box.height);
         if(!candidateBox)continue;
         const heightRatio=candidateBox.height/box.height;
         let candidates=heightRatio>=.62?matchDescriptor(describe(mask,candidateBox),templates):[];
@@ -243,9 +263,10 @@
       }
     }
     const suffix=new Float64Array(n+1).fill(Infinity),outgoing=Array.from({length:n},()=>[]);suffix[n]=0;
+    let maxSpan=0;
     // Preserve edge order and arithmetic while avoiding a scan of every edge
     // at every node of the segmentation graph.
-    for(const edge of edges)outgoing[edge.from].push(edge);
+    for(const edge of edges){outgoing[edge.from].push(edge);if(edge.to-edge.from>maxSpan)maxSpan=edge.to-edge.from;}
     for(let i=n-1;i>=0;i--)for(const e of outgoing[i])suffix[i]=Math.min(suffix[i],e.cost+suffix[e.to]);
 
     const tokens=[];
@@ -253,8 +274,18 @@
       const step=back[at];if(!step)throw Error('无法切分这一行，请缩小框选区域。');
       // Nearly equivalent segmentation paths are uncertain even if one cropped
       // rectangle resembles a template. A character's boundary is evidence too.
-      const rival=edges.filter(e=>e.from<at&&e.to>step.previous&&(e.from!==step.previous||e.to!==at));
-      const margin=Math.min(Infinity,...rival.map(e=>costs[e.from]+e.cost+suffix[e.to]-costs[n]));
+      let margin=Infinity;
+      const minFrom=Math.max(0,step.previous+1-maxSpan);
+      for(let from=minFrom;from<at;from++){
+        const list=outgoing[from];
+        for(let k=0;k<list.length;k++){
+          const e=list[k];
+          if(e.to>step.previous&&(from!==step.previous||e.to!==at)){
+            const m=costs[from]+e.cost+suffix[e.to]-costs[n];
+            if(m<margin)margin=m;
+          }
+        }
+      }
       step.token.segmentationMargin=margin;step.token.certain=step.token.certain&&margin>=.045;
       tokens.push(step.token);at=step.previous;
     }
@@ -522,8 +553,9 @@
     });
   }
   function referenceGridSupported(before,native,after,adapted,box){
+    const adaptedById=adapted instanceof Map?adapted:new Map(adapted.map(t=>[t.id,t]));
     if(box.height<40||box.height>96||box.width>160||before.length<2||before.length>6||after.length<2||after.length>6||
-      before.some(t=>!t.id||t.manual||t.box.height<30||adapted.find(a=>a.id===t.id)?.references))return false;
+      before.some(t=>!t.id||t.manual||t.box.height<30||adaptedById.get(t.id)?.references))return false;
     // The finer native search must reproduce the original reading while proving
     // its boundaries are near a rival. Old confidence based on missing cut sites
     // is not sufficient to mark the recovered reading as confirmed.
@@ -534,17 +566,18 @@
       const first=t.candidates?.[0],nativeScore=first?.nativeScore??first?.score;
       return first?.id!==t.id||!Number.isFinite(nativeScore)||nativeScore<.84||first.score-(t.candidates?.[1]?.score||0)<.035;
     }))return false;
-    const supported=new Set(after.filter(t=>adapted.find(a=>a.id===t.id)?.references).map(t=>t.id));
+    const supported=new Set(after.filter(t=>adaptedById.get(t.id)?.references).map(t=>t.id));
     if(supported.size<2||!after.some(t=>Number.isFinite(t.candidates[0].nativeScore)&&t.score-t.candidates[0].nativeScore>=.015))return false;
     return imageEvidence({lines:[{box,tokens:after}]})>imageEvidence({lines:[{box,tokens:before}]});
   }
-  function refineReferenceClusters(mask,line,adapted,templates,options,budget){
+  function refineReferenceClusters(mask,line,adapted,templates,options,budget,adaptedById){
     let tokens=line.tokens,regions=0;
     if(line.box.height<40||line.box.height>96||!budget.remaining)return {tokens,regions};
+    const byId=adaptedById||new Map(adapted.map(t=>[t.id,t]));
     const runs=[];
     for(let i=0;i<tokens.length;){
-      if(adapted.find(t=>t.id===tokens[i].id)?.references){i++;continue;}
-      const from=i;while(i<tokens.length&&!adapted.find(t=>t.id===tokens[i].id)?.references)i++;
+      if(byId.get(tokens[i].id)?.references){i++;continue;}
+      const from=i;while(i<tokens.length&&!byId.get(tokens[i].id)?.references)i++;
       if(i-from>=2&&i-from<=6)runs.push({from,to:i});
     }
     for(const {from,to}of runs.reverse()){
@@ -557,16 +590,16 @@
       if(native.length!==before.length||native.some((t,i)=>t.id!==before[i].id||overlap(t.box,before[i].box)<.85||
         !Number.isFinite(t.segmentationMargin)||t.segmentationMargin<0||t.segmentationMargin>=.01))continue;
       const after=recognizeLine(mask,box,adapted,'reference-grid');
-      const rescored=before.map(t=>({...t,score:matchDescriptor(describe(mask,t.box),adapted.filter(a=>a.id===t.id))[0]?.score||0}));
-      if(!referenceGridSupported(rescored,native,after,adapted,box))continue;
+      const rescored=before.map(t=>{const ref=byId.get(t.id);return {...t,score:ref?matchDescriptor(describe(mask,t.box),[ref])[0]?.score||0:0};});
+      if(!referenceGridSupported(rescored,native,after,byId,box))continue;
       for(const token of after)token.certain=false;
       tokens=[...tokens.slice(0,from),...after,...tokens.slice(to)];regions++;
     }
     return {tokens,regions};
   }
-  async function refineRepeatedGlyphs(image,baseline,templates,options,progress){
+  async function refineRepeatedGlyphs(image,baseline,templates,options,progress,grayData){
     if(baseline.lines.length<3)return baseline;
-    const mask=binarize(image,{threshold:baseline.threshold,polarity:baseline.polarity}),byId=new Map();
+    const mask=grayData?binarizeGray(grayData.gray,grayData.hist,image.width,image.height,{threshold:baseline.threshold,polarity:baseline.polarity}):binarize(image,{threshold:baseline.threshold,polarity:baseline.polarity}),byId=new Map();
     const median=values=>{const a=values.sort((a,b)=>a-b),n=a.length;return n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2;};
     // References are frozen before this pass. Only independently confident,
     // size-consistent repetitions may support another row; no iterative learning.
@@ -600,9 +633,10 @@
           return {...template,references:peers.sort((a,b)=>b.score-a.score).slice(0,16).map(item=>({id:template.id,...item.descriptor}))};
         });
         if(supported>=3){
+          const adaptedById=new Map(adapted.map(t=>[t.id,t]));
           const rescored=line.tokens.map(token=>{
             if(!token.id)return token;
-            const template=adapted.find(t=>t.id===token.id);
+            const template=adaptedById.get(token.id);
             const score=matchDescriptor(describe(mask,token.box),[template])[0]?.score||0;
             return {...token,score};
           });
@@ -622,7 +656,7 @@
           }catch(error){
             if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
           }
-          const finer=refineReferenceClusters(mask,selected,adapted,templates,options,gridBudget);
+          const finer=refineReferenceClusters(mask,selected,adapted,templates,options,gridBudget,adaptedById);
           if(finer.regions){
             if(selected===line)changed++;
             selected={...selected,tokens:finer.tokens,pageMatching:{method:'repeated-glyphs',referenceIds:supported,gridRegions:finer.regions}};
@@ -636,13 +670,15 @@
     if(options.cancelled?.())throw Error('已取消识别。');
     return changed&&count<=1500?{...baseline,lines,pageRefinement:{rows:changed}}:baseline;
   }
-  async function recognizeRaster(image,templateMasks,options={},progress=()=>{}){
-    const mask=binarize(image,options),templates=prepareTemplates(templateMasks,options);
+  async function recognizeRaster(image,templateMasks,options={},progress=()=>{},shared=null){
+    const grayData=grayImage(image),{gray,hist}=grayData;
+    const mask=binarizeGray(gray,hist,image.width,image.height,options),templates=prepareTemplates(templateMasks,options);
+    if(shared){shared.grayData=grayData;shared.templates=templates;}
     const baseline=await recognizeMask(mask,templates,options,p=>progress({...p,pass:1}));
     // A manual threshold is authoritative. Keep the coarse comparison as an
     // explicit single-pass fallback; only automatic fine comparison sweeps.
     if(options.threshold!=null||options.detail===false||!baseline.lines.length)return baseline;
-    const {gray,hist}=grayImage(image),dark=mask.polarity==='dark';
+    const dark=mask.polarity==='dark';
     let background=mask.threshold;
     for(let v=dark?mask.threshold+1:0;v<(dark?256:mask.threshold);v++)if(hist[v]>hist[background])background=v;
     // Search only part of the gap toward the background peak: recovering faint
@@ -654,12 +690,12 @@
       // A small page can also supply independent native-resolution references.
       // Sub-30-pixel rows cannot supply confident references or be recovered by
       // this pass; interpolation never changes their original resolution gate.
-      return baseline.lines.filter(l=>l.box.height>=30).length>=3?refineRepeatedGlyphs(image,refined,templates,options,progress):refined;
+      return baseline.lines.filter(l=>l.box.height>=30).length>=3?refineRepeatedGlyphs(image,refined,templates,options,progress,grayData):refined;
     }
     const passes=[baseline];let previousMask=mask;
     for(const threshold of thresholds){
       if(options.cancelled?.())throw Error('已取消识别。');
-      const variant=binarize(image,{threshold,polarity:mask.polarity});
+      const variant=binarizeGray(gray,hist,image.width,image.height,{threshold,polarity:mask.polarity});
       if(variant.data.every((v,i)=>v===previousMask.data[i]))continue;
       previousMask=variant;
       let result;
@@ -694,7 +730,7 @@
     }
     chosen=thresholdConsensus(chosen,passes);
     const result={...chosen,thresholdSearch:{baseline:baseline.threshold,selected:chosen.threshold,passes:passes.map(p=>({threshold:p.threshold,evidence:imageEvidence(p)}))}};
-    return refineRepeatedGlyphs(image,result,templates,options,progress);
+    return refineRepeatedGlyphs(image,result,templates,options,progress,grayData);
   }
   function prepareVectorProfile(profile,ids){
     if(!profile||profile.version!==1||!Array.isArray(profile.variants)||profile.variants.length>1024)throw Error('矢量辅助模板格式不支持。');
@@ -739,14 +775,17 @@
     return ranked.length>=2&&ranked[0].score>=.94&&ranked[0].score-ranked[1].score>=.06?ranked[0]:null;
   }
   async function recognize(image,templateMasks,options={},progress=()=>{}){
-    const result=await recognizeRaster(image,templateMasks,options,progress);
+    const shared={};
+    const result=await recognizeRaster(image,templateMasks,options,progress,shared);
     if(!options.vectorProfile||options.threshold!=null||options.detail===false||!result.lines.length)return result;
     if(options.cancelled?.())throw Error('已取消识别。');
-    const profile=prepareVectorProfile(options.vectorProfile,templateMasks.map(t=>t.id)),templates=prepareTemplates(templateMasks,options);
-    const mask=binarize(image,{threshold:result.threshold,polarity:result.polarity});
-    const delta=result.polarity==='dark'?8:-8,preferred=result.threshold+delta;
-    const alternate=binarize(image,{threshold:preferred<0||preferred>254?result.threshold-delta:preferred,polarity:result.polarity});
-    let checked=0,changed=0;
+    const profile=prepareVectorProfile(options.vectorProfile,templateMasks.map(t=>t.id));
+    if(!result.lines.some(row=>row.tokens.some(token=>!token.certain&&!token.manual&&token.id&&token.box.height>=16)))return {...result,vectorReview:{checked:0,changed:0}};
+    const templates=shared.templates||prepareTemplates(templateMasks,options);
+    const {gray,hist}=shared.grayData||grayImage(image);
+    const mask=binarizeGray(gray,hist,image.width,image.height,{threshold:result.threshold,polarity:result.polarity});
+    const delta=result.polarity==='dark'?8:-8,preferred=result.threshold+delta,altThreshold=preferred<0||preferred>254?result.threshold-delta:preferred;
+    let alternate=null,checked=0,changed=0;
     const lines=[];
     for(const row of result.lines){
       if(options.cancelled?.())throw Error('已取消识别。');
@@ -755,6 +794,7 @@
         checked++;
         const first=vectorWinner(describe(mask,token.box),templates,token.id,token.box.height,profile);
         if(!first||first.id===token.id)return token;
+        if(!alternate)alternate=binarizeGray(gray,hist,image.width,image.height,{threshold:altThreshold,polarity:result.polarity});
         const second=vectorWinner(describe(alternate,token.box),templates,token.id,token.box.height,profile);
         if(second?.id!==first.id)return token;
         const candidate=token.candidates.find(c=>c.id===first.id);if(!candidate)return token;

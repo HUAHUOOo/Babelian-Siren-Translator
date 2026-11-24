@@ -8,14 +8,35 @@
  'use strict';
  domainTerms=domainTerms||{};
  const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral antinomy ambrosia aether arcology irem poseidon poseidons alitheia argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed rot';
+ const VERBS=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see sees think granted saw ends remains knows know broken lies stands begins find finds feel feels hear hears sense senses observe observes fade fades understand understands realize realizes notice notices remember remembers explain explains declare declares report reports'.split(' '));
+ const COPULAS=new Set('is are was were'.split(' '));
+ const DEPENDENT=new Set('and but or nor neither either also not as than that which who whom whose what when where why how whatever whoever whenever wherever whether if unless because since while whilst whereas though although before after until once so except including with without of for from to in into on onto at by through under over between among near around against about despite during'.split(' '));
+ const MODIFIERS=new Set('very quite rather still already almost fully entirely'.split(' '));
+ const PREDICATES=new Set('open closed quiet silent cold warm hot dark bright ready safe lost broken gone dead alive awake asleep empty full clear blue red green'.split(' '));
+ const DETERMINERS=new Set('the a an this these those my your his her its our their each every any all both'.split(' '));
+ const QUESTION_WORDS=new Set('what who where when why how'.split(' '));
+ const QUESTION_AUXILIARIES=new Set('is are was were do does did can could will would should has have had must'.split(' '));
+ const INDIRECT=new Set('know knows knew known wonder wonders wondered ask asks asked explain explains explained remember remembers remembered understand understands understood tell tells told say says said see sees saw hear hears heard'.split(' '));
+ const REPORTING=new Set('understand understands realize realizes notice notices remember remembers know knows explain explains declare declares report reports'.split(' '));
+ const FINITE_STARTS=new Set([...COPULAS,'has','have','had','can','may','must','will','would','should','finds','fades',...REPORTING]);
+ const PRONOUNS=new Set('i he she it we you they there this these those'.split(' '));
+ const LIST_VERBS=new Set('find finds see sees feel feels hear hears sense senses observe observes notice notices'.split(' '));
+ const LIST_PREPOSITIONS=new Set('in on at with from through'.split(' '));
+ const LIST_ALLOWED=new Set('with of and or nor'.split(' '));
+ const COMMANDS=new Set('proceed see draw gain discard return choose apply resolve place remove take ignore'.split(' '));
  function create(wordData){
   const words=typeof wordData==='string'?wordData.trim().split(/\s+/):wordData;
-  const costs=new Map();let max=1;
-  for(const [i,word] of words.entries())if(/^[a-z]{2,32}$/.test(word)||word==='a'||word==='i'){
-   if(!costs.has(word))costs.set(word,Math.log((i+1)*Math.log(words.length+1)));max=Math.max(max,word.length);
+  const costs=new Map();let maxWord=1,maxPhrase=0;
+  const logBase=Math.log(words.length+1);
+  for(let i=0;i<words.length;i++){
+   const word=words[i];
+   if(/^[a-z]{2,32}$/.test(word)||word==='a'||word==='i'){
+    if(!costs.has(word))costs.set(word,Math.log((i+1)*logBase));
+    if(word.length>maxWord)maxWord=word.length;
+   }
   }
   for(const word of [...DOMAIN.split(' '),...(domainTerms.words||[])])if(/^[a-z]{2,40}$/.test(word)){
-   costs.set(word,Math.min(costs.get(word)??Infinity,8));max=Math.max(max,word.length);
+   costs.set(word,Math.min(costs.get(word)??Infinity,8));if(word.length>maxWord)maxWord=word.length;
   }
   const phrases=new Map();
   // Weak grammatical preferences resolve rare dictionary-name collisions in
@@ -31,28 +52,33 @@
    if(parts.length<2||parts.length>10||key.length>120||parts.some(p=>!/^[a-z]{1,40}$/.test(p)))continue;
    const cost=parts.reduce((sum,p)=>sum+(costs.get(p)??8),0)-(grammar.has(phrase)?1.2:Math.min(3,.6*(parts.length-1)));
    if(cost<(phrases.get(key)?.cost??Infinity))phrases.set(key,{parts,cost});
-   max=Math.max(max,key.length);
+   if(key.length>maxPhrase)maxPhrase=key.length;
   }
   function split(text,extra=[]){
    const lower=text.toLowerCase(),n=lower.length,local=new Map();
    // Preserve a known, separately written title-case name such as a country.
    if(/^[A-Z][a-z]+$/.test(text)&&grammarKeys.has(lower)&&costs.has(lower))return [{text,known:true}];
-   for(const word of extra){const w=word.toLowerCase();if(/^[a-z]{2,40}$/.test(w))local.set(w,5.5);}
-   const limit=Math.max(max,...Array.from(local.keys(),w=>w.length),1);
+   let wordLimit=maxWord;
+   for(const word of extra){const w=word.toLowerCase();if(/^[a-z]{2,40}$/.test(w)){local.set(w,5.5);if(w.length>wordLimit)wordLimit=w.length;}}
    const dp=new Float64Array(n+1).fill(Infinity),back=Array(n+1);dp[0]=0;
+   const deque=new Int32Array(n+1),keys=new Float64Array(n+1);let head=0,tail=0;
    for(let end=1;end<=n;end++){
-    for(let size=1;size<=Math.min(end,limit);size++){
+    const prev=end-1,prevKey=dp[prev]-3*prev;keys[prev]=prevKey;
+    while(tail>head&&keys[deque[tail-1]]>=prevKey)tail--;
+    deque[tail++]=prev;
+    while(head<tail&&deque[head]<end-40)head++;
+    for(let size=1;size<=Math.min(end,wordLimit);size++){
      const start=end-size,word=lower.slice(start,end),cost=local.get(word)??costs.get(word);
      if(cost===undefined)continue;
      if(dp[start]+cost<dp[end]){dp[end]=dp[start]+cost;back[end]={start,known:true};}
     }
-    for(let size=2;size<=Math.min(end,max);size++){
+    for(let size=2;size<=Math.min(end,maxPhrase);size++){
      const start=end-size,phrase=phrases.get(lower.slice(start,end));
      if(phrase&&dp[start]+phrase.cost<dp[end]){dp[end]=dp[start]+phrase.cost;back[end]={start,known:true,parts:phrase.parts};}
     }
     // Unknown strings remain present; do not spell-correct or invent letters.
-    for(let size=1;size<=Math.min(end,40);size++){
-     const start=end-size,cost=dp[start]+15+size*3;
+    if(head<tail){
+     const start=deque[head],cost=dp[start]+15+(end-start)*3;
      if(cost<dp[end]){dp[end]=cost;back[end]={start,known:false};}
     }
    }
@@ -110,12 +136,8 @@
   text=text.replace(/\b(poseidon)(s)\b/gi,(_,name,s)=>{possessives++;return name+"'"+s;});
   const words=[...text.matchAll(/[A-Za-z]+/g)].map(m=>({text:m[0],lower:m[0].toLowerCase(),start:m.index,end:m.index+m[0].length}));
   const inserts=new Map();let count=possessives,start=0,finite=false,question=false;
-  const verbs=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see sees think granted saw ends remains knows know broken lies stands begins ends find finds feel feels hear hears sense senses observe observes fade fades understand understands realize realizes notice notices remember remembers explain explains declare declares report reports'.split(' '));
-  const copulas=new Set('is are was were'.split(' ')),nominalStarts=new Set();
-  const dependent=new Set('and but or nor neither either also not as than that which who whom whose what when where why how whatever whoever whenever wherever whether if unless because since while whilst whereas though although before after until once so except including with without of for from to in into on onto at by through under over between among near around against about despite during'.split(' '));
-  const modifiers=new Set('very quite rather still already almost fully entirely'.split(' '));
-  const predicates=new Set('open closed quiet silent cold warm hot dark bright ready safe lost broken gone dead alive awake asleep empty full clear blue red green'.split(' '));
-  const determiners=new Set('the a an this these those my your his her its our their each every any all both'.split(' '));
+  const verbs=VERBS,copulas=COPULAS,nominalStarts=new Set();
+  const dependent=DEPENDENT,modifiers=MODIFIERS,predicates=PREDICATES,determiners=DETERMINERS;
   // Conservative adjacent copular clauses: a complete, short predicate followed
   // by a short nominal subject. Repeated predicates work without a topic-specific
   // noun/adjective list. Connectives and relatives keep their clause together.
@@ -134,17 +156,11 @@
    }
    if(copulas.has(words[i].lower))priorCopula=i;
   }
-  const questionWords=new Set('what who where when why how'.split(' '));
-  const questionAuxiliaries=new Set('is are was were do does did can could will would should has have had must'.split(' '));
-  const indirect=new Set('know knows knew known wonder wonders wondered ask asks asked explain explains explained remember remembers remembered understand understands understood tell tells told say says said see sees saw hear hears heard'.split(' '));
-  const reporting=new Set('understand understands realize realizes notice notices remember remembers know knows explain explains declare declares report reports'.split(' '));
-  const finiteStarts=new Set([...copulas,'has','have','had','can','may','must','will','would','should','finds','fades',...reporting]);
-  const pronouns=new Set('i he she it we you they there this these those'.split(' '));
+  const questionWords=QUESTION_WORDS,questionAuxiliaries=QUESTION_AUXILIARIES,indirect=INDIRECT,reporting=REPORTING,finiteStarts=FINITE_STARTS,pronouns=PRONOUNS;
   // Repeated finite predicates can share a subject. Require three or more
   // identical short verb/object/preposition headers and simple complements;
   // ordinary repeated words, nested clauses and existing marks are not lists.
-  const listVerbs=new Set('find finds see sees feel feels hear hears sense senses observe observes notice notices'.split(' '));
-  const listPrepositions=new Set('in on at with from through'.split(' ')),predicateLists=[];
+  const listVerbs=LIST_VERBS,listPrepositions=LIST_PREPOSITIONS,predicateLists=[];
   const plainNominal=part=>part.length>=1&&part.length<=5&&part.every(w=>!verbs.has(w.lower)&&!dependent.has(w.lower));
   for(let i=1;i<words.length;i++){
    if(!listVerbs.has(words[i].lower)||!/^(i|he|she|we|you|they)$/.test(words[i-1].lower)||
@@ -183,7 +199,7 @@
       !finiteStarts.has(words[subject+1]?.lower)&&!listVerbs.has(words[subject+1]?.lower)||
       !words.slice(i+1,j).some(w=>finiteStarts.has(w.lower))||/[.!?;:]|\[/.test(text.slice(words[j].end,words[subject].start)))continue;
     resumedSubjects.add(subject);
-    if(!/[,;:]\s*$/.test(text.slice(0,words[j].start)))resumptions.add(j);
+    if(!/[,;:]\s*$/.test(text.slice(words[j-1]?.end??0,words[j].start)))resumptions.add(j);
     if(followsList)correlativeStarts.add(at);
     break;
    }
@@ -243,7 +259,7 @@
    let anchor=predicate-1;
    while(anchor>=from&&modifiers.has(words[anchor].lower))anchor--;
    if(predicate!==from&&!copulas.has(words[anchor]?.lower))return [];
-   const allowed=new Set('with of and or nor'.split(' '));
+   const allowed=LIST_ALLOWED;
    for(let n=0;n<positions.length;n++){
     const end=positions[n+1]??to,phrase=words.slice(positions[n]+1,end);
     if(!phrase.length||phrase.length>10||phrase.some(w=>verbs.has(w.lower)||indirect.has(w.lower)||dependent.has(w.lower)&&!allowed.has(w.lower)))return [];
@@ -285,12 +301,12 @@
    if(verbs.has(w.lower))finite=true;
   }
   // A short leading conditional followed by an instruction needs a comma.
-  const commands=new Set('proceed see draw gain discard return choose apply resolve place remove take ignore'.split(' '));
+  const commands=COMMANDS;
   for(let i=0;i<words.length;i++)if(words[i].lower==='if'){
    for(let j=i+3;j<Math.min(words.length,i+15);j++){
     if(/[.!?;]|\[/.test(text.slice(words[i].end,words[j].start))||inserts.has(words[j].start))break;
     if(commands.has(words[j].lower)){
-     if(!/[,;:]\s*$/.test(text.slice(0,words[j].start))){inserts.set(words[j].start,', ');count++;}break;
+     if(!/[,;:]\s*$/.test(text.slice(words[j-1]?.end??0,words[j].start))){inserts.set(words[j].start,', ');count++;}break;
     }
    }
   }
@@ -338,16 +354,18 @@
  function createDraft(formatter){
   let draft=null;
   const key=(payload,options)=>JSON.stringify([payload,options]);
+  function validateDraft(){
+   if(!draft)return;
+   if(draft.stale){draft.error='逐字原文、映射或整理设置已变化。手动编辑已保留，请重新生成建议后再复制或追加。';return;}
+   try{reflow(draft.payload,draft.value);draft.error='';}catch(e){draft.error=e.message;}
+  }
   function generate(payload,options){
    const output=formatter.suggest(payload,options);
-   draft={payload,signature:key(payload,options),value:output.text,meta:output,dirty:false,stale:false};return state();
+   draft={payload,signature:key(payload,options),value:output.text,meta:output,dirty:false,stale:false,error:''};return state();
   }
   function state(){
    if(!draft)return null;
-   let error='';
-   if(draft.stale)error='逐字原文、映射或整理设置已变化。手动编辑已保留，请重新生成建议后再复制或追加。';
-   else try{reflow(draft.payload,draft.value);}catch(e){error=e.message;}
-   return {value:draft.value,dirty:draft.dirty,stale:draft.stale,meta:draft.meta,error};
+   return {value:draft.value,dirty:draft.dirty,stale:draft.stale,meta:draft.meta,error:draft.error};
   }
   return {
    state,generate,clear:()=>{draft=null;},
@@ -356,15 +374,15 @@
     if(saved===null){draft=null;return null;}
     if(!saved||typeof saved.value!=='string'||saved.value.length>100000||typeof saved.dirty!=='boolean')throw Error('整理草稿格式不正确。');
     const payload=JSON.parse(JSON.stringify(saved.payload)),options=JSON.parse(JSON.stringify(saved.options)),output=formatter.suggest(payload,options);
-    draft={payload,signature:key(payload,options),value:saved.value,meta:output,dirty:saved.dirty,stale:false};return state();
+    draft={payload,signature:key(payload,options),value:saved.value,meta:output,dirty:saved.dirty,stale:false,error:''};validateDraft();return state();
    },
    update(payload,options){
     if(!draft)return generate(payload,options);
-    if(key(payload,options)===draft.signature){draft.stale=false;return state();}
-    if(draft.dirty){draft.stale=true;return state();}
+    if(key(payload,options)===draft.signature){draft.stale=false;validateDraft();return state();}
+    if(draft.dirty){draft.stale=true;validateDraft();return state();}
     return generate(payload,options);
    },
-   edit(value){if(!draft)return null;draft.value=value;draft.dirty=true;return state();},
+   edit(value){if(!draft)return null;draft.value=value;draft.dirty=true;validateDraft();return state();},
    payload(){const current=state();if(!current||current.error)throw Error(current?.error||'尚无整理结果。');return reflow(draft.payload,draft.value);}
   };
  }

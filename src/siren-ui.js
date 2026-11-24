@@ -92,10 +92,11 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     if(open&&(!ready||loadingImport||scanBusy||sourceLoading||drag||!item()))return;
     if(open&&origin)precisionOrigin=origin;
     if(open&&mode==='review')reviewOpen=true;
+    const wasOpen=!popup.hidden;
     const restoreFocus=!open&&(focus||popup.contains(document.activeElement));
     popup.hidden=!open;$('panel-siren').classList.toggle('siren-precision-active',open);
     if(!open){precisionEdit=null;contactMode=false;clearViewGesture();}
-    if(ready)render();
+    if(ready&&(open||wasOpen))render();
     if(open&&focus){
       $('siren-precision-close').focus({preventScroll:true});
       if(window.matchMedia?.('(max-width:1000px)').matches)stage.scrollIntoView?.({block:'start'});
@@ -143,7 +144,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     $('siren-missing-toggle').hidden=!doc().groups.length;$('siren-source-coverage').hidden=!doc().groups.length;
     $('siren-work-note').textContent=history[mode].stats().oversized?'离开前请保存工作。当前单条历史较大，仅保留最近一次撤销。':'离开前请保存塞壬语工作。';
   }
-  function cancelScan({keepPreview=false}={}){scanTicket++;scan.cancel();scanBusy=false;if(scanPreview){scanPreview.stopped=true;if(!keepPreview)scanPreview=null;}if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}scanControls();}
+  function cancelScan({keepPreview=false}={}){const hadWork=scanBusy||!!scanPreview||!!deep?.running||!!missing?.running;scanTicket++;scan.cancel();scanBusy=false;if(scanPreview){scanPreview.stopped=true;if(!keepPreview)scanPreview=null;}if(deep)deep.running=false;if(missing){missing.running=false;missing.preview=null;$('siren-missing-preview').hidden=true;}if(hadWork)scanControls();}
   function remember(){history[mode].push(doc());revisions[mode]++;}
   function changed(){clearLocation();clearDeep();clearMissing();translation.invalidate();if(draft().state())draft().update(payload(),formatOptions());collectImages();render();}
   function scheduleImageSweep(){if(imageSweep!==null)return;imageSweep=setTimeout(()=>{imageSweep=null;collectImages();},0);}
@@ -226,7 +227,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     if(review){const bg=backgrounds.get(group.image);if(bg)ctx.drawImage(bg,0,0,600,600);}
     else {ctx.save();ctx.translate(group.cx,group.cy);ctx.rotate((group.baseRotation||0)*Math.PI/180);const size=group.baseSize||500;ctx.drawImage(images.base,-size*assets.base.pivotX,-size*assets.base.pivotY,size,size*assets.base.height/assets.base.width);ctx.restore();}
     const entries=row(group);
-    if(guides&&$('siren-path').checked){ctx.save();ctx.strokeStyle='#257b9388';ctx.lineWidth=1.5;ctx.beginPath();geometry.basePoints(group).forEach((p,i)=>{if(i)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);});ctx.stroke();ctx.restore();}
+    if(guides&&$('siren-path').checked){ctx.save();ctx.strokeStyle='#257b9388';ctx.lineWidth=1.5;ctx.beginPath();(analysis(group)?.points||geometry.basePoints(group)).forEach((p,i)=>{if(i)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);});ctx.stroke();ctx.restore();}
     for(let n=0;n<entries.length;n++){
       const token=entries[n].item,isSelected=selected===token.id;
       if(token.letter&&(!review||token.manualAdded||overlay&&isSelected)){
@@ -339,13 +340,15 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     $('siren-delete-group').disabled=!group;
     $('siren-undo').disabled=!history[mode].length;
     $('siren-group-label').textContent=group?'第'+(groupIndex+1)+'组 · '+group.items.length+'/6':'请先载入图片并自动匹配';
-    $('siren-items').replaceChildren();
-    if(group)entries.forEach((e,n)=>{
-      const selected=e.item.id===itemId,b=button((e.at===null?'未定位':n+1)+' '+(e.item.letter||'?')+(e.item.manualAdded?' · 人工':'')+(e.item.positionLocked?' · 锁定':''),()=>{selectItem(e.item.id);renderFields();linkItem();draw();setPrecisionOpen(true,{focus:true,origin:'items'});},selected);
-      b.setAttribute('aria-haspopup','dialog');b.setAttribute('aria-controls','siren-precision-panel');b.setAttribute('aria-expanded',String(selected&&!$('siren-precision-panel').hidden));
-      if(e.item.manualAdded)b.className='siren-manual-item';$('siren-items').append(b);
-    });
-    renderKeyboardAngle();renderMatch();renderOverlap();renderPending();renderSource();renderViewport();
+    if(!drag?.saved){
+      $('siren-items').replaceChildren();
+      if(group)entries.forEach((e,n)=>{
+        const selected=e.item.id===itemId,b=button((e.at===null?'未定位':n+1)+' '+(e.item.letter||'?')+(e.item.manualAdded?' · 人工':'')+(e.item.positionLocked?' · 锁定':''),()=>{selectItem(e.item.id);renderFields();linkItem();draw();setPrecisionOpen(true,{focus:true,origin:'items'});},selected);
+        b.setAttribute('aria-haspopup','dialog');b.setAttribute('aria-controls','siren-precision-panel');b.setAttribute('aria-expanded',String(selected&&!$('siren-precision-panel').hidden));
+        if(e.item.manualAdded)b.className='siren-manual-item';$('siren-items').append(b);
+      });
+    }
+    renderKeyboardAngle();renderMatch();renderOverlap();if(!drag?.saved){renderPending();renderSource();}renderViewport();
   }
   function renderMatch(){
     const token=item();$('siren-match-review').hidden=!token;
@@ -458,7 +461,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     if(contactGesture?.id===event.pointerId){
       const gesture=contactGesture;contactGesture=null;$('siren-contact-lens').hidden=true;
       if(event.type!=='pointerup'||!contactMode||g()!==gesture.group||item()!==gesture.token||item().positionLocked)return;
-      const p=Number.isFinite(event.clientX)&&Number.isFinite(event.clientY)?point(event,stage):gesture.point,match=geometry.project(geometry.basePoints(g()),p);
+      const p=Number.isFinite(event.clientX)&&Number.isFinite(event.clientY)?point(event,stage):gesture.point,match=geometry.project(analysis(g())?.points||geometry.basePoints(g()),p);
       if(!match||match.distance>12){note('标记离参考路径过远，尚未保存；请先对齐路径或重新标记。');return;}
       remember();item().contact={x:p.x,y:p.y};contactMode=false;changed();note('已记录人工首交点，并重新计算语序；可撤销。');return;
     }
@@ -555,7 +558,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   // Pending order follows the current document and geometric reading order only.
   function reviewEntries(){
     return docs.review.groups.flatMap((group,index)=>{
-      const entries=C.ordered(group,geometry?.analyze(group,true)),ties=new Set(),placed=entries.filter(e=>e.at!==null);
+      const entries=C.ordered(group,typeof analysis==='function'?analysis(group):geometry?.analyze(group,true)),ties=new Set(),placed=entries.filter(e=>e.at!==null);
       for(let i=1;i<placed.length;i++)if(placed[i].at-placed[i-1].at<1){ties.add(placed[i].item.id);ties.add(placed[i-1].item.id);}
       return entries.map(e=>({group,index,item:e.item,reasons:[!e.item.letter?'字母待确认':null,e.at===null?'未定位':null,ties.has(e.item.id)?'交点同序待确认':null,e.orderSensitive?'读序敏感':null].filter(Boolean)}));
     });
@@ -608,7 +611,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   async function loadSourceFile(file,{strict=false}={}){
     if(!file||!ready||loadingImport)return;setPrecisionOpen(false);cancelScan();clearMissing();reviewFocus=null;const ticket=++sourceTicket;sourceLoading=true;scanControls();let url;
     try{
-      if(file.size>16*1024*1024||!/^image\/(png|jpeg|webp)$/.test(file.type))throw Error('请选择16MB以内的 PNG / JPG / WebP 图片。');
+      if(file.size>16*1024*1024||!(/^image\/(png|jpeg|webp)$/.test(file.type)||!file.type&&/\.(png|jpe?g|webp)$/i.test(file.name||'')))throw Error('请选择16MB以内的 PNG / JPG / WebP 图片。');
       url=URL.createObjectURL(file);const img=await image(url);if(ticket!==sourceTicket)return;
       if(img.width*img.height>24000000||img.width>12000||img.height>12000)throw Error('图片尺寸过大，请先裁小到2400万像素以内。');
       source=img;sourceExpanded=false;sourceRegions.clear();sourcePaintKey=null;renderSource();scanControls();$('siren-scan-status').textContent='图片已载入，点击“开始识别”。已有解读组保留。';note('图片仅在本机处理。');return true;
@@ -882,7 +885,10 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   $('siren-auto-scan').addEventListener('click',()=>runScan('detect'));
   $('siren-fit-group').addEventListener('click',()=>runScan('fit'));
   $('siren-scan-cancel').addEventListener('click',()=>{const wasMissing=!!missing?.running;cancelScan({keepPreview:true});if(wasMissing)$('siren-missing-status').textContent='已取消补扫，原有解读未改变。';$('siren-scan-status').textContent='已取消，原有解读未改变。'+(scanPreview?.entries.size?'可保留已完成组，或放弃预览。':'');});
-  async function copy(el){try{await navigator.clipboard.writeText(el.value);note('已复制。');}catch(_){el.focus();el.select();note(document.execCommand('copy')?'已复制。':'请手动复制已选中的文本。');}}
+  async function copy(el){
+    if(globalThis.BabelianHost?.copyText){note(await globalThis.BabelianHost.copyText(el.value,el)?'已复制。':'请手动复制已选中的文本。');return;}
+    try{await navigator.clipboard.writeText(el.value);note('已复制。');}catch(_){el.focus();el.select();note(document.execCommand('copy')?'已复制。':'请手动复制已选中的文本。');}
+  }
   $('siren-copy-raw').addEventListener('click',()=>copy($('siren-raw')));
   $('siren-format').addEventListener('click',()=>{if(draft().state()?.dirty&&!confirm('重新生成会替换手动修改的分词与标点。继续？'))return;clearLocation();draft().generate(payload(),formatOptions());$('siren-formatted').value=draft().state().value;translation.invalidate();renderFormatted();draw();});
   $('siren-formatted').addEventListener('input',()=>{clearLocation();if(!draft().state())draft().generate(payload(),formatOptions());draft().edit($('siren-formatted').value);renderFormatted();draw();});
@@ -924,11 +930,11 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   const loaded=Promise.all([['base',assets.base],...Object.entries(assets.letters)].map(async([key,a])=>[key,await image(a.src)]))
     .then(entries=>{images=Object.fromEntries(entries);const masks={};templates={base:null,letters:{},path};for(const [letter,asset] of [['base',assets.base],...Object.entries(assets.letters)]){
       const canvas=document.createElement('canvas');canvas.width=asset.width;canvas.height=asset.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(images[letter],0,0);const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data,alpha=new Uint8Array(canvas.width*canvas.height);for(let i=0;i<alpha.length;i++)alpha[i]=rgba[i*4+3];masks[letter]={width:canvas.width,height:canvas.height,alpha};
-      const template={width:asset.width,height:asset.height,pivotX:asset.pivotX,pivotY:asset.pivotY,data:rgba};if(letter==='base')templates.base=template;else templates.letters[letter]=template;
+      const template={width:asset.width,height:asset.height,pivotX:asset.pivotX,pivotY:asset.pivotY,alpha};if(letter==='base')templates.base=template;else templates.letters[letter]=template;
     }geometry=SirenIntersections.prepare({base:assets.base,letters:assets.letters,path,masks});ready=true;$('siren-tools').disabled=false;
       for(const letter of 'ABCDEFGHIJKLMZYXWVUTSRQPON'){
         const b=button('',()=>pick(letter)),img=document.createElement('img');img.src=assets.letters[letter].src;img.alt='';keyboardImages.push(img);const label=document.createElement('span');label.textContent=letter;b.append(img,label);b.title='塞壬字母 '+letter;b.setAttribute('aria-label','塞壬字母 '+letter);$('siren-keyboard').append(b);
       }render();note('');
     }).catch(e=>note('塞壬语素材加载失败：'+e.message+' 请检查模块素材是否完整。'));
-  return {setMode:switchMode,refresh:()=>{if(ready)render();},pause:()=>{stopDemo(true);setPrecisionOpen(false);cancelScan();clearMissing();sourceTicket++;sourceLoading=false;translation.cancel();drag=null;contactMode=false;showKeyboard(false);if(ready)changed();},ready:loaded,snapshot:()=>JSON.parse(JSON.stringify(doc()))};
+  return {setMode:switchMode,refresh:()=>{if(ready)render();},pause:()=>{const active=!$('panel-siren').hidden||!!drag||contactMode||!!deep||!!missing||!!scanPreview||scanBusy||located.length>0;stopDemo(true);setPrecisionOpen(false);cancelScan();clearMissing();sourceTicket++;sourceLoading=false;translation.cancel();drag=null;contactMode=false;showKeyboard(false);if(ready&&active)changed();},ready:loaded,snapshot:()=>JSON.parse(JSON.stringify(doc()))};
 }};

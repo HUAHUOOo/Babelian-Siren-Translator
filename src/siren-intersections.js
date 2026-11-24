@@ -5,18 +5,21 @@
   const rad=angle=>angle*Math.PI/180;
   function prepare({base,letters,path,masks}){
     if(!path?.points?.length||!masks)throw Error('缺少螺旋路径或字形墨迹。');
-    const cache=new WeakMap(),candidateCache=new Map();
+    const cache=new WeakMap(),candidateCache=new Map(),baseCache=new Map();
     function basePoints(group){
-      const size=group.baseSize??500,rotation=rad(group.baseRotation??0),c=Math.cos(rotation),s=Math.sin(rotation),scale=size/base.width;
+      const size=group.baseSize??500,rot=group.baseRotation??0,key=group.cx+'|'+group.cy+'|'+size+'|'+rot;
+      if(baseCache.has(key))return baseCache.get(key);
+      const rotation=rad(rot),c=Math.cos(rotation),s=Math.sin(rotation),scale=size/base.width,bpx=base.width*base.pivotX,bpy=base.height*base.pivotY;
       const pts=[];let distance=0;
       for(let i=0;i<path.points.length;i++){
-        const raw=path.points[i],x=(raw[0]-base.width*base.pivotX)*scale,y=(raw[1]-base.height*base.pivotY)*scale;
+        const raw=path.points[i],x=(raw[0]-bpx)*scale,y=(raw[1]-bpy)*scale;
         const p={x:group.cx+x*c-y*s,y:group.cy+x*s+y*c};
         if(!pts.length){pts.push({...p,at:0});continue;}
         const prev=pts.at(-1),length=Math.hypot(p.x-prev.x,p.y-prev.y),steps=Math.max(1,Math.ceil(length/.5));
         for(let j=1;j<=steps;j++)pts.push({x:prev.x+(p.x-prev.x)*j/steps,y:prev.y+(p.y-prev.y)*j/steps,at:distance+length*j/steps});
         distance+=length;
       }
+      baseCache.set(key,pts);if(baseCache.size>16)baseCache.delete(baseCache.keys().next().value);
       return pts;
     }
     function sampleMask(mask,x,y){
@@ -27,10 +30,11 @@
     function crossings(points,item){
       const glyph=letters[item.letter],mask=masks[item.letter];if(!glyph||!mask)return [];
       const angle=rad(item.rotation),c=Math.cos(angle),s=Math.sin(angle),scale=glyph.width/item.size,half=item.size*Math.SQRT2;
+      const gpx=glyph.width*glyph.pivotX,gpy=glyph.height*glyph.pivotY;
       const hits=[];let run=null;
       for(const p of points){
         const dx=p.x-item.x,dy=p.y-item.y;
-        const ink=Math.abs(dx)<=half&&Math.abs(dy)<=half&&sampleMask(mask,(dx*c+dy*s)*scale+glyph.width*glyph.pivotX,(-dx*s+dy*c)*scale+glyph.height*glyph.pivotY)>=128;
+        const ink=Math.abs(dx)<=half&&Math.abs(dy)<=half&&sampleMask(mask,(dx*c+dy*s)*scale+gpx,(-dx*s+dy*c)*scale+gpy)>=128;
         if(ink){if(!run)run={first:p,last:p};else run.last=p;}
         else if(run){hits.push({x:run.first.x,y:run.first.y,at:run.first.at,end:run.last.at});run=null;}
       }
@@ -46,6 +50,7 @@
       if(!baseMask?.alpha||!glyph||!mask)return null;
       const size=group.baseSize??500,radius=size*.006,minSpan=Math.max(.5,size*.004),angle=rad(item.rotation),c=Math.cos(angle),s=Math.sin(angle),scale=glyph.width/item.size;
       const baseAngle=rad(group.baseRotation??0),bc=Math.cos(baseAngle),bs=Math.sin(baseAngle),baseScale=base.width/size;
+      const bpx=base.width*base.pivotX,bpy=base.height*base.pivotY,gpx=glyph.width*glyph.pivotX,gpy=glyph.height*glyph.pivotY;
       // Only a narrow normal section of the actual base ink is admissible:
       // this is not an inflated letter box or an unconditional proximity hit.
       const offsets=[0,-.25,.25,-.5,.5,-.75,.75,-1,1];let lo=0,hi=0,run=null;
@@ -57,9 +62,9 @@
         const dx=points[hi].x-points[lo].x,dy=points[hi].y-points[lo].y,length=Math.hypot(dx,dy);let contact=null;
         if(length>1e-9)for(const offset of offsets){
           const x=p.x-dy/length*radius*offset,y=p.y+dx/length*radius*offset,bx=x-group.cx,by=y-group.cy;
-          if(sampleMask(baseMask,(bx*bc+by*bs)*baseScale+base.width*base.pivotX,(-bx*bs+by*bc)*baseScale+base.height*base.pivotY)<128)continue;
+          if(sampleMask(baseMask,(bx*bc+by*bs)*baseScale+bpx,(-bx*bs+by*bc)*baseScale+bpy)<128)continue;
           const gx=x-item.x,gy=y-item.y;
-          if(sampleMask(mask,(gx*c+gy*s)*scale+glyph.width*glyph.pivotX,(-gx*s+gy*c)*scale+glyph.height*glyph.pivotY)>=128){contact={x,y,at:p.at};break;}
+          if(sampleMask(mask,(gx*c+gy*s)*scale+gpx,(-gx*s+gy*c)*scale+gpy)>=128){contact={x,y,at:p.at};break;}
         }
         if(contact){if(!run)run={...contact,end:p.at,count:1,method:'stroke-width'};else{run.end=p.at;run.count++;}}
         else if(run){if(valid())return run;run=null;}

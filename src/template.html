@@ -176,15 +176,16 @@
     .conflict-option small { font-size:12px; line-height:1.7; overflow-wrap:anywhere; max-width:100%; }
     .conflict-option strong { font-size:13px; color:#37552b; }
     #conflict-cancel { display:block; margin:20px 0 0 auto; }
-    @media(max-width:900px) { .mapping-layout { grid-template-columns:1fr; } .profile-slots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); } }
-    @media(max-width:600px) { .mapping-card { padding:16px; } .mapping-layout { gap:14px; } .workspace-tab { font-size:12px; padding:9px 11px; } #active-map-label { width:100%; margin:5px 0 0; } .glyph-catalog { grid-template-columns:repeat(6,minmax(0,1fr)); } .part-stepper { gap:2px; } .part-stepper input { width:30px; } .part-stepper button { width:23px; } .profile-slots { display:flex; } .candidate-stage { gap:8px; } }
-    #status { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(12px); opacity:0; pointer-events:none; background:#243d35; color:#fffdf7; padding:12px 20px; border-radius:8px; font-size:13px; transition:opacity .15s,transform .15s; max-width:calc(100% - 32px); text-align:center; box-shadow:0 6px 25px #193d3026; z-index:5; }
-    #status.show { opacity:1; transform:translateX(-50%) translateY(0); }
-    @media (max-width:900px) {
+    @media(max-width:900px) {
+      .mapping-layout { grid-template-columns:1fr; }
+      .profile-slots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); }
       .masthead-inner { padding-inline:24px; }
       main { padding:28px 24px 24px; }
     }
+    #status { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(12px); opacity:0; pointer-events:none; background:#243d35; color:#fffdf7; padding:12px 20px; border-radius:8px; font-size:13px; transition:opacity .15s,transform .15s; max-width:calc(100% - 32px); text-align:center; box-shadow:0 6px 25px #193d3026; z-index:5; }
+    #status.show { opacity:1; transform:translateX(-50%) translateY(0); }
     @media (max-width:600px) {
+      .mapping-card { padding:16px; } .mapping-layout { gap:14px; } .workspace-tab { font-size:12px; padding:9px 11px; } #active-map-label { width:100%; margin:5px 0 0; } .glyph-catalog { grid-template-columns:repeat(6,minmax(0,1fr)); } .part-stepper { gap:2px; } .part-stepper input { width:30px; } .part-stepper button { width:23px; } .profile-slots { display:flex; } .candidate-stage { gap:8px; }
       :root { --glyph-height:34px; }
       .masthead-inner { padding:16px 18px; }
       .brand-name { font-size:13px; }
@@ -456,8 +457,9 @@
   function render() {
     output.replaceChildren();
     let count = 0;
+    const lines = glyphLines();
     const fragment = document.createDocumentFragment();
-    for (const line of glyphLines()) {
+    for (const line of lines) {
       const row = document.createElement('div');
       row.className = 'cipher-line';
       for (const token of line) {
@@ -486,7 +488,7 @@
     $('copy').disabled = !currentText;
     $('clear').disabled = !currentText;
     $('download').disabled = count === 0;
-    $('download-svg').disabled = count === 0||!visuals.canExport(glyphLines());
+    $('download-svg').disabled = count === 0||!visuals.canExport(lines);
     resizeEnglish();
     save();
   }
@@ -637,18 +639,10 @@
   $('undo').addEventListener('click', () => undo());
   $('clear').addEventListener('click', () => { applyText('',0); notify('已清空，可点“撤销”恢复。'); });
   $('copy').addEventListener('click', async () => {
-    const text = currentText;
-    try {
-      if (!navigator.clipboard?.writeText) throw new Error('fallback');
-      await navigator.clipboard.writeText(text);
-      notify('已复制英文。');
-    } catch (_) {
-      const backup = {...selection};
-      input.focus(); input.select();
-      const copied = document.execCommand('copy');
-      input.setSelectionRange(backup.start, backup.end); selection = backup;
-      notify(copied ? '已复制英文。' : '请在英文框中全选并复制。');
-    }
+    const backup = {...selection};
+    const copied = await BabelianHost.copyText(currentText, input);
+    selection = backup;
+    notify(copied ? '已复制英文。' : '请在英文框中全选并复制。');
   });
   document.addEventListener('keydown', event => {
     if($('language-babelian').hidden||$('babelian-writer').hidden)return;
@@ -755,7 +749,9 @@
   input.setSelectionRange(selection.start,selection.end);
   makeKeyboard(); render();
   __MAPPING_EDITOR_JS__
-  const sharedFormatter=BabelianTextFormat.create(BABELIAN_ENGLISH_WORDS);
+  let _sharedFormatter=null;
+  const getFormatter=()=>_sharedFormatter||(_sharedFormatter=BabelianTextFormat.create(BABELIAN_ENGLISH_WORDS));
+  const sharedFormatter={split:(...args)=>getFormatter().split(...args),suggest:(...args)=>getFormatter().suggest(...args)};
   window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,textFormatter:sharedFormatter,notify});
   window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,displayGlyphs:DISPLAY_GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,textFormatter:sharedFormatter,getMapping:()=>mappingApi.snapshot().workingMap,
     editMapping:glyph=>{switchTool('mapping');selectGlyph(glyph);$('mapping-value').focus();},

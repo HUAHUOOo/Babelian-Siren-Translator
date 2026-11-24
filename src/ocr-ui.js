@@ -39,14 +39,32 @@ globalThis.BabelianOCRUI={
   mount({glyphs,displayGlyphs=glyphs,wordData,textFormatter,getMapping,editMapping,append,notify}){
   const $=id=>document.getElementById(id),OCR=BabelianOCR,Work=BabelianOCRWork,ids=Object.keys(glyphs);
   const panel=$('panel-decode'),preview=$('ocr-preview'),ctx=preview.getContext('2d');
-  let source=null,crop=null,result=null,resultImage=null,selected=null,drag=null,rebox=null;
-  let templatesPromise=null,templates=null,prepared=null,worker=null,job=0,loading=0,busy=false;
-  let deepSuggestion=null,splitToken=null,reviewContext=null;
+  let source=null,crop=null,result=null,resultImage=null,resultCanvas=null,selected=null,drag=null,rebox=null;
+  let templatesPromise=null,templates=null,prepared=null,worker=null,workerReady=false,job=0,loading=0,busy=false;
+  let deepSuggestion=null,splitToken=null,reviewContext=null,tokensRenderKey='',choiceMapKey='';
   let located=[],locationArea=null;
   const formatter=textFormatter||BabelianTextFormat.create(wordData),formattedDraft=BabelianTextFormat.createDraft(formatter);
   const translation=BabelianTranslation.createSession(BabelianTranslation.createClient(),renderTranslation);
-  const label=id=>'G'+String(ids.indexOf(id)+1).padStart(2,'0');
+  const labelMap=new Map(ids.map((id,i)=>[id,'G'+String(i+1).padStart(2,'0')]));
+  const label=id=>labelMap.get(id)||'G00';
   const mapping=()=>getMapping();
+  function resultSignature(map,pendingOnly,joinLines){
+    let sig=pendingOnly+'|'+joinLines+'|';
+    for(const id of ids)sig+=map[id]+'\0';
+    for(const line of result.lines){
+      sig+='\n';
+      for(const t of line.tokens)sig+=(t.id||'')+','+(t.candidates?.[0]?.id||'')+','+(t.manual?1:0)+(t.certain?2:0)+','+t.box.x+','+t.box.width+';';
+    }
+    return sig;
+  }
+  function getResultCanvas(){
+    if(!resultImage)return null;
+    if(!resultCanvas||resultCanvas.width!==resultImage.width||resultCanvas.height!==resultImage.height){
+      resultCanvas=document.createElement('canvas');resultCanvas.width=resultImage.width;resultCanvas.height=resultImage.height;
+      resultCanvas.getContext('2d').putImageData(resultImage,0,0);
+    }
+    return resultCanvas;
+  }
   // Preserve the previous automatic defaults without exposing tuning controls.
   const options=()=>({polarity:'auto',threshold:null,oneLine:false,detail:true});
   const recognitionOptions=()=>({...options(),...(globalThis.BabelianVectorTemplateProfile?{vectorProfile:globalThis.BabelianVectorTemplateProfile}:{})});
@@ -60,9 +78,9 @@ globalThis.BabelianOCRUI={
   function message(text){$('ocr-status').textContent=text;renderEntry();}
   function imageElement(id){const img=document.createElement('img');img.src=displayGlyphs[id].src;img.alt=label(id);return img;}
   function setBusy(value){busy=value;$('ocr-run').disabled=value||!source;$('ocr-cancel').hidden=!value;$('ocr-controls').disabled=value;$('ocr-deep').disabled=value;panel.setAttribute('aria-busy',String(value));syncReviewControls();renderEntry();}
-  function cancel(){job++;if(worker){worker.terminate();worker=null;}setBusy(false);}
+  function cancel(){job++;if(worker){worker.terminate();worker=null;workerReady=false;}setBusy(false);}
   function clearResult(){
-    clearLocation();
+    clearLocation();tokensRenderKey='';resultCanvas=null;
     formattedDraft.clear();$('ocr-formatted').value='';$('ocr-format-status').textContent='';
     translation.invalidate('识别结果已清除，请重新整理后翻译。');endRebox();
     result=null;resultImage=null;selected=null;deepSuggestion=null;$('ocr-deep-candidates').replaceChildren();$('ocr-deep-status').textContent='';$('ocr-results').hidden=true;$('ocr-review').hidden=true;$('ocr-inspection').hidden=true;
@@ -222,21 +240,22 @@ globalThis.BabelianOCRUI={
     clearResult();setBusy(true);const version=++job;message('正在准备字形模板…');
     try{
       await loadTemplates();if(version!==job)return;
-      resultImage=source.getContext('2d').getImageData(crop.x,crop.y,crop.width,crop.height);
+      resultImage=source.getContext('2d').getImageData(crop.x,crop.y,crop.width,crop.height);resultCanvas=null;
       let answer;
       // Blob workers support the offline single-file build. If unavailable, keep
       // the same engine and yield between lines; never send pixels to a service.
-      if(typeof Worker!=='undefined'){
+      if(!worker&&typeof Worker!=='undefined'){
         let url;
-        try{url=URL.createObjectURL(new Blob([OCR.workerSource()],{type:'text/javascript'}));worker=new Worker(url);}catch(_){worker=null;}finally{if(url)URL.revokeObjectURL(url);}
+        try{url=URL.createObjectURL(new Blob([OCR.workerSource()],{type:'text/javascript'}));worker=new Worker(url);workerReady=false;}catch(_){worker=null;workerReady=false;}finally{if(url)URL.revokeObjectURL(url);}
       }
       if(worker){
         try{answer=await new Promise((resolve,reject)=>{
           worker.onmessage=e=>{if(version!==job)return;if(e.data.progress)progress(e.data.progress);else if(e.data.error)reject(Error(e.data.error));else resolve(e.data.result);};
           worker.onerror=()=>reject(Error('本地识别进程无法启动。'));
-          worker.postMessage({image:resultImage,templates,options:recognitionOptions()});
+          if(workerReady)worker.postMessage({image:resultImage,options:options()});
+          else{worker.postMessage({image:resultImage,templates,options:recognitionOptions()});workerReady=true;}
         });}catch(e){
-          if(version!==job)return;worker?.terminate();worker=null;message('正在使用兼容模式识别…');
+          if(version!==job)return;worker?.terminate();worker=null;workerReady=false;message('正在使用兼容模式识别…');
           answer=await OCR.recognize(resultImage,templates,{...recognitionOptions(),cancelled:()=>version!==job},p=>{if(version===job)progress(p);});
         }
       }else answer=await OCR.recognize(resultImage,templates,{...recognitionOptions(),cancelled:()=>version!==job},p=>{if(version===job)progress(p);});
@@ -244,7 +263,7 @@ globalThis.BabelianOCRUI={
       if(!result.lines.length)message('未找到有效字形行。请检查框选范围及图片清晰度。');
       else message(`识别完成，共 ${result.lines.length} 行。${result.polarity==='dark'?'深字浅底':'浅字深底'}，阈值 ${result.threshold}。请复核橙色项目及分割边界。`);
     }catch(e){if(version===job){message('识别失败：'+e.message);clearResult();}}
-    finally{if(version===job){worker?.terminate();worker=null;setBusy(false);if(result?.lines.length)$('ocr-results').scrollIntoView({block:'start'});}}
+    finally{if(version===job){setBusy(false);if(result?.lines.length)$('ocr-results').scrollIntoView({block:'start'});}}
   }
   $('ocr-run').addEventListener('click',recognize);
   $('ocr-cancel').addEventListener('click',()=>{loading++;cancel();message('已取消。可以调整框选后重新识别。');});
@@ -252,12 +271,21 @@ globalThis.BabelianOCRUI={
     renderEntry();
     if(!result)return;
     clearLocation();
-    const map=mapping(),list=$('ocr-tokens'),scroll=list.scrollTop;list.replaceChildren();let unknown=0,total=0,noCandidate=0;
+    const map=mapping(),list=$('ocr-tokens'),pendingOnly=$('ocr-pending-only').checked,joinLines=$('ocr-join').checked;
+    const renderKey=resultSignature(map,pendingOnly,joinLines);
+    if(tokensRenderKey===renderKey){
+      list.querySelectorAll('[aria-pressed="true"]').forEach(b=>b.setAttribute('aria-pressed','false'));
+      if(selected)list.querySelector(`[data-line="${selected.line}"][data-token="${selected.token}"]`)?.setAttribute('aria-pressed','true');
+      syncReviewControls();if(selected)renderReview();else setEditorVisible(false);
+      return;
+    }
+    tokensRenderKey=renderKey;
+    const scroll=list.scrollTop;list.replaceChildren();let unknown=0,total=0,noCandidate=0;
     result.lines.forEach((line,li)=>{
       const row=document.createElement('div');row.className='ocr-token-line';const title=document.createElement('span');title.className='ocr-row-label';title.textContent=`第 ${li+1} 行`;row.append(title);
       line.tokens.forEach((token,ti)=>{
         total++;const id=OCR.tokenGlyph(token),accepted=token.id&&(token.manual||token.certain),reading=OCR.tokenReading(token,map);if(!accepted)unknown++;if(!id)noCandidate++;
-        if($('ocr-pending-only').checked&&accepted)return;
+        if(pendingOnly&&accepted)return;
         const b=document.createElement('button');b.type='button';b.className='ocr-token';b.dataset.line=li;b.dataset.token=ti;b.classList.toggle('uncertain',!accepted);b.classList.toggle('unmapped',!!accepted&&!map[id]);b.setAttribute('aria-pressed',String(selected?.line===li&&selected?.token===ti));
         const top=document.createElement('span');top.textContent=`${ti+1} · ${id?label(id):'未知'}`;
         if(id)b.append(imageElement(id));
@@ -271,7 +299,7 @@ globalThis.BabelianOCRUI={
     $('ocr-output-note').textContent=unknown?`${unknown} 项尚待确认，已有候选先按当前映射输出${noCandidate?`；${noCandidate} 项无候选，显示 [?]`:''}。需要时展开逐字复核。`:'已按当前映射输出。需要校正时，可展开逐字复核。';
     refreshFormatted();
     list.scrollTop=scroll;
-    $('ocr-filter-empty').hidden=!$('ocr-pending-only').checked||unknown>0||list.hidden;
+    $('ocr-filter-empty').hidden=!pendingOnly||unknown>0||list.hidden;
     syncReviewControls();if(selected)renderReview();else setEditorVisible(false);
   }
   function focusSelected(){
@@ -413,7 +441,7 @@ globalThis.BabelianOCRUI={
     }
     $('ocr-review-title').textContent=`复核第 ${selected.line+1} 行 · 第 ${selected.token+1} 项`;
     const b=token.box,canvas=$('ocr-piece');canvas.width=b.width;canvas.height=b.height;
-    const tmp=document.createElement('canvas');tmp.width=resultImage.width;tmp.height=resultImage.height;tmp.getContext('2d').putImageData(resultImage,0,0);
+    const tmp=getResultCanvas();
     canvas.getContext('2d').drawImage(tmp,b.x,b.y,b.width,b.height,0,0,b.width,b.height);
     const pieceContext=canvas.getContext('2d');pieceContext.fillStyle=result.polarity==='light'?'#232323':'#f4f4f4';
     for(const excluded of token.excludedBoxes||[])pieceContext.fillRect(excluded.x-b.x,excluded.y-b.y,excluded.width,excluded.height);
@@ -429,8 +457,11 @@ globalThis.BabelianOCRUI={
       const caption=document.createElement('span');caption.textContent=`${label(candidate.id)} · ${map[candidate.id]||'未映射'} · ${Math.round(candidate.score*100)} 分`;button.append(caption);
       button.addEventListener('click',()=>{$('ocr-choice').value=candidate.id;showChoice();});list.append(button);
     }
-    $('ocr-choice').replaceChildren();
-    for(const id of ids){const option=document.createElement('option');option.value=id;option.textContent=`${label(id)} · ${map[id]||'未映射'}`;$('ocr-choice').append(option);}
+    const mapKey=JSON.stringify(map);
+    if(choiceMapKey!==mapKey){
+      choiceMapKey=mapKey;$('ocr-choice').replaceChildren();
+      for(const id of ids){const option=document.createElement('option');option.value=id;option.textContent=`${label(id)} · ${map[id]||'未映射'}`;$('ocr-choice').append(option);}
+    }
     $('ocr-choice').value=OCR.tokenGlyph(token)||ids[0];showChoice();
     syncReviewControls();
   }
@@ -458,8 +489,7 @@ globalThis.BabelianOCRUI={
   $('ocr-unknown').addEventListener('click',()=>{const t=active();if(!t||busy||rebox)return;endRebox();t.manual=false;t.certain=false;renderResults();draw();});
   $('ocr-edit-map').addEventListener('click',()=>{endRebox();if(active())editMapping($('ocr-choice').value);});
   function imageMask(excludedBoxes=[]){return BabelianOCRCorrection.exclude(OCR.binarize(resultImage,{threshold:result.threshold,polarity:result.polarity}),excludedBoxes);}
-  function classify(box,excludedBoxes=BabelianOCRCorrection.exclusionsFor([active()]),preserveBox=false){
-    const mask=imageMask(excludedBoxes);
+  function classify(box,excludedBoxes=BabelianOCRCorrection.exclusionsFor([active()]),preserveBox=false,mask=imageMask(excludedBoxes)){
     const tight=OCR.bounds(mask,box.x,box.y,box.x+box.width,box.y+box.height)||box;
     const candidates=OCR.matchDescriptor(OCR.describe(mask,tight),prepared);
     return {box:preserveBox?{...box}:tight,candidates,id:candidates[0]?.id||null,score:candidates[0]?.score||0,certain:false,manual:false,excludedBoxes};
@@ -469,9 +499,10 @@ globalThis.BabelianOCRUI={
     if(result.lines.reduce((n,row)=>n+row.tokens.length,0)>=1500){message('分割项已达1500项，请分段识别。');return;}
     try{
       const boxes=BabelianOCRCorrection.splitBoxes(t.box,Number($('ocr-split-at').value));
+      const excluded=BabelianOCRCorrection.exclusionsFor([t]),mask=imageMask(excluded);
       // Classify both sides before mutating. Failed matching must leave the
       // original result and selection intact.
-      const parts=boxes.map(box=>classify(box,BabelianOCRCorrection.exclusionsFor([t]),true));
+      const parts=boxes.map(box=>classify(box,excluded,true,mask));
       result.lines[selected.line].tokens.splice(selected.token,1,...parts);resetSplitPreview();renderResults();draw();message('已拆成两个分割项，请分别确认候选。');
     }catch(error){message('未应用拆分：'+error.message);}
   });
@@ -495,7 +526,7 @@ globalThis.BabelianOCRUI={
       const boxes=located.map(p=>result.lines[p.line].tokens[p.token].box),pad=8;
       const x=Math.max(0,Math.min(...boxes.map(b=>b.x))-pad),y=Math.max(0,Math.min(...boxes.map(b=>b.y))-pad);
       locationArea={x,y,width:Math.min(resultImage.width,Math.max(...boxes.map(b=>b.x+b.width))+pad)-x,height:Math.min(resultImage.height,Math.max(...boxes.map(b=>b.y+b.height))+pad)-y};
-      const cv=$('ocr-location-preview'),tmp=document.createElement('canvas');tmp.width=resultImage.width;tmp.height=resultImage.height;tmp.getContext('2d').putImageData(resultImage,0,0);
+      const cv=$('ocr-location-preview'),tmp=getResultCanvas();
       cv.width=locationArea.width;cv.height=locationArea.height;const c=cv.getContext('2d');c.drawImage(tmp,x,y,cv.width,cv.height,0,0,cv.width,cv.height);c.strokeStyle='#1768dc';c.lineWidth=Math.max(1,cv.width/600*2);
       for(const b of boxes)c.strokeRect(b.x-x,b.y-y,b.width,b.height);
       $('ocr-location-status').textContent=`对应 ${located.length} 个字形 · 第 ${[...new Set(located.map(p=>p.line+1))].join('、')} 行。点击蓝框或“复核此处”才打开复核。`;
@@ -543,11 +574,15 @@ globalThis.BabelianOCRUI={
     refreshFormatted(true);
   });
   $('ocr-formatted').addEventListener('input',()=>{clearLocation();draw();renderFormattedState(formattedDraft.edit($('ocr-formatted').value));});
+  async function copyField(field,text,okMessage,fallbackMessage){
+    if(globalThis.BabelianHost?.copyText){notify(await globalThis.BabelianHost.copyText(text,field)?okMessage:fallbackMessage);return;}
+    try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(text);notify(okMessage);}
+    catch(_){field.focus();field.select();notify(document.execCommand('copy')?okMessage:fallbackMessage);}
+  }
   $('ocr-formatted-copy').addEventListener('click',async()=>{
     try{
       const payload=formattedDraft.payload();
-      try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(payload.text);notify('已复制自动整理建议。');}
-      catch(_){$('ocr-formatted').focus();$('ocr-formatted').select();notify(document.execCommand('copy')?'已复制整理文本。':'请全选并复制整理文本。');}
+      await copyField($('ocr-formatted'),payload.text,'已复制自动整理建议。','请全选并复制整理文本。');
     }catch(e){notify(e.message);}
   });
   $('ocr-formatted-append').addEventListener('click',()=>{try{append(formattedDraft.payload());}catch(e){notify(e.message);}});
@@ -583,16 +618,15 @@ globalThis.BabelianOCRUI={
   $('ocr-translate-copy').addEventListener('click',async()=>{
     syncTranslation();if(translation.state().status!=='done')return;
     const field=$('ocr-translation');
-    try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(field.value);notify('已复制中文译文。');}
-    catch(_){field.focus();field.select();notify(document.execCommand('copy')?'已复制中文译文。':'请全选并复制中文译文。');}
+    await copyField(field,field.value,'已复制中文译文。','请全选并复制中文译文。');
   });
   $('ocr-copy').addEventListener('click',async()=>{
-    const field=$('ocr-output');try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(field.value);notify('已复制识别英文，包含待确认候选。');}
-    catch(_){field.focus();field.select();notify(document.execCommand('copy')?'已复制识别英文。':'请在结果框中全选并复制。');}
+    const field=$('ocr-output');
+    await copyField(field,field.value,'已复制识别英文，包含待确认候选。','请在结果框中全选并复制。');
   });
   $('ocr-append').addEventListener('click',()=>{if(result)append(OCR.toWriter(result,mapping(),outputOptions()));});
   window.addEventListener('babelian-mapping-change',renderResults);
   window.addEventListener('resize',()=>{draw();drawReviewContext();});
   renderEntry();
-  return {refresh:()=>{renderResults();draw();},pause:()=>{loading++;cancel();clearLocation();translation.cancel();},snapshot:()=>JSON.parse(JSON.stringify({crop,result,selected}))};
+  return {refresh:()=>{tokensRenderKey='';renderResults();draw();},pause:()=>{loading++;cancel();clearLocation();translation.cancel();},snapshot:()=>JSON.parse(JSON.stringify({crop,result,selected}))};
 }};

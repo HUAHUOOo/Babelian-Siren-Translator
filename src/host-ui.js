@@ -22,6 +22,20 @@
     link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),10000);
   }
+  async function copyText(text,field=null){
+    try{
+      if(!navigator.clipboard?.writeText)throw Error('fallback');
+      await navigator.clipboard.writeText(text);
+      return true;
+    }catch(_){
+      if(!field)return false;
+      const start=field.selectionStart,end=field.selectionEnd;
+      field.focus();field.select();
+      const copied=document.execCommand('copy');
+      if(typeof start==='number'&&typeof end==='number')field.setSelectionRange?.(start,end);
+      return copied;
+    }
+  }
   function connect(runtime){
     const $=id=>document.getElementById(id);
     let app=null;
@@ -76,5 +90,5 @@
       fail(error){$('host-bar').hidden=false;$('host-status').textContent=error.message;$('host-reload').hidden=false;$('host-reload').disabled=false;},
     };
   }
-  window.BabelianHost={connect,download};
+  window.BabelianHost={connect,download,copyText};
 })();

@@ -25,7 +25,8 @@
     } catch (_) {storageAvailable=false;}
   }
   function reading(glyph) {return workingMap[glyph] ?? '';}
-  function glyphLabel(glyph) {return '字形 G'+String(GLYPH_IDS.indexOf(glyph)+1).padStart(2,'0');}
+  const GLYPH_LABELS=new Map(GLYPH_IDS.map((glyph,i)=>[glyph,'字形 G'+String(i+1).padStart(2,'0')]));
+  function glyphLabel(glyph) {return GLYPH_LABELS.get(glyph)||'字形 G00';}
   // The reference chart deliberately includes both the letter A and article A.
   // This one known pair is not an arbitrary custom duplicate assignment.
   function referencePair(value,a,b){return value==='A'&&((a==='A'&&b==='a_word')||(a==='a_word'&&b==='A'));}
@@ -125,14 +126,28 @@
     if(first){const [value,glyphs]=first;openConflict(glyphs[0],value,glyphs.slice(1),false);return true;}
     return false;
   }
+  const catalogViews=new Map();let catalogMapKey='';
   function renderCatalog() {
-    const root=$('glyph-catalog');root.replaceChildren();
-    for(const glyph of Object.keys(GLYPHS)) {
-      const button=document.createElement('button');button.type='button';button.className='catalog-key';button.dataset.glyph=glyph;
-      button.setAttribute('aria-pressed',String(glyph===chosenGlyph));button.title=glyphLabel(glyph)+' → '+(workingMap[glyph]||'未设置');
-      const img=imageFor(glyph,'');img.alt='';
-      const label=document.createElement('span');label.textContent=workingMap[glyph]||'未设置';
-      button.append(img,label);button.addEventListener('click',()=>selectGlyph(glyph));root.append(button);
+    const root=$('glyph-catalog');
+    if(!catalogViews.size){
+      root.replaceChildren();
+      for(const glyph of GLYPH_IDS) {
+        const button=document.createElement('button');button.type='button';button.className='catalog-key';button.dataset.glyph=glyph;
+        const img=imageFor(glyph,'');img.alt='';
+        const label=document.createElement('span');
+        button.append(img,label);button.addEventListener('click',()=>selectGlyph(glyph));root.append(button);
+        catalogViews.set(glyph,{button,label});
+      }
+    }
+    const mapKey=JSON.stringify(workingMap),updateLabels=mapKey!==catalogMapKey;
+    catalogMapKey=mapKey;
+    for(const [glyph,view] of catalogViews) {
+      view.button.setAttribute('aria-pressed',String(glyph===chosenGlyph));
+      if(updateLabels){
+        const text=workingMap[glyph]||'未设置';
+        view.button.title=glyphLabel(glyph)+' → '+text;
+        view.label.textContent=text;
+      }
     }
   }
   function renderFinder() {

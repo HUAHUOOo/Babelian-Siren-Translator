@@ -6,19 +6,25 @@
  const rad=a=>a*Math.PI/180;
  // A locator belongs to the outer turn at its bearing, not to a bounding
  // circle. Keep the reference spiral open: never join its two endpoints.
- function createLocatorBoundary(base,path,marginRatio=0){
+ function createLocatorOuter(base,path){
   if(!path?.points?.length)throw Error('缺少大螺旋参考路径。');
-  if(!Number.isFinite(marginRatio)||marginRatio<0)throw Error('无效的边界余量。');
   const points=path.points.map(([x,y])=>[x-base.width*(base.pivotX??.5),y-base.height*(base.pivotY??.5)]);
-  return (pose,locator)=>{
-   const size=pose.baseSize??pose.size,angle=rad(pose.baseRotation??pose.rotation??0),scale=base.width/size;
-   const dx=locator.x-pose.cx,dy=locator.y-pose.cy,c=Math.cos(angle),s=Math.sin(angle);
-   const x=(dx*c+dy*s)*scale,y=(-dx*s+dy*c)*scale,r=Math.hypot(x,y);
-   if(!Number.isFinite(r)||!(size>0))return false;
-   if(r<1e-8)return true;
-   const ux=x/r,uy=y/r;let outer=-Infinity;
-   for(let i=1;i<points.length;i++){
-    const [ax,ay]=points[i-1],[bx,by]=points[i],vx=bx-ax,vy=by-ay,den=ux*vy-uy*vx;
+  // Index segments into angular bins so ray queries inspect only relevant turns
+  // while keeping exact ray-segment intersection arithmetic.
+  const BINS=360,TAU=Math.PI*2,bins=Array.from({length:BINS},()=>[]),special=[];
+  for(let i=1;i<points.length;i++){
+   const [ax,ay]=points[i-1],[bx,by]=points[i];
+   if(Math.hypot(ax,ay)<1e-5||Math.hypot(bx,by)<1e-5){special.push(i);continue;}
+   const a1=Math.atan2(ay,ax),a2=Math.atan2(by,bx);
+   let d=a2-a1;if(d>Math.PI)d-=TAU;else if(d<=-Math.PI)d+=TAU;
+   if(Math.abs(d)>2.5){special.push(i);continue;}
+   const lo=Math.min(a1,a1+d),hi=Math.max(a1,a1+d);
+   const b0=Math.floor((lo+Math.PI)/TAU*BINS)-1,b1=Math.floor((hi+Math.PI)/TAU*BINS)+1;
+   for(let b=b0;b<=b1;b++)bins[((b%BINS)+BINS)%BINS].push(i);
+  }
+  const test=(list,ux,uy,outer)=>{
+   for(let k=0;k<list.length;k++){
+    const i=list[k],[ax,ay]=points[i-1],[bx,by]=points[i],vx=bx-ax,vy=by-ay,den=ux*vy-uy*vx;
     if(Math.abs(den)<1e-10){
      if(Math.abs(ax*uy-ay*ux)<1e-8)outer=Math.max(outer,ax*ux+ay*uy,bx*ux+by*uy);
      continue;
@@ -26,8 +32,26 @@
     const t=(ax*uy-ay*ux)/den,hit=(ax*vy-ay*vx)/den;
     if(t>=-1e-9&&t<=1+1e-9&&hit>=0)outer=Math.max(outer,hit);
    }
-   return r<=outer+base.width*marginRatio+1e-7;
+   return outer;
   };
+  return (pose,locator)=>{
+   const size=pose.baseSize??pose.size,angle=rad(pose.baseRotation??pose.rotation??0),scale=base.width/size;
+   const dx=locator.x-pose.cx,dy=locator.y-pose.cy,c=Math.cos(angle),s=Math.sin(angle);
+   const x=(dx*c+dy*s)*scale,y=(-dx*s+dy*c)*scale,r=Math.hypot(x,y);
+   if(!Number.isFinite(r)||!(size>0))return null;
+   if(r<1e-8)return {r,outer:Infinity};
+   const ux=x/r,uy=y/r;
+   let bin=Math.floor((Math.atan2(uy,ux)+Math.PI)/TAU*BINS);if(bin<0)bin=0;else if(bin>=BINS)bin=BINS-1;
+   let outer=test(bins[bin],ux,uy,-Infinity);
+   if(special.length)outer=test(special,ux,uy,outer);
+   return {r,outer};
+  };
+ }
+ function createLocatorBoundary(base,path,marginRatio=0){
+  if(!path?.points?.length)throw Error('缺少大螺旋参考路径。');
+  if(!Number.isFinite(marginRatio)||marginRatio<0)throw Error('无效的边界余量。');
+  const measure=createLocatorOuter(base,path),margin=base.width*marginRatio+1e-7;
+  return (pose,locator)=>{const m=measure(pose,locator);return !!m&&m.r<=m.outer+margin;};
  }
  // Fitted centres near the outer stroke may sit just beyond its reference
  // centreline. Allow 2.5% of base width radially; all pixel evidence and
@@ -97,9 +121,24 @@
  }
  function dilate(bitmap,radius=1){
   const {width:w,height:h,ink:a}=bitmap,out=new Float32Array(a.length);
+  if(radius===1){
+   for(let y=0;y<h;y++){
+    const row=y*w,up=y>0?row-w:-1,dn=y<h-1?row+w:-1;
+    for(let x=0;x<w;x++){
+     const i=row+x;let v=a[i];
+     if(x>0&&a[i-1]>v)v=a[i-1];
+     if(x+1<w&&a[i+1]>v)v=a[i+1];
+     if(up>=0&&a[up+x]>v)v=a[up+x];
+     if(dn>=0&&a[dn+x]>v)v=a[dn+x];
+     out[i]=v;
+    }
+   }
+   return {width:w,height:h,ink:out};
+  }
+  const limit=(radius+.4)**2;
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
    let v=0;for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
-    if(dx*dx+dy*dy>(radius+.4)**2)continue;
+    if(dx*dx+dy*dy>limit)continue;
     const xx=x+dx,yy=y+dy;if(xx>=0&&xx<w&&yy>=0&&yy<h)v=Math.max(v,a[yy*w+xx]);
    }out[y*w+x]=v;
   }return {width:w,height:h,ink:out};
@@ -235,8 +274,8 @@
  }
  function create(assets){
   const baseTemplate=asset(assets.base,true),letters=Object.fromEntries(Object.entries(assets.letters).map(([k,v])=>[k,asset(v)]));
-  const containsLocator=createRecognitionBoundary(assets.base,assets.path);
-  const strictLocator=createLocatorBoundary(assets.base,assets.path);
+  const measureLocator=createLocatorOuter(assets.base,assets.path),bandMargin=assets.base.width*.025+1e-7;
+  const containsLocator=(pose,locator)=>{const m=measureLocator(pose,locator);return !!m&&m.r<=m.outer+bandMargin;};
   const progress=(options,stage,value)=>options?.onProgress?.({stage,progress:value});
   function refine(bitmap,template,initial,baseMask,options={}){
    const pts=template.points(options.samples||240),bearing=options.bearingBase,negativePts=options.background?template.negativePoints(96):null;
@@ -247,14 +286,15 @@
    };
    let best=evaluate({...initial});
    for(const step of options.steps||[4,2,1,.5]){
-    const candidates=[];
+    let next=best;
     for(const dx of [-step,0,step])for(const dy of [-step,0,step])for(const ds of [-step,0,step])for(const da of [-step,0,step]){
+     if(!dx&&!dy&&!ds&&!da)continue;
      const f={...best,cx:best.cx+dx,cy:best.cy+dy,size:best.size+ds};if(f.size<12)continue;
      if(bearing)f.delta=clamp((best.delta??0)+da,-30,30);else f.rotation=normalize(best.rotation+da);
      if(options.minSize&&f.size<options.minSize||options.maxSize&&f.size>options.maxSize)continue;
-     candidates.push(evaluate(f));
+     const cand=evaluate(f);if(cand.score>next.score)next=cand;
     }
-    candidates.sort((a,b)=>b.score-a.score);if(candidates[0]?.score>best.score)best=candidates[0];
+    best=next;
    }return best;
   }
   function detectGroups(bitmap,options={}){
@@ -354,7 +394,7 @@
    // must not evict established interior poses before pixel refinement.
    // Small screenshot strokes can fall between four-pixel seed centres.
    // Denser starts retain the same per-letter proposal and refinement budgets.
-   for(let cy=y0;cy<=y1;cy+=2)for(let cx=x0;cx<=x1;cx+=2)if(containsLocator(baseSmall,{x:cx,y:cy}))locations.push({cx,cy,edge:!strictLocator(baseSmall,{x:cx,y:cy})});
+   for(let cy=y0;cy<=y1;cy+=2)for(let cx=x0;cx<=x1;cx+=2){const m=measureLocator(baseSmall,{x:cx,y:cy});if(m&&m.r<=m.outer+bandMargin)locations.push({cx,cy,edge:m.r>m.outer+1e-7});}
    // Opt-out supports exact regression comparisons. Unbounded custom inputs
    // keep full evaluation; only this letter stage uses the early-out bound.
    const coarseGate=options.coarsePruning===false||target.ink.some(v=>!Number.isFinite(v)||v<0||v>1)?null:.69;
@@ -454,13 +494,27 @@
    for(let pass=0;pass<3;pass++)for(let i=0;i<selected.length;i++)selected[i]=rank(i).find(p=>!p.outside)||emptyPose;
 
    // Bounded pixel-objective coordinate descent; labels/centres are never supplied.
-   function rendered(p,other){
-    const template=p.letter?letters[p.letter]:baseTemplate,indices=[],values=[],w=bitmap.width,h=bitmap.height;
-    const c=Math.cos(rad(p.rotation)),s=Math.sin(rad(p.rotation)),scale=template.width/p.size,reach=p.size*.8;
+   function renderedBenefit(p,other){
+    const template=p.letter?letters[p.letter]:baseTemplate,w=bitmap.width;
+    const c=Math.cos(rad(p.rotation)),s=Math.sin(rad(p.rotation)),scale=template.width/p.size;
     let benefit=0;
     const {x0,x1,y0,y1}=rasterBounds(template,p,bitmap,c,s,scale);
+    const px=template.width*template.pivotX,py=template.height*template.pivotY;
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
-     const dx=x-p.cx,dy=y-p.cy,v=sample(template,(dx*c+dy*s)*scale+template.width*template.pivotX,(-dx*s+dy*c)*scale+template.height*template.pivotY);
+     const dx=x-p.cx,dy=y-p.cy,v=sample(template,(dx*c+dy*s)*scale+px,(-dx*s+dy*c)*scale+py);
+     if(v<=.005)continue;const j=y*w+x,before=other[j],after=Math.max(before,v),target=bitmap.ink[j];
+     benefit+=(target-before)**2-(target-after)**2;
+    }
+    return benefit;
+   }
+   function rendered(p,other){
+    const template=p.letter?letters[p.letter]:baseTemplate,indices=[],values=[],w=bitmap.width;
+    const c=Math.cos(rad(p.rotation)),s=Math.sin(rad(p.rotation)),scale=template.width/p.size;
+    let benefit=0;
+    const {x0,x1,y0,y1}=rasterBounds(template,p,bitmap,c,s,scale);
+    const px=template.width*template.pivotX,py=template.height*template.pivotY;
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+     const dx=x-p.cx,dy=y-p.cy,v=sample(template,(dx*c+dy*s)*scale+px,(-dx*s+dy*c)*scale+py);
      if(v<=.005)continue;const j=y*w+x,before=other[j],after=Math.max(before,v),target=bitmap.ink[j];
      benefit+=(target-before)**2-(target-after)**2;indices.push(j);values.push(v);
     }
@@ -471,7 +525,7 @@
     const other=bm.slice();selected.forEach((p,i)=>{if(i!==slot)for(let k=0;k<p.indices.length;k++){const j=p.indices[k];other[j]=Math.max(other[j],p.values[k]);}});
     const alternatives=rank(slot).slice(0,3);
     for(const initial of alternatives){
-     let best=rendered(initial,other);
+     let best={...initial,benefit:renderedBenefit(initial,other)};
      for(const step of [1,.5,.25])for(let repeat=0;repeat<2;repeat++){
       let next=best;
       for(const field of ['cx','cy','size','rotation'])for(const sign of [-1,1]){
@@ -481,10 +535,11 @@
        const bearing=Math.atan2(trial.cy-base.cy,trial.cx-base.cx)*180/Math.PI-90;
        if(Math.abs(normalize(trial.rotation-bearing))>30)continue;
        if(containsLocator(base,{x:trial.cx,y:trial.cy})===!!initial.outside)continue;
-       const candidate=rendered(trial,other);if(candidate.benefit>next.benefit)next=candidate;
+       const benefit=renderedBenefit(trial,other);if(benefit>next.benefit)next={...trial,benefit};
       }
       if(next===best)break;best=next;
      }
+     best=rendered(best,other);
      // The existing coverage floor still applies to the refined physical pose.
      const measured=support(bitmap,letters[best.letter].points(420),best,{width:bitmap.width,height:bitmap.height,ink:bm});
      best={...best,...measured};
@@ -497,13 +552,13 @@
    // Refine the base against ink not already owned by selected letter masks.
    const others=new Float32Array(bitmap.ink.length);
    selected.forEach(p=>{for(let k=0;k<p.indices.length;k++){const j=p.indices[k];others[j]=Math.max(others[j],p.values[k]);}});
-   const initialBase={...base};let fittedBase=rendered(initialBase,others);
+   const initialBase={...base};let fittedBase={...initialBase,benefit:renderedBenefit(initialBase,others)};
    for(const step of [2,1,.5,.25,.125])for(let repeat=0;repeat<3;repeat++){
     let next=fittedBase;
     for(const field of ['cx','cy','size','rotation'])for(const sign of [-1,1]){
      const trial={...fittedBase,[field]:fittedBase[field]+sign*step};trial.rotation=normalize(trial.rotation);
      if(Math.abs(trial.cx-initialBase.cx)>3||Math.abs(trial.cy-initialBase.cy)>3||Math.abs(trial.size-initialBase.size)>3||Math.abs(normalize(trial.rotation-initialBase.rotation))>5)continue;
-     const candidate=rendered(trial,others);if(candidate.benefit>next.benefit)next=candidate;
+     const benefit=renderedBenefit(trial,others);if(benefit>next.benefit)next={...trial,benefit};
     }
     if(next===fittedBase)break;fittedBase=next;
    }
@@ -580,13 +635,19 @@
     if(centreAllowed(cr,coarseBase,p))centres.push(p);
    }
    diagnostics.centres=centres.length;if(!centres.length)return result([]);
+   const sizes=[.33,.355,.38,.405,.44].map(ratio=>coarseBase.size*ratio);
+   for(const p of centres){
+    const bearing=Math.atan2(p.cy-coarseBase.cy,p.cx-coarseBase.cx)*180/Math.PI-90;
+    p.angles=[-30,-20,-10,0,10,20,30].map(delta=>{const rotation=normalize(bearing+delta);return {delta,rotation,c:Math.cos(rad(rotation)),s:Math.sin(rad(rotation))};});
+   }
    const names=Object.keys(letters),proposals=[];
    for(let n=0;n<names.length;n++){
     check();const letter=names[n],pts=letters[letter].points(96),top=[];
-    for(const p of centres){const bearing=Math.atan2(p.cy-coarseBase.cy,p.cx-coarseBase.cx)*180/Math.PI-90;
-     for(const ratio of [.33,.355,.38,.405,.44])for(const delta of [-30,-20,-10,0,10,20,30]){
-      const pose={...p,size:coarseBase.size*ratio,rotation:normalize(bearing+delta),delta},m=support(target,pts,pose,coarseMask);
-      if(m.score>.69&&m.uniqueFraction>.35&&m.visible>.95)insertTop(top,{...pose,...m,letter},seeds,coarseBase.size*.055,15);
+    for(const {cx,cy,angles} of centres){
+     for(const size of sizes)for(const angle of angles){
+      const floor=top.length>=seeds?Math.max(.69,top.at(-1).score):.69;
+      const m=seedSupport(target,pts,cx,cy,size,coarseMask,angle,floor);
+      if(m)insertTop(top,{cx,cy,size,rotation:angle.rotation,delta:angle.delta,...m,letter},seeds,coarseBase.size*.055,15);
      }
     }
     proposals.push(...top);progress(options,'region-coarse',(n+1)/Math.max(1,names.length));
@@ -605,9 +666,10 @@
    // Compare a full rendered glyph against the untouched crop, excluding base ink.
    // Additional glyphs may overlap this region: this is evidence, never auto-acceptance.
    function pixelBenefit(p){
-    const template=letters[p.letter],c=Math.cos(rad(p.rotation)),s=Math.sin(rad(p.rotation)),scale=template.width/p.size,reach=p.size*.8;let benefit=0;
-    for(let y=Math.max(0,Math.floor(p.cy-reach));y<=Math.min(image.height-1,Math.ceil(p.cy+reach));y++)for(let x=Math.max(0,Math.floor(p.cx-reach));x<=Math.min(image.width-1,Math.ceil(p.cx+reach));x++){
-     const dx=x-p.cx,dy=y-p.cy,v=sample(template,(dx*c+dy*s)*scale+template.width*template.pivotX,(-dx*s+dy*c)*scale+template.height*template.pivotY);if(v<=.005)continue;
+    const template=letters[p.letter],c=Math.cos(rad(p.rotation)),s=Math.sin(rad(p.rotation)),scale=template.width/p.size;let benefit=0;
+    const {x0,x1,y0,y1}=rasterBounds(template,p,image,c,s,scale),px=template.width*template.pivotX,py=template.height*template.pivotY;
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+     const dx=x-p.cx,dy=y-p.cy,v=sample(template,(dx*c+dy*s)*scale+px,(-dx*s+dy*c)*scale+py);if(v<=.005)continue;
      const at=y*image.width+x,before=baseInk[at],after=Math.max(before,v),observed=image.ink[at];benefit+=(observed-before)**2-(observed-after)**2;
     }return benefit;
    }

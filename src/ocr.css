@@ -11,8 +11,7 @@
     .ocr-canvas-wrap { overflow:auto; border:1px solid var(--line); background:var(--bg); border-radius:0; }
     #ocr-preview { display:block; width:100%; height:auto; touch-action:none; cursor:crosshair; }
     .ocr-crop-details { margin:15px 0; max-width:none; }
-    .ocr-card select { border:1px solid var(--line); border-radius:0; background:var(--panel); color:var(--ink); }
-    .ocr-card select { max-width:100%; padding:8px; }
+    .ocr-card select { border:1px solid var(--line); border-radius:0; background:var(--panel); color:var(--ink); max-width:100%; padding:8px; }
     .ocr-toolbar label { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
     #ocr-status { font-size:14px; line-height:1.8; flex:1; min-width:200px; }
     .ocr-output-label { display:block; margin:12px 0 8px; }

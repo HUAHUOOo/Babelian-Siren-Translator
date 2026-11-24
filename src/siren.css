@@ -76,7 +76,7 @@
     #siren-status {border-left:3px solid var(--accent);padding-left:12px;color:var(--ink)}
     #siren-source-canvas[data-selecting=true] {cursor:crosshair;touch-action:none}
     #siren-missing-preview {display:block;width:min(100%,360px);height:auto;border:2px solid #b65606;background:#fffdf7}
-    #siren-pending-tools {position:static;top:0;z-index:2;background:var(--panel);border:1px solid var(--line);padding:8px 12px;align-items:flex-start;margin-block:14px}
+    #siren-pending-tools {position:static;background:var(--panel);border:1px solid var(--line);padding:8px 12px;align-items:flex-start;margin-block:14px}
     #siren-pending-status {margin:0;flex:1 1 240px;font-size:13px}
 .siren-reading-demo { margin:12px 0; border-top:1px solid var(--line); padding:12px 0 4px; }
 .siren-reading-demo summary { cursor:pointer; }
