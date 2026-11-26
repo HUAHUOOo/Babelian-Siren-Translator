@@ -39,7 +39,7 @@ globalThis.BabelianOCRUI={
   mount({glyphs,displayGlyphs=glyphs,wordData,textFormatter,getMapping,editMapping,append,notify}){
   const $=id=>document.getElementById(id),OCR=BabelianOCR,Work=BabelianOCRWork,ids=Object.keys(glyphs);
   const panel=$('panel-decode'),preview=$('ocr-preview'),ctx=preview.getContext('2d');
-  let source=null,crop=null,result=null,resultImage=null,resultCanvas=null,selected=null,drag=null,rebox=null;
+  let source=null,rawSource=null,photoState={quarterTurns:0,angle:0,equalize:false},crop=null,result=null,resultImage=null,resultCanvas=null,selected=null,drag=null,rebox=null;
   let templatesPromise=null,templates=null,prepared=null,worker=null,workerReady=false,job=0,loading=0,busy=false;
   let deepSuggestion=null,splitToken=null,reviewContext=null,tokensRenderKey='',choiceMapKey='';
   let located=[],locationArea=null;
@@ -77,7 +77,40 @@ globalThis.BabelianOCRUI={
   }
   function message(text){$('ocr-status').textContent=text;renderEntry();}
   function imageElement(id){const img=document.createElement('img');img.src=displayGlyphs[id].src;img.alt=label(id);return img;}
-  function setBusy(value){busy=value;$('ocr-run').disabled=value||!source;$('ocr-cancel').hidden=!value;$('ocr-controls').disabled=value;$('ocr-deep').disabled=value;panel.setAttribute('aria-busy',String(value));syncReviewControls();renderEntry();}
+  const photoActive=()=>photoState.quarterTurns!==0||Math.abs(photoState.angle)>=.05||photoState.equalize;
+  function syncPhotoControls(){
+    const hasPrep=!!globalThis.BabelianPhotoPrep,disabled=busy||!rawSource||!hasPrep;
+    $('ocr-deskew-angle').value=String(photoState.angle);
+    $('ocr-deskew-value').textContent=(photoState.angle>0?'+':'')+photoState.angle+'°';
+    $('ocr-illumination').checked=photoState.equalize;
+    for(const id of ['ocr-deskew-auto','ocr-turn-left','ocr-turn-right','ocr-deskew-angle','ocr-illumination'])$(id).disabled=disabled;
+    $('ocr-photo-reset').disabled=disabled||!photoActive();
+  }
+  function imageToCanvas(img){
+    const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+    const g=c.getContext('2d'),out=g.createImageData?g.createImageData(img.width,img.height):{width:img.width,height:img.height,data:img.data};
+    if(out.data!==img.data)out.data.set(img.data);
+    g.putImageData(out,0,0);return c;
+  }
+  function applyPhotoPrep(statusText){
+    if(!rawSource||busy)return;
+    try{
+      if(!photoActive()||!globalThis.BabelianPhotoPrep){source=rawSource;}
+      else{
+        const rawData=rawSource.getContext('2d').getImageData(0,0,rawSource.width,rawSource.height);
+        source=imageToCanvas(BabelianPhotoPrep.transformImage(rawData,photoState));
+      }
+      crop={x:0,y:0,width:source.width,height:source.height};
+      clearResult();$('ocr-revert-suggestion').hidden=true;
+      const tags=[];
+      if(photoState.quarterTurns)tags.push('旋转 '+(photoState.quarterTurns*90)+'°');
+      if(Math.abs(photoState.angle)>=.05)tags.push('纠偏 '+(photoState.angle>0?'+':'')+photoState.angle+'°');
+      if(photoState.equalize)tags.push('光照均衡');
+      $('ocr-photo-status').textContent=statusText||(tags.length?'已应用：'+tags.join(' · ')+'。请确认金色选区后点击“识别所选区域”。':'已恢复原始图片。');
+      syncPhotoControls();draw();message(tags.length?'预处理已更新，请检查选区并点击“识别所选区域”。':'已恢复原始图片，请检查选区并点击“识别所选区域”。');
+    }catch(e){$('ocr-photo-status').textContent=e.message;}
+  }
+  function setBusy(value){busy=value;$('ocr-run').disabled=value||!source;$('ocr-cancel').hidden=!value;$('ocr-controls').disabled=value;$('ocr-deep').disabled=value;panel.setAttribute('aria-busy',String(value));syncPhotoControls();syncReviewControls();renderEntry();}
   function cancel(){job++;if(worker){worker.terminate();worker=null;workerReady=false;}setBusy(false);}
   function clearResult(){
     clearLocation();tokensRenderKey='';resultCanvas=null;
@@ -188,6 +221,7 @@ globalThis.BabelianOCRUI={
       const scale=Math.min(1,2200/img.naturalWidth,Math.sqrt(6000000/(img.naturalWidth*img.naturalHeight)));
       source=document.createElement('canvas');source.width=Math.max(1,Math.round(img.naturalWidth*scale));source.height=Math.max(1,Math.round(img.naturalHeight*scale));
       source.getContext('2d').drawImage(img,0,0,source.width,source.height);
+      rawSource=source;photoState={quarterTurns:0,angle:0,equalize:false};$('ocr-photo-status').textContent='';syncPhotoControls();
       crop={x:0,y:0,width:source.width,height:source.height};clearResult();$('ocr-image-area').hidden=false;
       $('ocr-file-info').textContent=`${file.name} · ${source.width} × ${source.height}${scale<1?'（已缩小，请优先上传裁剪后的原尺寸密码图）':''}`;
       $('ocr-image-advice').hidden=true;$('ocr-auto-note').textContent='';$('ocr-quality-note').textContent='';$('ocr-revert-suggestion').hidden=true;
@@ -195,13 +229,27 @@ globalThis.BabelianOCRUI={
         message('正在检查文字区域，图片只在本机处理…');draw();
         try{
           await loadTemplates(false);await new Promise(resolve=>setTimeout(resolve,0));if(version!==loading)return;
-          const advice=BabelianImageAssist.analyze(source.getContext('2d').getImageData(0,0,source.width,source.height),templates,OCR);
+          const imgData=source.getContext('2d').getImageData(0,0,source.width,source.height);
+          const advice=BabelianImageAssist.analyze(imgData,templates,OCR);
           if(advice.crop){crop=advice.crop;$('ocr-revert-suggestion').hidden=false;}
           $('ocr-auto-note').textContent=advice.crop?`已建议框出 ${advice.rows} 个疑似文字行。请检查是否完整，仍可拖动调整。`:advice.ambiguous?'检测到多处疑似文字，未自动缩小范围，请手动框选。':'未找到足够明确的文字区域，已保留全图，请按需手动框选。';
-          $('ocr-quality-note').textContent=advice.warnings.join(' ');$('ocr-image-advice').hidden=false;
+          const notes=[...advice.warnings];
+          if(globalThis.BabelianPhotoPrep){
+            try{
+              const check=BabelianPhotoPrep.assess(imgData);
+              const tips=[];
+              if(check.skewed)tips.push(`检测到约 ${Math.abs(check.skewAngle)}° 倾斜`);
+              if(check.unevenLighting)tips.push('明暗分布不均');
+              if(tips.length){
+                const hint=tips.join('且')+'，可展开下方“手机实拍预处理”纠偏或均衡光照。';
+                notes.push(hint);$('ocr-photo-status').textContent=hint;
+              }
+            }catch(_){}
+          }
+          $('ocr-quality-note').textContent=notes.join(' ');$('ocr-image-advice').hidden=false;
         }catch(_){if(version!==loading)return;$('ocr-auto-note').textContent='自动建议不可用，已保留全图，可以手动框选。';$('ocr-image-advice').hidden=false;}
       }
-      $('ocr-run').disabled=false;draw();message('检查金色选区是否包含全部密码文字，点击“识别所选区域”；也可拖动调整。');
+      $('ocr-run').disabled=false;syncPhotoControls();draw();message('检查金色选区是否包含全部密码文字，点击“识别所选区域”；也可拖动调整。');
     }catch(e){if(version===loading)message(e.message);}
     finally{URL.revokeObjectURL(url);$('ocr-file').value='';if(version===loading)setBusy(false);}
   }
@@ -216,6 +264,25 @@ globalThis.BabelianOCRUI={
     }catch(e){if(current())message('无法读取剪贴板：'+e.message+' 也可用 Ctrl+V 或选择文件。');}
   });
   $('ocr-revert-suggestion').addEventListener('click',()=>{if(!source||busy)return;changeCrop({x:0,y:0,width:source.width,height:source.height});$('ocr-auto-note').textContent='已撤回自动选区，使用完整原图；可继续手动框选。';});
+  $('ocr-turn-left').addEventListener('click',()=>{if(!rawSource||busy)return;photoState.quarterTurns=(photoState.quarterTurns+3)%4;applyPhotoPrep();});
+  $('ocr-turn-right').addEventListener('click',()=>{if(!rawSource||busy)return;photoState.quarterTurns=(photoState.quarterTurns+1)%4;applyPhotoPrep();});
+  $('ocr-deskew-angle').addEventListener('input',()=>{const v=Number($('ocr-deskew-angle').value)||0;$('ocr-deskew-value').textContent=(v>0?'+':'')+v+'°';});
+  $('ocr-deskew-angle').addEventListener('change',()=>{if(!rawSource||busy)return;photoState.angle=Number($('ocr-deskew-angle').value)||0;applyPhotoPrep();});
+  $('ocr-illumination').addEventListener('change',()=>{if(!rawSource||busy)return;photoState.equalize=$('ocr-illumination').checked;applyPhotoPrep();});
+  $('ocr-deskew-auto').addEventListener('click',()=>{
+    if(!rawSource||busy||!globalThis.BabelianPhotoPrep)return;
+    try{
+      const rawData=rawSource.getContext('2d').getImageData(0,0,rawSource.width,rawSource.height);
+      const base=photoState.quarterTurns?BabelianPhotoPrep.transformImage(rawData,{quarterTurns:photoState.quarterTurns}):rawData;
+      const est=BabelianPhotoPrep.estimateSkew(base);
+      if(!est.confident||Math.abs(est.angle)<.4){
+        photoState.angle=0;applyPhotoPrep('未检测到明显倾斜（或图片不含清晰横行文字），已保持 0°。');return;
+      }
+      photoState.angle=Math.max(-15,Math.min(15,Math.round(est.angle*2)/2));
+      applyPhotoPrep(`已自动纠偏 ${photoState.angle>0?'+':''}${photoState.angle}°，请检查文字是否水平。`);
+    }catch(e){$('ocr-photo-status').textContent=e.message;}
+  });
+  $('ocr-photo-reset').addEventListener('click',()=>{if(!rawSource||busy)return;photoState={quarterTurns:0,angle:0,equalize:false};applyPhotoPrep('已恢复原始图片。');});
   $('ocr-file').addEventListener('change',e=>loadFile(e.target.files[0]));
   panel.addEventListener('dragover',e=>{e.preventDefault();});
   panel.addEventListener('drop',e=>{e.preventDefault();if(!busy)loadFile(e.dataTransfer.files[0]);});

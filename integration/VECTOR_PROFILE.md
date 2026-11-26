@@ -10,7 +10,7 @@
 
 ## 识别辅助
 
-`globalThis.BabelianVectorTemplateProfile`是另一个对象，格式`{version:1,variants:[...]}`。每项包含不透明ID、目标高度、比例、32行位图及128字的细位图和计数，最多1024项。当前构建包含经校验的580项；缺少或无效时原算法仍可独立工作。
+`globalThis.BabelianVectorTemplateProfile`是另一个对象，兼容标准格式`{version:1,variants:[...]}`以及构建使用的紧凑格式`{version:1,encoding:"deflate-rows-v1",entries:[[id,targetHeight,ratio],...],data:"<base64 raw-deflate>"}`（仅存储`rows`与`fine.rows`的小端`uint32`位图，运行时通过内置同步解压并逐位等价还原`wide`与计数），最多1024项。当前构建包含经校验的580项；缺少或无效时原算法仍可独立工作。
 
 原分割、阈值及同页校正完整运行后，只检查高度至少16像素、近分且未确认的候选。原最佳候选须与当前结果一致且分数至少0.72、前两名差小于0.035；只比较距最佳不超过0.025的原生前五名。所有竞争者均需两个分辨率，取较低支持度；至少0.94且领先0.06，并在两个阈值下支持同一新候选才可改字。
 

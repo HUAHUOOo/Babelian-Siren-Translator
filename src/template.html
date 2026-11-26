@@ -302,21 +302,23 @@
   <div id="status" role="status" aria-live="polite"></div>
   <dialog id="conflict-dialog" aria-labelledby="conflict-title" aria-describedby="conflict-description"><h2 id="conflict-title">这个对应已被使用</h2><p id="conflict-description"></p><div id="conflict-options" class="conflict-options"></div><button id="conflict-cancel" type="button" class="secondary" autofocus>取消，暂不修改</button></dialog>
   <script>
+  __COMPACT_CODEC_JS__
   __PLATFORM_JS__
   __HOST_UI_JS__
   __OCR_ENGINE_JS__
   __IMAGE_ASSIST_JS__
+  __PHOTO_PREP_JS__
   __TEXT_LOCATOR_JS__
   __BABELIAN_DEEP_JS__
   __OCR_CORRECTION_JS__
   __OCR_CONTEXT_JS__
   __TRANSLATION_JS__
-  globalThis.BabelianDomainTerms=__DOMAIN_TERMS__;
+  globalThis.BabelianDomainTerms=JSON.parse(BabelianCompact.inflateText(__DOMAIN_TERMS__));
   __TEXT_FORMAT_JS__
   /* Offline English frequency vocabulary: https://github.com/keredson/wordninja
   __WORD_LICENSE__
   */
-  const BABELIAN_ENGLISH_WORDS=__ENGLISH_WORD_DATA__;
+  const BABELIAN_ENGLISH_WORDS_PACKED=__ENGLISH_WORD_DATA__;
   __OCR_UI_JS__
   __SIREN_CORE_JS__
   __SIREN_MEMORY_JS__
@@ -750,10 +752,10 @@
   makeKeyboard(); render();
   __MAPPING_EDITOR_JS__
   let _sharedFormatter=null;
-  const getFormatter=()=>_sharedFormatter||(_sharedFormatter=BabelianTextFormat.create(BABELIAN_ENGLISH_WORDS));
+  const getFormatter=()=>_sharedFormatter||(_sharedFormatter=BabelianTextFormat.create(BabelianCompact.inflateText(BABELIAN_ENGLISH_WORDS_PACKED)));
   const sharedFormatter={split:(...args)=>getFormatter().split(...args),suggest:(...args)=>getFormatter().suggest(...args)};
-  window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:BABELIAN_ENGLISH_WORDS,textFormatter:sharedFormatter,notify});
-  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,displayGlyphs:DISPLAY_GLYPHS,wordData:BABELIAN_ENGLISH_WORDS,textFormatter:sharedFormatter,getMapping:()=>mappingApi.snapshot().workingMap,
+  window.BABELIAN_APP.siren=SirenUI.mount({assets:SIREN_ASSETS,path:SIREN_PATH,wordData:'',textFormatter:sharedFormatter,notify});
+  window.BABELIAN_APP.ocr=BabelianOCRUI.mount({glyphs:GLYPHS,displayGlyphs:DISPLAY_GLYPHS,wordData:'',textFormatter:sharedFormatter,getMapping:()=>mappingApi.snapshot().workingMap,
     editMapping:glyph=>{switchTool('mapping');selectGlyph(glyph);$('mapping-value').focus();},
     append:payload=>{
       if(!payload.text)return;

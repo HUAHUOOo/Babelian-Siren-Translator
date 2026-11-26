@@ -70,7 +70,8 @@
     .siren-match-tools {display:flex;flex-direction:row;flex-wrap:wrap;gap:8px}
     #siren-open-add {white-space:nowrap}
     #siren-stage,#siren-match-review,#siren-keyboard-panel {overflow-anchor:none}
-    #siren-status:empty,#siren-format-status:empty,#siren-reading-groups:empty {display:none}
+    #siren-status:empty,#siren-format-status:empty,#siren-reading-groups:empty,#siren-photo-status:empty {display:none}
+    #siren-deskew-angle {display:block;width:100%;min-height:36px;margin:4px 0;accent-color:var(--accent);touch-action:pan-y}
     .siren-candidate-preview {display:flex;align-items:center;justify-content:center;width:96px;height:96px;background:var(--panel);border-radius:0}
     .siren-candidate-preview img {display:block;width:64px;height:64px;object-fit:contain;transform-origin:center;pointer-events:none}
     #siren-status {border-left:3px solid var(--accent);padding-left:12px;color:var(--ink)}

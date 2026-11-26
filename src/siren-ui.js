@@ -5,7 +5,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   const docs={generate:C.create(),review:C.create('review')},history={generate:SirenMemory.createHistory(),review:SirenMemory.createHistory()},selections={generate:0,review:0};
   let mode='generate',groupIndex=0,itemId=null,images=null,geometry=null,ready=false,drag=null,contactMode=false,pendingPoint=null,precisionEdit=null;
   const stripBounds=new WeakMap(),tile=document.createElement('canvas');tile.width=600;tile.height=600;
-  let source=null,sourceTicket=0,sourceLoading=false,importTicket=0,loadingImport=false,keyboardPoint=null,templates=null,scanBusy=false,scanTicket=0;
+  let source=null,rawSource=null,photoState={quarterTurns:0,angle:0,equalize:false},sourceTicket=0,sourceLoading=false,importTicket=0,loadingImport=false,keyboardPoint=null,templates=null,scanBusy=false,scanTicket=0;
   let deep=null,missing=null,reviewFocus=null;
   let demoIndex=0,demoTimer=null,demoSignature='';
   let scanPreview=null,differenceSignature='';
@@ -18,7 +18,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
   const scan=SirenScan.create({engineSource:SirenRecognition.workerSource(),onProgress:p=>{
     const stages={'cached':'复用相同图片的计算','base-regions':'分割大螺旋','base-windows':'分窗寻找大螺旋','base-coarse':'寻找大螺旋','base-refine':'对齐大螺旋','group':'匹配分组','letters-coarse':'比较26个字形','letters-refine':'微调字形位置与大小','letters-joint':'整组像素核验','letters-complete':'整理候选'};
     const regionStages={'region-coarse':'细搜定位与字形','region-refine':'精调候选','region-verify':'原图像素核验'};
-    $(missing?.running?'siren-missing-status':deep?.running?'siren-deep-status':'siren-scan-status').textContent=(p.index?'第 '+p.index+'/'+p.count+' 组 · ':'')+(stages[p.stage]||regionStages[p.stage]||'正在匹配')+' '+Math.round((p.progress||0)*100)+'%';
+    $(missing?.running?'siren-missing-status':deep?.running?'siren-deep-status':'siren-scan-status').textContent=(p.index?'第 '+p.index+'/'+p.count+' 组 · ':'')+(p.parallel>1?p.parallel+'线程并行 · ':'')+(stages[p.stage]||regionStages[p.stage]||'正在匹配')+' '+Math.round((p.progress||0)*100)+'%';
   }});
   const revisions={generate:0,review:0},savedRevisions={generate:0,review:0};
   const backgrounds=SirenMemory.createImageCache(image,scheduleImageSweep),drafts={generate:null,review:null},formatter=textFormatter||BabelianTextFormat.create(wordData);
@@ -117,6 +117,38 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     for(const img of keyboardImages)img.style.transform='rotate('+angle+'deg)';
     $('siren-key-angle').textContent='对照朝向：'+Math.round(angle)+'°';
   }
+  const photoActive=()=>photoState.quarterTurns!==0||Math.abs(photoState.angle)>=.05||photoState.equalize;
+  function syncPhotoControls(){
+    const hasPrep=!!globalThis.BabelianPhotoPrep,disabled=!rawSource||!ready||scanBusy||sourceLoading||loadingImport||!hasPrep;
+    $('siren-deskew-angle').value=String(photoState.angle);
+    $('siren-deskew-value').textContent=(photoState.angle>0?'+':'')+photoState.angle+'°';
+    $('siren-illumination').checked=photoState.equalize;
+    for(const id of ['siren-turn-left','siren-turn-right','siren-deskew-angle','siren-illumination'])$(id).disabled=disabled;
+    $('siren-photo-reset').disabled=disabled||!photoActive();
+  }
+  function applyPhotoPrep(statusText){
+    if(!rawSource||!ready||scanBusy||sourceLoading||loadingImport)return;
+    try{
+      cancelScan();clearMissing();reviewFocus=null;sourceTicket++;sourceRegions.clear();sourcePaintKey=null;
+      if(!photoActive()||!globalThis.BabelianPhotoPrep){source=rawSource;}
+      else{
+        const ratio=Math.min(1,3600/Math.max(rawSource.width,rawSource.height),Math.sqrt(12000000/(rawSource.width*rawSource.height)));
+        const work=document.createElement('canvas');work.width=Math.max(1,Math.round(rawSource.width*ratio));work.height=Math.max(1,Math.round(rawSource.height*ratio));
+        const wctx=work.getContext('2d',{willReadFrequently:true});wctx.drawImage(rawSource,0,0,work.width,work.height);
+        const out=BabelianPhotoPrep.transformImage(wctx.getImageData(0,0,work.width,work.height),photoState);
+        const next=document.createElement('canvas');next.width=out.width;next.height=out.height;
+        const nctx=next.getContext('2d'),imgData=nctx.createImageData?nctx.createImageData(out.width,out.height):{width:out.width,height:out.height,data:out.data};
+        if(imgData.data!==out.data)imgData.data.set(out.data);
+        nctx.putImageData(imgData,0,0);source=next;
+      }
+      const tags=[];
+      if(photoState.quarterTurns)tags.push('旋转 '+(photoState.quarterTurns*90)+'°');
+      if(Math.abs(photoState.angle)>=.05)tags.push('倾角 '+(photoState.angle>0?'+':'')+photoState.angle+'°');
+      if(photoState.equalize)tags.push('光照均衡');
+      $('siren-photo-status').textContent=statusText||(tags.length?'已应用：'+tags.join(' · ')+'。请点击“开始识别”。':'已恢复原始图片。');
+      renderSource();scanControls();
+    }catch(e){$('siren-photo-status').textContent=e.message;}
+  }
   function scanControls(refreshEntry=true){
     if(scanBusy||loadingImport||sourceLoading)stopDemo(true);
     $('siren-auto-scan').disabled=!source||!ready||scanBusy||sourceLoading;
@@ -128,6 +160,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     $('siren-deep-toggle').hidden=mode!=='review';$('siren-deep-toggle').disabled=!g()?.image||scanBusy;
     $('siren-deep-run').disabled=!deep?.region||!!deep?.drag||scanBusy;
     $('siren-deep-apply').disabled=!deep?.preview||scanBusy||!!item()?.positionLocked;
+    syncPhotoControls();
     if(refreshEntry)renderEntry();renderScanPreview();renderDifference();
   }
   function renderEntry(){
@@ -614,11 +647,28 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
       if(file.size>16*1024*1024||!(/^image\/(png|jpeg|webp)$/.test(file.type)||!file.type&&/\.(png|jpe?g|webp)$/i.test(file.name||'')))throw Error('请选择16MB以内的 PNG / JPG / WebP 图片。');
       url=URL.createObjectURL(file);const img=await image(url);if(ticket!==sourceTicket)return;
       if(img.width*img.height>24000000||img.width>12000||img.height>12000)throw Error('图片尺寸过大，请先裁小到2400万像素以内。');
-      source=img;sourceExpanded=false;sourceRegions.clear();sourcePaintKey=null;renderSource();scanControls();$('siren-scan-status').textContent='图片已载入，点击“开始识别”。已有解读组保留。';note('图片仅在本机处理。');return true;
+      rawSource=img;source=img;photoState={quarterTurns:0,angle:0,equalize:false};$('siren-photo-status').textContent='';
+      sourceExpanded=false;sourceRegions.clear();sourcePaintKey=null;renderSource();
+      if(globalThis.BabelianPhotoPrep){
+        try{
+          const s=Math.min(1,320/Math.max(img.width,img.height)),probe=document.createElement('canvas');
+          probe.width=Math.max(1,Math.round(img.width*s));probe.height=Math.max(1,Math.round(img.height*s));
+          const pctx=probe.getContext('2d',{willReadFrequently:true});pctx.drawImage(img,0,0,probe.width,probe.height);
+          const check=BabelianPhotoPrep.assess(pctx.getImageData(0,0,probe.width,probe.height));
+          if(check.unevenLighting)$('siren-photo-status').textContent='检测到图片明暗分布不均，可展开“手机实拍预处理”开启均衡反光与阴影。';
+        }catch(_){}
+      }
+      scanControls();$('siren-scan-status').textContent='图片已载入，点击“开始识别”。已有解读组保留。';note('图片仅在本机处理。');return true;
     }catch(e){if(ticket===sourceTicket)note(e.message);if(strict)throw e;}finally{if(url)URL.revokeObjectURL(url);if(ticket===sourceTicket){sourceLoading=false;scanControls();}}
   }
   $('siren-upload').addEventListener('click',()=>$('siren-image-file').click());
   $('siren-image-file').addEventListener('change',async event=>{await loadSourceFile(event.target.files[0]);event.target.value='';});
+  $('siren-turn-left').addEventListener('click',()=>{if(!rawSource)return;photoState.quarterTurns=(photoState.quarterTurns+3)%4;applyPhotoPrep();});
+  $('siren-turn-right').addEventListener('click',()=>{if(!rawSource)return;photoState.quarterTurns=(photoState.quarterTurns+1)%4;applyPhotoPrep();});
+  $('siren-deskew-angle').addEventListener('input',()=>{const v=Number($('siren-deskew-angle').value)||0;$('siren-deskew-value').textContent=(v>0?'+':'')+v+'°';});
+  $('siren-deskew-angle').addEventListener('change',()=>{if(!rawSource)return;photoState.angle=Number($('siren-deskew-angle').value)||0;applyPhotoPrep();});
+  $('siren-illumination').addEventListener('change',()=>{if(!rawSource)return;photoState.equalize=$('siren-illumination').checked;applyPhotoPrep();});
+  $('siren-photo-reset').addEventListener('click',()=>{if(!rawSource)return;photoState={quarterTurns:0,angle:0,equalize:false};applyPhotoPrep('已恢复原始图片。');});
   const acceptsPaste=()=>!$('panel-siren').hidden&&mode==='review'&&ready&&!loadingImport;
   document.addEventListener('paste',event=>{
     if(!acceptsPaste())return;const file=[...(event.clipboardData?.items||[])].find(i=>i.kind==='file'&&/^image\/(png|jpeg|webp)$/.test(i.type))?.getAsFile();
@@ -858,7 +908,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
     if(operation==='fit'&&g()?.items.length&&!confirm('重新匹配会替换本组全部识别项（包括已锁定项）。原图保留，可撤销。继续？'))return;
     setPrecisionOpen(false);clearDeep();clearMissing();
     const target=doc(),targetGroup=g(),revision=revisions.review,imageTicket=sourceTicket,ticket=++scanTicket;
-    const job={target,targetGroup,revision,imageTicket,source,operation,entries:new Map(),completed:0,total:0,cached:0,queue:Promise.resolve(),stopped:false};scanPreview=job;
+    const job={target,targetGroup,revision,imageTicket,source,operation,entries:new Map(),seen:new Set(),completed:0,total:0,cached:0,queue:Promise.resolve(),stopped:false};scanPreview=job;
     scanBusy=true;scanControls();$('siren-scan-status').textContent='正在本机匹配图形，可随时取消；尚未修改原有工作。';
     try{
       const input=scanImage(operation),limit=operation==='fit'?1:Math.min(20,50-target.groups.length);
@@ -869,7 +919,7 @@ globalThis.SirenUI={mount({assets,path,wordData,textFormatter,notify}){
           if(ticket!==scanTicket||!previewCurrent(job)||job.error)return;
           if(p.group.base){let frame;const group=await scanResultGroup(p.group,input.canvas,operation==='fit',value=>{frame=value;});
             if(ticket!==scanTicket||!previewCurrent(job))return;job.entries.set(p.index-1,{slot:p.index-1,group,frame,result:p.group});}
-          job.completed=p.index;job.total=p.count;if(p.cached)job.cached++;renderScanPreview();
+          job.seen.add(p.index-1);job.completed=job.seen.size;job.total=p.count;if(p.cached)job.cached++;renderScanPreview();
         }).catch(e=>{job.error=e;});
       }});
       await job.queue;if(job.error)throw job.error;

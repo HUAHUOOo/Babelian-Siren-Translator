@@ -5,14 +5,31 @@ const root=path.resolve(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,'src',file),'utf8');
 const sourceGlyphs=JSON.parse(read('glyphs.json')),sourceParts=JSON.parse(read('parts.json'));
 const sourceSiren=JSON.parse(read('siren-glyphs.json'));
+const Compact=require('../src/compact-codec.js');
 const apkProfiles=require('./apk-resources.cjs').load(root);
 if(!require('../src/babelian-visuals.js').create(sourceGlyphs,apkProfiles.artwork).vectorReady)throw Error('Incomplete APK display profile');
-if(require('../src/ocr-engine.js').prepareVectorProfile(apkProfiles.recognition,Object.keys(sourceGlyphs)).size!==58)throw Error('Incomplete APK recognition profile');
+function packVectorProfile(profile){
+ const raw=Buffer.alloc(profile.variants.length*640);let offset=0;
+ const entries=profile.variants.map(v=>{
+  for(const word of v.rows){raw.writeUInt32LE(word>>>0,offset);offset+=4;}
+  for(const word of v.fine.rows){raw.writeUInt32LE(word>>>0,offset);offset+=4;}
+  return [v.id,v.targetHeight,v.ratio];
+ });
+ return {version:1,encoding:'deflate-rows-v1',entries,data:zlib.deflateRawSync(raw,{level:9}).toString('base64')};
+}
+const packedRecognition=packVectorProfile(apkProfiles.recognition);
+if(JSON.stringify(Compact.unpackVectorProfile(packedRecognition,{asArrays:true}))!==JSON.stringify(apkProfiles.recognition))throw Error('Packed APK recognition profile round-trip mismatch');
+if(require('../src/ocr-engine.js').prepareVectorProfile(packedRecognition,Object.keys(sourceGlyphs)).size!==58)throw Error('Incomplete APK recognition profile');
 const safeJSON=data=>JSON.stringify(data).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
 const domainTerms=JSON.parse(read('domain-terms.json'));
+const domainTermsJson=JSON.stringify({words:domainTerms.words,phrases:domainTerms.phrases});
+const packedDomainTerms=zlib.deflateRawSync(Buffer.from(domainTermsJson,'utf8'),{level:9}).toString('base64');
+if(Compact.inflateText(packedDomainTerms)!==domainTermsJson)throw Error('Domain terms round-trip mismatch');
 const dictionary=fs.readFileSync(path.join(root,'src/english-words.txt.gz'));
 if(crypto.createHash('sha256').update(dictionary).digest('hex')!==JSON.parse(read('english-words-source.json')).sha256)throw Error('English vocabulary checksum mismatch');
 const wordData=zlib.gunzipSync(dictionary).toString('utf8').trim().split(/\s+/).filter(w=>/^[a-z]{2,32}$/.test(w)||w==='a'||w==='i').join(' ');
+const packedWordData=zlib.deflateRawSync(Buffer.from(wordData,'utf8'),{level:9}).toString('base64');
+if(Compact.inflateText(packedWordData)!==wordData)throw Error('English vocabulary round-trip mismatch');
 const stripProvenance=siren=>{
  const clean=({provenance,...rest})=>rest;
  return {...siren,base:clean(siren.base),letters:Object.fromEntries(Object.entries(siren.letters).map(([k,v])=>[k,clean(v)]))};
@@ -37,11 +54,13 @@ function htmlFor(mode,glyphs,parts,siren){
   '__SIREN_CSS__':read('siren.css'),
   '__ASSISTANT_THEME_CSS__':read('assistant-theme.css'),
   '__SIREN_HTML__':read('siren-panel.html'),
+  '__COMPACT_CODEC_JS__':read('compact-codec.js'),
   '__MAPPING_EDITOR_JS__':read('mapping-editor.js'),
   '__PLATFORM_JS__':read('runtime.js'),
   '__HOST_UI_JS__':read('host-ui.js'),
   '__OCR_ENGINE_JS__':read('ocr-engine.js'),
   '__IMAGE_ASSIST_JS__':read('image-assist.js'),
+  '__PHOTO_PREP_JS__':read('photo-prep.js'),
   '__TEXT_LOCATOR_JS__':read('text-locator.js'),
   '__BABELIAN_DEEP_JS__':read('babelian-deep.js'),
   '__OCR_CORRECTION_JS__':read('ocr-correction.js'),
@@ -50,8 +69,8 @@ function htmlFor(mode,glyphs,parts,siren){
   '__OCR_UI_JS__':read('ocr-ui.js'),
   '__BABELIAN_VISUALS_JS__':read('babelian-visuals.js'),
   '__TEXT_FORMAT_JS__':read('text-format.js'),
-  '__DOMAIN_TERMS__':JSON.stringify({words:domainTerms.words,phrases:domainTerms.phrases}),
-  '__ENGLISH_WORD_DATA__':JSON.stringify(wordData),
+  '__DOMAIN_TERMS__':JSON.stringify(packedDomainTerms),
+  '__ENGLISH_WORD_DATA__':JSON.stringify(packedWordData),
   '__WORD_LICENSE__':read('wordninja-LICENSE.txt'),
   '__OCR_CSS__':read('ocr.css'),
   '__OCR_HTML__':read('ocr-panel.html'),
@@ -63,7 +82,7 @@ function htmlFor(mode,glyphs,parts,siren){
   html=html.replace(placeholder,()=>content);
  }
  if(/__[A-Z_]+__/.test(html))throw Error('Unresolved build placeholder');
- html=html.replace('<script>',()=>'<script>\nglobalThis.BabelianVectorArtwork='+safeJSON(apkProfiles.artwork)+';\nglobalThis.BabelianVectorTemplateProfile='+safeJSON(apkProfiles.recognition)+';\n</script>\n<script>');
+ html=html.replace('<script>',()=>'<script>\nglobalThis.BabelianVectorArtwork='+safeJSON(apkProfiles.artwork)+';\nglobalThis.BabelianVectorTemplateProfile='+safeJSON(packedRecognition)+';\n</script>\n<script>');
  return html;
 }
 const standalone=htmlFor('standalone',sourceGlyphs,sourceParts,sourceSiren);

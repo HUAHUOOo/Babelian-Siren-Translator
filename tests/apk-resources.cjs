@@ -17,10 +17,14 @@ for(const name of files){
 }
 const geometry=json('siren/geometry-and-order.json');assert.equal(geometry.letters.length,26);assert.equal(geometry.main.segments_in_reading_order.length,24);
 assert.equal(json('icons/index.json').length,189);for(const icon of json('icons/index.json'))assert(Object.hasOwn(data.manifest.files,icon.path));
+const Compact=require('../src/compact-codec.js');
 for(const file of ['index.html','dist/ato/babelian/index.html']){
  const html=fs.readFileSync(path.join(root,file),'utf8');
  for(const [name,expected]of [['BabelianVectorArtwork',data.artwork],['BabelianVectorTemplateProfile',data.recognition]]){
-  const match=html.match(new RegExp('globalThis\\.'+name+'=(\\{[^\\n]+\\});'));assert(match,'Missing built-in profile '+name);assert.deepEqual(JSON.parse(match[1]),expected);
+  const match=html.match(new RegExp('globalThis\\.'+name+'=(\\{[^\\n]+\\});'));assert(match,'Missing built-in profile '+name);
+  const parsed=JSON.parse(match[1]);
+  const actual=name==='BabelianVectorTemplateProfile'&&parsed.encoding==='deflate-rows-v1'?Compact.unpackVectorProfile(parsed,{asArrays:true}):parsed;
+  assert.deepEqual(actual,expected);
  }
  assert(!html.includes('Babelian_Cypher.ttf'),'Font must not be loaded from network');
 }

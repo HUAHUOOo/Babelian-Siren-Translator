@@ -15,6 +15,15 @@
             </div>
             <div class="ocr-canvas-wrap"><canvas id="ocr-preview" width="1" height="1" aria-label="截图预览；拖动框选密码区域。点击识别框可复核。"></canvas></div>
             <div id="ocr-image-advice" class="ocr-image-advice" hidden><p id="ocr-auto-note" class="ocr-help" role="status"></p><p id="ocr-quality-note" class="ocr-help"></p><button id="ocr-revert-suggestion" type="button" class="text-button" hidden>撤回自动选区，使用全图</button></div>
+            <details id="ocr-photo-details" class="ocr-crop-details">
+              <summary>手机实拍预处理（倾斜／反光阴影）</summary>
+              <p class="ocr-help">仅在拍照歪斜、逆光阴影或覆膜反光时按需使用；电子截图无需开启。修改只作用于本机预览，随时可恢复原图。</p>
+              <div class="ocr-toolbar"><button id="ocr-deskew-auto" type="button" class="secondary">自动纠偏</button><button id="ocr-turn-left" type="button" class="secondary">向左 90°</button><button id="ocr-turn-right" type="button" class="secondary">向右 90°</button><button id="ocr-photo-reset" type="button" class="text-button" disabled>恢复原图</button></div>
+              <label class="ocr-split-label" for="ocr-deskew-angle">微调倾角 <output id="ocr-deskew-value" for="ocr-deskew-angle">0°</output></label>
+              <input id="ocr-deskew-angle" type="range" min="-15" max="15" step="0.5" value="0">
+              <div class="ocr-toolbar"><label><input id="ocr-illumination" type="checkbox"> 均衡反光与阴影（局部光照归一化）</label></div>
+              <p id="ocr-photo-status" class="ocr-help" role="status" aria-live="polite"></p>
+            </details>
           </div>
         </fieldset>
         <div id="ocr-run-toolbar" class="ocr-toolbar" hidden><button id="ocr-run" class="primary" type="button" hidden disabled>识别所选区域</button><button id="ocr-cancel" class="secondary" type="button" hidden>取消识别</button><span id="ocr-status" role="status" aria-live="polite"></span></div>

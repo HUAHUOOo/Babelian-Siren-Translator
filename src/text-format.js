@@ -7,7 +7,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(domainTerms){
  'use strict';
  domainTerms=domainTerms||{};
- const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral antinomy ambrosia aether arcology irem poseidon poseidons alitheia argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed rot';
+ const DOMAIN='aeon trespass odyssey babelian siren sirens strider dahaka dionysian alchemy thnitos khrusos umbral antinomy ambrosia aether arcology irem poseidon poseidons alitheia argo argonaut argonauts titan titans primordial primordials ur fleece sisyphus pandora hermes trismegistus petrified dissipate coalesce seawater amorphous storybook unbestowed rot defragged rebooting git';
  const VERBS=new Set('is are was were be been has have had can may must will would should falls coils stirs comes awaits turns carries treats want win lose see sees think granted saw ends remains knows know broken lies stands begins find finds feel feels hear hears sense senses observe observes fade fades understand understands realize realizes notice notices remember remembers explain explains declare declares report reports'.split(' '));
  const COPULAS=new Set('is are was were'.split(' '));
  const DEPENDENT=new Set('and but or nor neither either also not as than that which who whom whose what when where why how whatever whoever whenever wherever whether if unless because since while whilst whereas though although before after until once so except including with without of for from to in into on onto at by through under over between among near around against about despite during'.split(' '));
@@ -102,8 +102,9 @@
     const value=payload.text.slice(span.start,span.end);
     // A recognized word-valued glyph supplies a real boundary even though
     // neighboring letter-valued glyphs have no spaces in the raw transcript.
-    // Keep THE + N distinct from THEN; ordinary glyph spacing is not evidence.
-    if(/^[A-Za-z]{2,40}$/.test(value)&&costs.has(value.toLowerCase())||/^[A-Za-z]{1,16}(?:\/[A-Za-z]{1,16}){1,2}$/.test(value)){boundaries.add(span.start);boundaries.add(span.end);}
+    // Keep THE + N distinct from THEN, and single-letter word glyph a_word
+    // distinct from ordinary letter a/A; ordinary glyph spacing is not evidence.
+    if(/^[A-Za-z]{2,40}$/.test(value)&&costs.has(value.toLowerCase())||span.glyph==='a_word'&&/^[A-Za-z]$/.test(value)||/^[A-Za-z]{1,16}(?:\/[A-Za-z]{1,16}){1,2}$/.test(value)){boundaries.add(span.start);boundaries.add(span.end);}
    }
    const chars=[];
    for(let i=0;i<=payload.text.length;i++){

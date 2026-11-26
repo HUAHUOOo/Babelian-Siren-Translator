@@ -1,10 +1,14 @@
 /* Image-only recognition. IDs are opaque: no alphabet, dictionary or language model. */
 (function(root,factory){
-  const api=factory();
+  const compact=typeof module==='object'&&module.exports&&typeof require==='function'?require('./compact-codec.js'):root.BabelianCompact;
+  const api=factory(compact);
   if(typeof module==='object'&&module.exports)module.exports=api;
   else root.BabelianOCR=api;
-  api.workerSource=()=>`const OCR=(${factory.toString()})();let cachedTemplates=null,cachedVector=null;onmessage=async e=>{try{const d=e.data;if(d.templates!==undefined)cachedTemplates=d.templates;if(d.options&&d.options.vectorProfile!==undefined)cachedVector=d.options.vectorProfile;const opts=d.options||{};const runOpts=opts.vectorProfile!==undefined||!cachedVector?opts:{...opts,vectorProfile:cachedVector};const r=await OCR.recognize(d.image,d.templates??cachedTemplates,runOpts,p=>postMessage({progress:p}));postMessage({result:r});}catch(e){postMessage({error:e.message});}};`;
-})(typeof globalThis!=='undefined'?globalThis:this,function(){
+  api.workerSource=()=>{
+    const codec=compact?._source?`const BabelianCompact=(${compact._source})();`:'';
+    return `${codec}const OCR=(${factory.toString()})(typeof BabelianCompact!=='undefined'?BabelianCompact:null);let cachedTemplates=null,cachedVector=null;onmessage=async e=>{try{const d=e.data;if(d.templates!==undefined)cachedTemplates=d.templates;if(d.options&&d.options.vectorProfile!==undefined)cachedVector=d.options.vectorProfile;const opts=d.options||{};const runOpts=opts.vectorProfile!==undefined||!cachedVector?opts:{...opts,vectorProfile:cachedVector};const r=await OCR.recognize(d.image,d.templates??cachedTemplates,runOpts,p=>postMessage({progress:p}));postMessage({result:r});}catch(e){postMessage({error:e.message});}};`;
+  };
+})(typeof globalThis!=='undefined'?globalThis:this,function(Compact){
   'use strict';
   const SIZE=32;
   function pop(n){n-=(n>>>1)&0x55555555;n=(n&0x33333333)+((n>>>2)&0x33333333);return (((n+(n>>>4))&0x0f0f0f0f)*0x01010101)>>>24;}
@@ -166,6 +170,19 @@
     // A scan may have touching glyphs. Weak column valleys provide extra cut sites.
     const split=[];
     for(const a of atoms){
+      if(touching==='union-components'){
+        const pts=new Set([a.start,a.end]);
+        for(const [inset,minFrac,valley] of [[3,.18,.055],[1,.06,.25]]){
+          let from=a.start;
+          for(let x=a.start+inset;x<a.end-inset;x++){
+            const i=x-box.x,n=cols[i];
+            if(x-from>=box.height*minFrac&&n<=Math.max(1,box.height*valley)&&n<cols[i-1]&&n<=cols[i+1]){pts.add(x);from=x;}
+          }
+        }
+        const sorted=[...pts].sort((p,q)=>p-q);
+        for(let k=1;k<sorted.length;k++)split.push({start:sorted[k-1],end:sorted[k]});
+        continue;
+      }
       let from=a.start;
       const inset=touching?1:3;
       for(let x=a.start+inset;x<a.end-inset;x++){
@@ -177,7 +194,7 @@
       }
       split.push({start:from,end:a.end});
     }
-    if(touching!=='components')return split;
+    if(touching!=='components'&&touching!=='union-components')return split;
     // Slanted, disconnected wedges can overlap in their horizontal projection.
     // Component edges offer cuts even when no blank column or valley exists.
     // They only add competing boundaries; every foreground pixel stays present.
@@ -214,15 +231,18 @@
     }
     return [...cuts].sort((a,b)=>a-b);
   }
-  function recognizeLine(mask,box,templates,touching=false){
+  function recognizeLine(mask,box,templates,touching=false,matchCache=null){
     const atoms=atomsFor(mask,box,touching),n=atoms.length;
     if(n>1400)throw Error('单行内容过多，请分段框选。');
+    let minRatio=Infinity,maxRatio=0;
+    for(let k=0;k<templates.length;k++){const t=templates[k];if(t.count){if(t.ratio<minRatio)minRatio=t.ratio;if(t.ratio>maxRatio)maxRatio=t.ratio;}}
+    const loRatio=minRatio*Math.exp(-.381),hiRatio=maxRatio*Math.exp(.381);
     const atomBoxes=atoms.map(a=>bounds(mask,a.start,box.y,a.end,box.y+box.height));
     const costs=new Float64Array(n+1).fill(Infinity),back=Array(n+1),edges=[];costs[0]=0;
     for(let i=0;i<n;i++){
       if(!Number.isFinite(costs[i]))continue;
       let bLeft=Infinity,bTop=Infinity,bRight=-1,bBottom=-1;
-      for(let j=i;j<Math.min(n,i+(touching==='reference-grid'?Math.ceil(box.height*1.9/(box.height>48?2:1)):touching==='components'?28:14));j++){
+      for(let j=i;j<Math.min(n,i+(touching==='reference-grid'?Math.ceil(box.height*1.9/(box.height>48?2:1)):touching==='components'||touching==='union-components'?28:14));j++){
         if(j>i&&atoms[j].start-atoms[j-1].end>box.height*.4)break;
         const ab=atomBoxes[j];
         if(ab){
@@ -243,8 +263,15 @@
           break;
         }
         if(!candidateBox)continue;
-        const heightRatio=candidateBox.height/box.height;
-        let candidates=heightRatio>=.62?matchDescriptor(describe(mask,candidateBox),templates):[];
+        const heightRatio=candidateBox.height/box.height,candRatio=candidateBox.width/candidateBox.height;
+        let candidates=[];
+        if(heightRatio>=.62&&candRatio>=loRatio&&candRatio<=hiRatio){
+          if(matchCache){
+            const key=candidateBox.x+','+candidateBox.y+','+candidateBox.width+','+candidateBox.height;
+            candidates=matchCache.get(key);
+            if(!candidates){candidates=matchDescriptor(describe(mask,candidateBox),templates);matchCache.set(key,candidates);}
+          }else candidates=matchDescriptor(describe(mask,candidateBox),templates);
+        }
         const best=candidates[0],score=best?.score||0;
         const weight=width/box.height;
         const cost=costs[i]+(1-score)*weight+.025;
@@ -291,23 +318,47 @@
     }
     return tokens.reverse();
   }
+  function hasWeakToken(tokens){return tokens.some(t=>!t.certain&&(!t.id||t.score<.72));}
+  function localComponentImproved(before,after,box){
+    const wholeBefore=imageEvidence({lines:[{box,tokens:before}]}),wholeAfter=imageEvidence({lines:[{box,tokens:after}]});
+    if(wholeAfter<=wholeBefore+.004)return false;
+    const entries=[...before.map(token=>({token,side:'before'})),...after.map(token=>({token,side:'after'}))]
+      .sort((a,b)=>a.token.box.x-b.token.box.x),groups=[];
+    for(const entry of entries){
+      let group=groups[groups.length-1];
+      if(!group||entry.token.box.x>=group.end){group={end:0,before:[],after:[]};groups.push(group);}
+      group.end=Math.max(group.end,entry.token.box.x+entry.token.box.width);group[entry.side].push(entry.token);
+    }
+    let resolvedWeak=false;
+    for(const group of groups){
+      const b=group.before,a=group.after;
+      if(b.length===a.length&&b.every((t,i)=>t.id===a[i].id&&overlap(t.box,a[i].box)>=.9))continue;
+      if(!b.length||!a.length)return false;
+      const gain=imageEvidence({lines:[{box,tokens:a}]})-imageEvidence({lines:[{box,tokens:b}]});
+      if(gain<=0)return false;
+      if(hasWeakToken(b)&&gain>=.015&&a.every(t=>t.id&&t.score>=.75))resolvedWeak=true;
+    }
+    return resolvedWeak;
+  }
   async function recognizeMask(mask,templates,options,progress,bands=rowBands(mask,options.oneLine,templates)){
     if(bands.length>100)throw Error('内容超过100行，请分段框选。');
     const lines=[];let count=0;
     for(let i=0;i<bands.length;i++){
       if(options.cancelled?.())throw Error('已取消识别。');
+      let rowCache=null;
       let tokens=recognizeLine(mask,bands[i],templates),segmentation;
       const box=bands[i],baseline={box,tokens};
+      const getRowCache=()=>rowCache||(rowCache=new Map());
       // Printed glyphs can touch through several dark pixels rather than
       // a one-pixel bridge. Offer additional local projection valleys, then
       // compare the complete row using the same image-only objective. Do not
       // force the new cuts, infer letters from words, or raise confidence.
       // Source height alone does not distinguish a clean glyph from a larger
-      // scan with connected strokes. Gate on row evidence at every usable size.
-      if(options.detail!==false&&box.height>=16&&imageEvidence({lines:[baseline]})<.86){
+      // scan with connected strokes. Gate on row evidence or a weak local token.
+      if(options.detail!==false&&box.height>=16&&(imageEvidence({lines:[baseline]})<.86||hasWeakToken(baseline.tokens))){
         if(options.cancelled?.())throw Error('已取消识别。');
         try{
-          const refined=recognizeLine(mask,box,templates,true);
+          const refined=recognizeLine(mask,box,templates,true,getRowCache());
           if(imageEvidence({lines:[{box,tokens:refined}]})>imageEvidence({lines:[baseline]})+.008){
             tokens=refined;
             for(const token of tokens){
@@ -327,7 +378,7 @@
       if(options.detail!==false&&box.height>=40&&imageEvidence({lines:[{box,tokens}]})<.86){
         if(options.cancelled?.())throw Error('已取消识别。');
         try{
-          const refined=recognizeLine(mask,box,templates,'dense');
+          const refined=recognizeLine(mask,box,templates,'dense',getRowCache());
           if(imageEvidence({lines:[{box,tokens:refined}]})>imageEvidence({lines:[{box,tokens}]})+.008){
             tokens=refined;
             for(const token of tokens){
@@ -335,6 +386,25 @@
               token.certain=token.certain&&Boolean(peer?.certain);
             }
             segmentation={method:'dense-valleys',sourceHeight:box.height};
+          }
+        }catch(error){
+          if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
+        }
+      }
+      // A mostly crisp native-size row can still contain one slanted pair whose
+      // disconnected wedges overlap in horizontal projection. Union component
+      // boundaries preserve all baseline cuts while resolving that local pair.
+      if(options.detail!==false&&box.height>=40&&imageEvidence({lines:[{box,tokens}]})>=.86&&hasWeakToken(tokens)){
+        if(options.cancelled?.())throw Error('已取消识别。');
+        try{
+          const refined=recognizeLine(mask,box,templates,'union-components',getRowCache());
+          if(localComponentImproved(tokens,refined,box)){
+            tokens=refined;
+            for(const token of tokens){
+              const peer=baseline.tokens.find(t=>t.id===token.id&&overlap(t.box,token.box)>=.85);
+              token.certain=token.certain&&Boolean(peer?.certain);
+            }
+            segmentation={method:'component-cuts',sourceHeight:box.height};
           }
         }catch(error){
           if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
@@ -429,13 +499,14 @@
           };
           if(overlap(mapBox(bands[0]),b)<.8)continue;
           let tokens,cutSearch=false;
+          const rowCache=new Map();
           try{
-            tokens=recognizeLine(mask,bands[0],templates);
+            tokens=recognizeLine(mask,bands[0],templates,false,rowCache);
             if(extra&&imageEvidence({lines:[{box:bands[0],tokens}]})<.86){
               let best=imageEvidence({lines:[{box:bands[0],tokens}]});
               for(const mode of [true,'dense','components']){
                 if(options.cancelled?.())throw Error('已取消识别。');
-                const alternative=recognizeLine(mask,bands[0],templates,mode),score=imageEvidence({lines:[{box:bands[0],tokens:alternative}]});
+                const alternative=recognizeLine(mask,bands[0],templates,mode,rowCache),score=imageEvidence({lines:[{box:bands[0],tokens:alternative}]});
                 if(score>best){tokens=alternative;best=score;cutSearch=true;}
               }
             }
@@ -554,7 +625,8 @@
   }
   function referenceGridSupported(before,native,after,adapted,box){
     const adaptedById=adapted instanceof Map?adapted:new Map(adapted.map(t=>[t.id,t]));
-    if(box.height<40||box.height>96||box.width>160||before.length<2||before.length>6||after.length<2||after.length>6||
+    const maxWidth=Math.max(160,Math.round(box.height*4));
+    if(box.height<40||box.height>96||box.width>maxWidth||before.length<2||before.length>6||after.length<2||after.length>6||
       before.some(t=>!t.id||t.manual||t.box.height<30||adaptedById.get(t.id)?.references))return false;
     // The finer native search must reproduce the original reading while proving
     // its boundaries are near a rival. Old confidence based on missing cut sites
@@ -570,10 +642,28 @@
     if(supported.size<2||!after.some(t=>Number.isFinite(t.candidates[0].nativeScore)&&t.score-t.candidates[0].nativeScore>=.015))return false;
     return imageEvidence({lines:[{box,tokens:after}]})>imageEvidence({lines:[{box,tokens:before}]});
   }
+  function contestedGridSupported(before,native,after,adaptedById,box){
+    const maxWidth=Math.max(160,Math.round(box.height*4));
+    if(box.height<40||box.height>96||box.width>maxWidth||before.length<2||before.length>6||after.length<2||after.length>6||
+      before.some(t=>!t.id||t.manual||t.box.height<30||adaptedById.get(t.id)?.references))return false;
+    const contested=native.length!==before.length||native.some((t,i)=>t.id!==before[i].id||overlap(t.box,before[i].box)<.85||
+      !Number.isFinite(t.segmentationMargin)||t.segmentationMargin<0||t.segmentationMargin<.045);
+    if(!contested)return false;
+    if(after.length===before.length&&after.every((t,i)=>t.id===before[i].id))return false;
+    if(after.some(t=>{
+      const first=t.candidates?.[0],nativeScore=first?.nativeScore??first?.score;
+      return !t.id||first?.id!==t.id||!Number.isFinite(nativeScore)||nativeScore<.86||first.score-(t.candidates?.[1]?.score||0)<.05;
+    }))return false;
+    const supported=new Set(after.filter(t=>adaptedById.get(t.id)?.references).map(t=>t.id));
+    if(supported.size<2||!after.some(t=>Number.isFinite(t.candidates[0].nativeScore)&&t.score-t.candidates[0].nativeScore>=.02))return false;
+    const evAfter=imageEvidence({lines:[{box,tokens:after}]});
+    return evAfter>imageEvidence({lines:[{box,tokens:before}]})+.008&&evAfter>imageEvidence({lines:[{box,tokens:native}]});
+  }
   function refineReferenceClusters(mask,line,adapted,templates,options,budget,adaptedById){
     let tokens=line.tokens,regions=0;
     if(line.box.height<40||line.box.height>96||!budget.remaining)return {tokens,regions};
     const byId=adaptedById||new Map(adapted.map(t=>[t.id,t]));
+    const maxWidth=Math.max(160,Math.round(line.box.height*4));
     const runs=[];
     for(let i=0;i<tokens.length;){
       if(byId.get(tokens[i].id)?.references){i++;continue;}
@@ -584,14 +674,17 @@
       if(options.cancelled?.())throw Error('已取消识别。');
       if(!budget.remaining)break;
       const before=tokens.slice(from,to),x=before[0].box.x,end=before.at(-1).box.x+before.at(-1).box.width;
-      if(end-x>160||before.some(t=>!t.id||t.manual||t.box.height<30))continue;
+      if(end-x>maxWidth||before.some(t=>!t.id||t.manual||t.box.height<30))continue;
       const box={x,y:line.box.y,width:end-x,height:line.box.height};budget.remaining--;
-      const native=recognizeLine(mask,box,templates,'reference-grid');
-      if(native.length!==before.length||native.some((t,i)=>t.id!==before[i].id||overlap(t.box,before[i].box)<.85||
-        !Number.isFinite(t.segmentationMargin)||t.segmentationMargin<0||t.segmentationMargin>=.01))continue;
-      const after=recognizeLine(mask,box,adapted,'reference-grid');
+      const native=recognizeLine(mask,box,templates,'reference-grid',new Map());
+      const nativeTight=native.length===before.length&&native.every((t,i)=>t.id===before[i].id&&overlap(t.box,before[i].box)>=.85&&
+        Number.isFinite(t.segmentationMargin)&&t.segmentationMargin>=0&&t.segmentationMargin<.01);
+      const nativeContested=!nativeTight&&(native.length!==before.length||native.some((t,i)=>t.id!==before[i].id||overlap(t.box,before[i].box)<.85||
+        !Number.isFinite(t.segmentationMargin)||t.segmentationMargin<0||t.segmentationMargin<.045));
+      if(!nativeTight&&!nativeContested)continue;
+      const after=recognizeLine(mask,box,adapted,'reference-grid',new Map());
       const rescored=before.map(t=>{const ref=byId.get(t.id);return {...t,score:ref?matchDescriptor(describe(mask,t.box),[ref])[0]?.score||0:0};});
-      if(!referenceGridSupported(rescored,native,after,byId,box))continue;
+      if(nativeTight?!referenceGridSupported(rescored,native,after,byId,box):!contestedGridSupported(rescored,native,after,byId,box))continue;
       for(const token of after)token.certain=false;
       tokens=[...tokens.slice(0,from),...after,...tokens.slice(to)];regions++;
     }
@@ -670,6 +763,88 @@
     if(options.cancelled?.())throw Error('已取消识别。');
     return changed&&count<=1500?{...baseline,lines,pageRefinement:{rows:changed}}:baseline;
   }
+  function fixedHeightEvidence(tokens,height){
+    let sum=0,weight=0;
+    for(const token of tokens){const w=token.box.width/height;sum+=token.score*w-.025;weight+=w;}
+    return weight?sum/weight:0;
+  }
+  function rowFencedHysteresis(gray,width,height,bands,coreTh,tailTh,polarity){
+    const out=new Uint8Array(width*height),q=new Int32Array(width*height),light=polarity==='light';
+    const isCore=v=>light?v>coreTh:v<=coreTh,isWeak=v=>light?v>tailTh:v<=tailTh;
+    const fences=[];
+    for(let bi=0;bi<bands.length;bi++){
+      const b=bands[bi];
+      const yMin=bi===0?Math.max(0,b.y-6):Math.floor((bands[bi-1].y+bands[bi-1].height+b.y)/2);
+      const yMax=bi===bands.length-1?Math.min(height-1,b.y+b.height+6):Math.floor((b.y+b.height+bands[bi+1].y)/2)-1;
+      fences.push({yMin,yMax});
+      let head=0,tail=0;
+      for(let y=yMin;y<=yMax;y++){
+        const row=y*width;
+        for(let x=b.x;x<b.x+b.width;x++){const idx=row+x;if(isCore(gray[idx])){out[idx]=1;q[tail++]=idx;}}
+      }
+      while(head<tail){
+        const idx=q[head++],x=idx%width,y=(idx/width)|0;
+        const yy0=y>yMin?y-1:yMin,yy1=y<yMax?y+1:yMax,xx0=x>0?x-1:0,xx1=x+1<width?x+1:width-1;
+        for(let yy=yy0;yy<=yy1;yy++){
+          const row=yy*width;
+          for(let xx=xx0;xx<=xx1;xx++){const ni=row+xx;if(!out[ni]&&isWeak(gray[ni])){out[ni]=1;q[tail++]=ni;}}
+        }
+      }
+    }
+    return {mask:{width,height,data:out,threshold:coreTh,polarity},fences};
+  }
+  async function refineFadedRows(gray,image,baseline,chosen,templates,background,options){
+    if(options.threshold!=null||options.detail===false||imageEvidence(chosen)>=.78||!chosen.lines.some(l=>l.box.height>=40))return chosen;
+    const dark=baseline.polarity==='dark',span=background-baseline.threshold;
+    if(Math.abs(span)<18)return chosen;
+    const margin=dark?-10:10;
+    const tailThresholds=[...new Set([1/3,1/2].map(f=>{
+      const t=Math.max(0,Math.min(254,Math.round(baseline.threshold+span*f)));
+      return dark?Math.min(t,background+margin):Math.max(t,background+margin);
+    }))].filter(t=>Math.abs(t-baseline.threshold)>=4);
+    if(!tailThresholds.length)return chosen;
+    const baseBands=baseline.lines.map(l=>l.box);
+    const masks=tailThresholds.map(tailTh=>({tailTh,...rowFencedHysteresis(gray,image.width,image.height,baseBands,baseline.threshold,tailTh,baseline.polarity)}));
+    const lines=[];let changed=0,count=0;
+    for(let row=0;row<chosen.lines.length;row++){
+      if(options.cancelled?.())throw Error('已取消识别。');
+      const current=chosen.lines[row],baseH=baseline.lines[row]?.box.height||current.box.height;
+      let selected=current,bestEv=fixedHeightEvidence(current.tokens,baseH);
+      if(baseH>=40){
+        for(const {tailTh,mask,fences} of masks){
+          const f=fences[row],candBox=bounds(mask,0,f.yMin,image.width,f.yMax+1);
+          if(!candBox||candBox.height<40||overlap(candBox,current.box)<.7)continue;
+          const rowCache=new Map();
+          let candTokens;
+          try{
+            candTokens=recognizeLine(mask,candBox,templates,false,rowCache);
+            let candEv=fixedHeightEvidence(candTokens,baseH);
+            if(candEv<.86){
+              for(const mode of [true,'dense']){
+                const alt=recognizeLine(mask,candBox,templates,mode,rowCache),altEv=fixedHeightEvidence(alt,baseH);
+                if(altEv>candEv+.008){candTokens=alt;candEv=altEv;}
+              }
+            }
+            if(candEv>bestEv+.008){
+              const safeTokens=candTokens.map(t=>{
+                const peer=current.tokens.find(p=>p.certain&&p.id===t.id&&overlap(p.box,t.box)>=.85);
+                return {...t,certain:t.certain&&Boolean(peer)};
+              });
+              selected={...current,box:candBox,tokens:safeTokens,hysteresis:{core:baseline.threshold,tail:tailTh}};
+              bestEv=candEv;
+            }
+          }catch(error){
+            if(!/^(单行内容过多|无法切分这一行)/.test(error.message))throw error;
+          }
+        }
+      }
+      if(selected!==current)changed++;
+      lines.push(selected);count+=selected.tokens.length;
+      if(count>1500)return chosen;
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    return changed?{...chosen,lines,fadedRefinement:{rows:changed}}:chosen;
+  }
   async function recognizeRaster(image,templateMasks,options={},progress=()=>{},shared=null){
     const grayData=grayImage(image),{gray,hist}=grayData;
     const mask=binarizeGray(gray,hist,image.width,image.height,options),templates=prepareTemplates(templateMasks,options);
@@ -685,7 +860,7 @@
     // tips must not flood paper texture or join adjacent rows. No image IDs,
     // letters, word counts or expected text participate in this decision.
     const thresholds=[...new Set([1/6,1/3].map(f=>Math.max(0,Math.min(254,Math.round(mask.threshold+(background-mask.threshold)*f)))))].filter(t=>Math.abs(t-mask.threshold)>=4);
-    if(baseline.lines.some(l=>l.box.height<40)){
+    if(baseline.lines.every(l=>l.box.height<40)){
       const refined=await refineSmallRows(image,gray,baseline,templates,thresholds,options,progress);
       // A small page can also supply independent native-resolution references.
       // Sub-30-pixel rows cannot supply confident references or be recovered by
@@ -730,9 +905,14 @@
     }
     chosen=thresholdConsensus(chosen,passes);
     const result={...chosen,thresholdSearch:{baseline:baseline.threshold,selected:chosen.threshold,passes:passes.map(p=>({threshold:p.threshold,evidence:imageEvidence(p)}))}};
-    return refineRepeatedGlyphs(image,result,templates,options,progress,grayData);
+    const repeated=await refineRepeatedGlyphs(image,result,templates,options,progress,grayData);
+    return refineFadedRows(gray,image,baseline,repeated,templates,background,options);
   }
   function prepareVectorProfile(profile,ids){
+    if(profile?.encoding==='deflate-rows-v1'){
+      if(!Compact?.unpackVectorProfile)throw Error('矢量辅助模板解压组件缺失。');
+      profile=Compact.unpackVectorProfile(profile);
+    }
     if(!profile||profile.version!==1||!Array.isArray(profile.variants)||profile.variants.length>1024)throw Error('矢量辅助模板格式不支持。');
     const allowed=new Set(ids),groups=new Map(),seen=new Set();
     function descriptor(value,size){
